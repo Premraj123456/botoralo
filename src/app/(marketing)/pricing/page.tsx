@@ -8,13 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { CheckCircle2, Bot } from 'lucide-react';
+import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { SignedIn, SignedOut, SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
 import { createStripeCheckout } from '@/lib/stripe/actions';
 import { toast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { getStripe } from '@/lib/stripe/client';
 
 const plans = [
   {
@@ -78,12 +78,12 @@ export default function PricingPage() {
       if (!sessionId || checkoutError) {
         throw new Error(checkoutError || 'Failed to create checkout session.');
       }
-      
-      const stripe = (await import('@/lib/stripe/client')).getStripe();
+
+      const stripe = await getStripe();
       if (!stripe) {
         throw new Error("Stripe.js has not loaded yet.");
       }
-      
+
       const { error } = await stripe.redirectToCheckout({ sessionId });
       if (error) {
         console.error(error);
