@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Bot } from "lucide-react";
+import { Link } from '@/components/layout/page-loader';
 
 const plans = [
   {
@@ -34,38 +35,57 @@ const plans = [
 
 export default function PricingPage() {
   return (
-    <div className="flex flex-col gap-8 items-center">
-      <div className="text-center max-w-2xl">
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Choose the perfect plan for your bots</h1>
-        <p className="mt-4 text-lg text-muted-foreground">
-          Simple, transparent pricing. No hidden fees. Cancel anytime.
-        </p>
+    <div className="bg-background text-foreground min-h-screen">
+      <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.05] z-0">
+         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-transparent pointer-events-none"></div>
       </div>
-      <div className="grid gap-8 md:grid-cols-3 max-w-5xl w-full">
-        {plans.map((plan) => (
-          <Card key={plan.name} className={plan.isPrimary ? 'border-primary ring-2 ring-primary' : ''}>
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <p className="text-4xl font-bold">{plan.price}<span className="text-lg font-normal text-muted-foreground">/mo</span></p>
-              <CardDescription>{plan.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-6">
-              <div className="text-center font-semibold bg-muted py-2 rounded-md">{plan.ram}</div>
-              <ul className="space-y-3">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    <span className="text-muted-foreground">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <Button className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
-                {plan.cta}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
+        <Link className="flex items-center justify-center" href="/">
+          <Bot className="h-6 w-6 text-primary" />
+          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
+        </Link>
+        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
+          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Login</Link>
+          <Button asChild size="sm">
+            <Link href="/signup">Sign Up</Link>
+          </Button>
+        </nav>
+      </header>
+      <main className="py-12 md:py-20 lg:py-24 z-10 relative">
+        <div className="container mx-auto px-4 md:px-6 flex flex-col gap-12 items-center">
+          <div className="text-center max-w-2xl">
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-headline bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Choose the perfect plan for your bots</h1>
+            <p className="mt-4 text-lg text-muted-foreground">
+              Simple, transparent pricing. No hidden fees. Cancel anytime.
+            </p>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3 max-w-5xl w-full">
+            {plans.map((plan) => (
+              <Card key={plan.name} className={`bg-card/50 border-border/50 backdrop-blur-sm flex flex-col ${plan.isPrimary ? 'border-primary ring-2 ring-primary shadow-2xl shadow-primary/20' : ''}`}>
+                <CardHeader className="text-center">
+                  <CardTitle className="text-2xl font-headline">{plan.name}</CardTitle>
+                  <p className="text-4xl font-bold">{plan.price}<span className="text-lg font-normal text-muted-foreground">/mo</span></p>
+                  <CardDescription>{plan.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-6 flex-grow">
+                  <div className="text-center font-semibold bg-muted py-2 rounded-md">{plan.ram}</div>
+                  <ul className="space-y-3 flex-grow">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        <span className="text-muted-foreground">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                   <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
+                    <Link href="/signup">{plan.cta}</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
