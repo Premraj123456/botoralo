@@ -21,8 +21,8 @@ export function SidebarNav() {
   const pathname = usePathname();
 
   return (
-    <div className="flex-1 overflow-auto">
-      <nav className="flex flex-col p-2 gap-4">
+    <div className="flex-1 overflow-auto py-2">
+      <nav className="grid items-start px-2 text-sm font-medium">
         <SidebarMenu>
           {primaryNav.map((item) => (
             <SidebarMenuItem key={item.name}>
@@ -39,7 +39,7 @@ export function SidebarNav() {
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
-        <Separator className="mx-2" />
+        <Separator className="my-4" />
         <SidebarMenu>
           {secondaryNav.map((item) => (
             <SidebarMenuItem key={item.name}>

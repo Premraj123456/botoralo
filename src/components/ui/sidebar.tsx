@@ -161,7 +161,7 @@ const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+    const { isMobile, openMobile, setOpenMobile } = useSidebar()
 
     if (isMobile) {
       return (
@@ -186,8 +186,8 @@ const Sidebar = React.forwardRef<
         ref={ref}
         className={cn(
           "fixed top-0 left-0 z-20 h-screen hidden md:block",
-          "w-64 transition-[width] duration-200",
-          "border-r border-border/50",
+          "w-64 transition-[width] duration-300 ease-in-out",
+          "border-r border-border/50 bg-background",
           "group-data-[state=collapsed]:w-14",
           className
         )}
@@ -211,7 +211,7 @@ const SidebarTrigger = React.forwardRef<
       ref={ref}
       variant="ghost"
       size="icon"
-      className={cn("h-7 w-7", className)}
+      className={cn("h-8 w-8", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
@@ -253,7 +253,7 @@ SidebarMenuItem.displayName = "SidebarMenuItem"
 
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none transition-[width,height,padding] hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-primary active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-accent-foreground data-[state=open]:hover:bg-accent data-[state=open]:hover:text-accent-foreground group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:h-10 group-data-[state=collapsed]:p-2 [&>span]:group-data-[state=collapsed]:hidden [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center gap-3 overflow-hidden rounded-md p-2 text-left text-sm outline-none transition-all duration-200 ease-in-out hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-primary active:bg-accent active:text-accent-foreground disabled:pointer-events-none disabled:opacity-50 data-[active=true]:bg-accent data-[active=true]:font-medium data-[active=true]:text-accent-foreground group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:w-10 group-data-[state=collapsed]:h-10 group-data-[state=collapsed]:py-2 group-data-[state=collapsed]:px-0 [&>span]:group-data-[state=collapsed]:hidden [&>span:last-child]:truncate [&>svg]:size-5 [&>svg]:shrink-0",
   {
     variants: {
       variant: {

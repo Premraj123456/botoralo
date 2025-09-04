@@ -29,7 +29,7 @@ export default function DashboardLayout({
             <SidebarNav />
           </div>
         </Sidebar>
-        <div className="transition-[margin-left] duration-200 md:ml-14 group-data-[state=expanded]:md:ml-64">
+        <div className="transition-[margin-left] duration-300 ease-in-out md:ml-14 group-data-[state=expanded]:md:ml-64">
           <Header />
           <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
             {children}
