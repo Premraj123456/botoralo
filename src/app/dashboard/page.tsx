@@ -1,19 +1,48 @@
 import { Link } from '@/components/layout/page-loader';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
 import { bots } from '@/lib/data';
+import { currentUser } from '@clerk/nextjs/server';
+import { getUserSubscription } from '@/lib/stripe/actions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-export default function Dashboard() {
+export default async function Dashboard() {
+  const user = await currentUser();
+  if (!user) return <div>Not logged in</div>;
+
+  const subscription = await getUserSubscription(user.id);
+  const userBots = bots; // In a real app, you'd fetch this for the user
+  const canCreateBot = userBots.length < (subscription.botLimit || 0);
+
+  const CreateBotButton = () => (
+    <Button asChild disabled={!canCreateBot}>
+      <Link href="/dashboard/bots/new">
+        <PlusCircle className="mr-2 h-4 w-4" /> Create New Bot
+      </Link>
+    </Button>
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold md:text-3xl">My Bots</h1>
-        <Button asChild>
-          <Link href="/dashboard/bots/new">
-            <PlusCircle className="mr-2 h-4 w-4" /> Create New Bot
-          </Link>
-        </Button>
+        {canCreateBot ? (
+          <CreateBotButton />
+        ) : (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <div className="inline-flex">
+                  <CreateBotButton />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>You've reached your bot limit. Please upgrade your plan.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
       </div>
       {bots.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -26,11 +55,9 @@ export default function Dashboard() {
           <div className="flex flex-col items-center gap-2 text-center">
             <h3 className="text-2xl font-bold tracking-tight">You have no bots yet</h3>
             <p className="text-sm text-muted-foreground">Get started by creating your first bot.</p>
-            <Button className="mt-4" asChild>
-              <Link href="/dashboard/bots/new">
-                <PlusCircle className="mr-2 h-4 w-4" /> Create New Bot
-              </Link>
-            </Button>
+            <div className="mt-4">
+              <CreateBotButton />
+            </div>
           </div>
         </div>
       )}
