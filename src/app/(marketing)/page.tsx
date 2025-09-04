@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs'
 
 const testimonials = [
   {
@@ -84,12 +85,19 @@ export default function LandingPage() {
           >
             Pricing
           </Link>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild size="sm" className="glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-            <Link href="/signup">Get Started</Link>
-          </Button>
+          <SignedOut>
+            <SignInButton>
+              <Button variant="ghost" size="sm">Login</Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button size="sm" className="glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">Get Started</Button>
+            </SignUpButton>
+          </SignedOut>
+           <SignedIn>
+            <Button asChild size="sm" className="glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+          </SignedIn>
         </nav>
       </header>
       <main className="flex-1 z-10">
@@ -109,7 +117,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
                    <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href="/signup">
+                    <Link href="/dashboard">
                       Get Started Free
                       <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </Link>
@@ -266,7 +274,7 @@ export default function LandingPage() {
                 </p>
                 <div className="mt-8">
                    <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href="/signup">
+                    <Link href="/dashboard">
                       Start Deploying Now
                       <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </Link>

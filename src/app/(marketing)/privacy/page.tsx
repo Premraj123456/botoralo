@@ -1,6 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from '@/components/layout/page-loader';
 import { Bot } from "lucide-react";
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
+import { Button } from "@/components/ui/button";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -11,8 +13,17 @@ export default function PrivacyPolicyPage() {
           <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Login</Link>
-          <Link href="/signup" className="text-sm font-medium text-primary">Sign Up</Link>
+          <SignedOut>
+            <SignInButton>
+               <Button variant="ghost" size="sm">Login</Button>
+            </SignInButton>
+            <SignUpButton>
+               <Button size="sm">Sign Up</Button>
+            </SignUpButton>
+          </SignedOut>
+          <SignedIn>
+              <Link href="/dashboard" className="text-sm font-medium text-primary">Dashboard</Link>
+          </SignedIn>
         </nav>
       </header>
       <main className="py-12 md:py-20 lg:py-24">

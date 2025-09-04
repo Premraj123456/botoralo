@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Bot } from "lucide-react";
 import { Link } from '@/components/layout/page-loader';
+import { SignedIn, SignedOut, SignInButton, SignUpButton } from "@clerk/nextjs";
 
 const plans = [
   {
@@ -45,10 +46,17 @@ export default function PricingPage() {
           <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Login</Link>
-          <Button asChild size="sm">
-            <Link href="/signup">Sign Up</Link>
-          </Button>
+          <SignedOut>
+            <SignInButton>
+              <Button variant="ghost" size="sm">Login</Button>
+            </SignInButton>
+            <SignUpButton>
+              <Button size="sm">Sign Up</Button>
+            </SignUpButton>
+          </SignedOut>
+          <SignedIn>
+              <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</Link>
+          </SignedIn>
         </nav>
       </header>
       <main className="py-12 md:py-20 lg:py-24 z-10 relative">
@@ -78,7 +86,7 @@ export default function PricingPage() {
                     ))}
                   </ul>
                    <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
-                    <Link href="/signup">{plan.cta}</Link>
+                    <Link href="/dashboard">{plan.cta}</Link>
                   </Button>
                 </CardContent>
               </Card>
