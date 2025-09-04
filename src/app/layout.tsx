@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Inter } from 'next/font/google';
 import { PageLoader } from '@/components/layout/page-loader';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'BotPilot',
