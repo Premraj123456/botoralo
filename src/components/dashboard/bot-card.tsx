@@ -38,7 +38,7 @@ export function BotCard({ bot }: BotCardProps) {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center">
-            <span className={cn("flex h-2 w-2 shrink-0 translate-y-px rounded-full mr-2", color)} />
+            <div className={cn("h-2 w-2 rounded-full mr-2", color)} />
             {text}
           </div>
           <div className="flex items-center gap-1">
