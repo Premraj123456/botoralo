@@ -7,15 +7,15 @@ import Link from "next/link";
 
 export default function SignupPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-muted">
-      <Card className="mx-auto max-w-sm w-full">
+    <div className="flex items-center justify-center min-h-screen bg-background dark:bg-grid-white/[0.05] bg-grid-black/[0.02]">
+      <Card className="mx-auto max-w-sm w-full animate-fade-in-up shadow-xl">
         <CardHeader className="space-y-1 text-center">
            <Link className="flex items-center justify-center mb-4" href="/">
              <Bot className="h-8 w-8 text-primary" />
              <span className="ml-2 text-2xl font-semibold">BotPilot</span>
            </Link>
-          <CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
-          <CardDescription>Enter your information to create an account</CardDescription>
+          <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
+          <CardDescription>Enter your information to get started</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -40,7 +40,7 @@ export default function SignupPage() {
           </div>
           <div className="mt-4 text-center text-sm">
             Already have an account?{" "}
-            <Link href="/login" className="underline">
+            <Link href="/login" className="underline text-primary">
               Login
             </Link>
           </div>

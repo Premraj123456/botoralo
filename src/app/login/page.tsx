@@ -7,15 +7,15 @@ import Link from "next/link";
 
 export default function LoginPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-muted">
-      <Card className="mx-auto max-w-sm w-full">
+    <div className="flex items-center justify-center min-h-screen bg-background dark:bg-grid-white/[0.05] bg-grid-black/[0.02]">
+      <Card className="mx-auto max-w-sm w-full animate-fade-in-up shadow-xl">
         <CardHeader className="space-y-1 text-center">
            <Link className="flex items-center justify-center mb-4" href="/">
              <Bot className="h-8 w-8 text-primary" />
              <span className="ml-2 text-2xl font-semibold">BotPilot</span>
            </Link>
-          <CardTitle className="text-2xl font-bold">Login</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <CardDescription>Enter your credentials to access your account</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -26,7 +26,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Password</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline">
+                <Link href="#" className="ml-auto inline-block text-sm text-primary hover:underline">
                   Forgot your password?
                 </Link>
               </div>
@@ -41,7 +41,7 @@ export default function LoginPage() {
           </div>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="underline">
+            <Link href="/signup" className="underline text-primary">
               Sign up
             </Link>
           </div>
