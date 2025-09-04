@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/components/layout/page-loader';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';

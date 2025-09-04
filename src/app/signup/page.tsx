@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Bot } from "lucide-react";
-import Link from "next/link";
+import { Link } from '@/components/layout/page-loader';
 
 export default function SignupPage() {
   return (

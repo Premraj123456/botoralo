@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Bot, Code, Rocket, ArrowRight } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from '@/components/layout/page-loader'
 import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -55,7 +55,7 @@ export default function LandingPage() {
          <div className="absolute bottom-[-20%] right-[10%] w-[40rem] h-[40rem] bg-secondary/30 rounded-full blur-[150px] animate-pulse delay-500" />
        </div>
       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
-        <Link className="flex items-center justify-center" href="#">
+        <Link className="flex items-center justify-center" href="/">
           <Bot className="h-6 w-6 text-primary" />
           <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
         </Link>

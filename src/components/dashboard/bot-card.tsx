@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from '@/components/layout/page-loader';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
