@@ -4,6 +4,11 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
+import { Inter } from 'next/font/google';
+import { Toaster } from '@/components/ui/toaster';
+import { PageLoader } from '@/components/layout/page-loader';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
   title: 'BotPilot Dashboard',
