@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, PlusCircle, DollarSign, CreditCard, Settings } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Link } from '@/components/layout/page-loader';
