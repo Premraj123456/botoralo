@@ -48,7 +48,7 @@ export function BotCard({ bot }: BotCardProps) {
       </CardContent>
       <CardFooter>
         <Button className="w-full" asChild>
-          <Link href={`/bots/${bot.id}`}>
+          <Link href={`/dashboard/bots/${bot.id}`}>
             <Terminal className="mr-2 h-4 w-4" />
             View Details
           </Link>

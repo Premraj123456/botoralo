@@ -29,7 +29,7 @@ export default function NewBotPage() {
               <Textarea
                 id="bot-code"
                 placeholder="Paste your bot script here..."
-                className="font-code min-h-[300px] text-sm"
+                className="font-mono min-h-[300px] text-sm"
               />
             </div>
             <div className="flex justify-end">

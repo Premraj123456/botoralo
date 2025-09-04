@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PlusCircle, DollarSign, CreditCard, Settings, User } from "lucide-react";
+import { LayoutDashboard, PlusCircle, DollarSign, CreditCard, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 
 const primaryNav = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "New Bot", href: "/bots/new", icon: PlusCircle },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { name: "New Bot", href: "/dashboard/bots/new", icon: PlusCircle },
 ];
 
 const secondaryNav = [
   { name: "Pricing", href: "/pricing", icon: DollarSign },
-  { name: "Billing", href: "/billing", icon: CreditCard },
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
+  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export function SidebarNav() {
