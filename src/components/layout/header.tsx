@@ -1,4 +1,3 @@
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -8,7 +7,6 @@ import { Link } from '@/components/layout/page-loader';
 export function Header() {
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background/60 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30 backdrop-blur-sm">
-      <SidebarTrigger />
       <div className="w-full flex-1">
         {/* Optional: Add search or other header elements here */}
       </div>

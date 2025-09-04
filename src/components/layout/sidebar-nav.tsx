@@ -2,9 +2,10 @@
 
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, PlusCircle, DollarSign, CreditCard, Settings } from "lucide-react";
-import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Link } from '@/components/layout/page-loader';
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const primaryNav = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -20,42 +21,33 @@ const secondaryNav = [
 export function SidebarNav() {
   const pathname = usePathname();
 
+  const renderNav = (items: typeof primaryNav) => (
+    items.map((item) => (
+      <li key={item.name}>
+        <Button
+          asChild
+          variant={pathname === item.href ? "secondary" : "ghost"}
+          className="w-full justify-start gap-2"
+        >
+          <Link href={item.href}>
+            <item.icon />
+            <span>{item.name}</span>
+          </Link>
+        </Button>
+      </li>
+    ))
+  );
+
   return (
     <div className="flex-1 overflow-auto py-2">
       <nav className="grid items-start px-2 text-sm font-medium">
-        <SidebarMenu>
-          {primaryNav.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
-                tooltip={item.name}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <ul className="flex flex-col gap-1">
+          {renderNav(primaryNav)}
+        </ul>
         <Separator className="my-4" />
-        <SidebarMenu>
-          {secondaryNav.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname.startsWith(item.href)}
-                tooltip={item.name}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <ul className="flex flex-col gap-1">
+          {renderNav(secondaryNav)}
+        </ul>
       </nav>
     </div>
   );
