@@ -31,11 +31,11 @@ export default function SignupPage() {
               <Label htmlFor="confirm-password">Confirm Password</Label>
               <Input id="confirm-password" type="password" required />
             </div>
-            <Button type="submit" className="w-full">
-              Create an account
+            <Button asChild className="w-full">
+              <Link href="/dashboard">Create an account</Link>
             </Button>
-             <Button variant="outline" className="w-full">
-              Sign up with Google
+             <Button variant="outline" className="w-full" asChild>
+              <Link href="/dashboard">Sign up with Google</Link>
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
