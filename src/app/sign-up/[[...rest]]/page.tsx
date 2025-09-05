@@ -17,30 +17,30 @@ import { Bot, Loader2 } from "lucide-react";
 import { Link } from "@/components/layout/page-loader";
 import { useToast } from "@/hooks/use-toast";
 
-export default function SignInPage() {
+export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       // In a real app, you'd call your auth provider (e.g., Firebase)
-      console.log("Signing in with:", email, password);
-      // Mock successful login
+      console.log("Signing up with:", email, password);
+      // Mock successful signup
       await new Promise((resolve) => setTimeout(resolve, 1000));
       toast({
         title: "Success!",
-        description: "You have been signed in.",
+        description: "Your account has been created.",
       });
       router.push("/dashboard");
     } catch (error) {
       toast({
         title: "Error",
-        description: (error as Error).message || "Failed to sign in.",
+        description: (error as Error).message || "Failed to sign up.",
         variant: "destructive",
       });
     } finally {
@@ -57,13 +57,13 @@ export default function SignInPage() {
                 <Bot className="h-8 w-8 text-primary" />
              </Link>
           </div>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
+          <CardTitle className="text-2xl">Create an Account</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account.
+            Enter your email and password to get started.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSignIn} className="space-y-4">
+          <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -86,15 +86,15 @@ export default function SignInPage() {
               />
             </div>
              <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? <Loader2 className="animate-spin" /> : "Sign In"}
+              {isLoading ? <Loader2 className="animate-spin" /> : "Sign Up"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex flex-col gap-4">
             <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link href="/sign-up" className="underline">
-                    Sign up
+                Already have an account?{" "}
+                <Link href="/sign-in" className="underline">
+                    Sign In
                 </Link>
             </div>
         </CardFooter>
