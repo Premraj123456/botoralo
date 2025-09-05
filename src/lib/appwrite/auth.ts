@@ -18,3 +18,12 @@ export async function signup(email: string, password: string, name: string) {
 export async function logout() {
     await account.deleteSession('current');
 }
+
+export async function hasActiveSession() {
+    try {
+        await account.get();
+        return true;
+    } catch (error) {
+        return false;
+    }
+}

@@ -9,7 +9,7 @@ import { Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/appwrite/auth';
+import { login, hasActiveSession } from '@/lib/appwrite/auth';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function SignInPage() {
@@ -25,6 +25,11 @@ export default function SignInPage() {
     setIsLoading(true);
     setError('');
     try {
+      // First, check if there's already an active session
+      if (await hasActiveSession()) {
+        router.push('/dashboard');
+        return;
+      }
       await login(email, password);
       toast({ title: 'Success', description: "You've been signed in." });
       router.push('/dashboard');
