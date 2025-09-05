@@ -1,10 +1,14 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// This is a placeholder middleware to disable the faulty Clerk integration.
-export function middleware(request: NextRequest) {
-  return NextResponse.next();
-}
+const isProtectedRoute = createRouteMatcher([
+  '/dashboard(.*)',
+]);
+
+export default clerkMiddleware((auth, req) => {
+  if (isProtectedRoute(req)) {
+    auth().protect();
+  }
+});
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],

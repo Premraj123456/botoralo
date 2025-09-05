@@ -1,3 +1,4 @@
+import { UserButton } from "@clerk/nextjs";
 
 export function Header() {
   return (
@@ -5,7 +6,7 @@ export function Header() {
       <div className="w-full flex-1">
         {/* Optional: Add search or other header elements here */}
       </div>
-      {/* UserButton has been removed as Clerk is disabled */}
+      <UserButton />
     </header>
   )
 }
