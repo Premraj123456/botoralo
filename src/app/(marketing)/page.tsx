@@ -102,7 +102,7 @@ export default async function LandingPage() {
               <Button asChild variant="outline">
                 <Link href="/auth">
                   <LogIn className="mr-2 h-4 w-4" />
-                  Sign In
+                  Get Started
                 </Link>
               </Button>
             )}
