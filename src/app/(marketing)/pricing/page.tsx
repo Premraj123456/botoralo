@@ -13,7 +13,7 @@ import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { createStripeCheckout } from '@/lib/stripe/actions';
 import { toast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 const plans = [
   {
@@ -56,6 +56,9 @@ const plans = [
 
 export default function PricingPage() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const checkoutLinkRef = useRef<HTMLAnchorElement>(null);
+
 
   const handleCheckout = async (priceId: string) => {
     setLoadingPriceId(priceId);
@@ -70,11 +73,14 @@ export default function PricingPage() {
         throw new Error(checkoutError || 'Failed to create checkout session.');
       }
       
-      if (window.top) {
-        window.top.location.href = url;
-      } else {
-        window.location.href = url;
-      }
+      // Use a link to navigate, which is more robust in iframes
+      const a = document.createElement('a');
+      a.href = url;
+      // This tells the browser to navigate the top-level window, breaking out of the iframe
+      a.target = '_top'; 
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
 
     } catch (error) {
       console.error(error);
