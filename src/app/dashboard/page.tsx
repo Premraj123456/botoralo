@@ -1,18 +1,14 @@
 import { Link } from '@/components/layout/page-loader';
-import { PlusCircle, Info } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
 import { bots } from '@/lib/data';
-import { currentUser } from '@clerk/nextjs/server';
-import { getUserSubscription } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-export default async function Dashboard() {
-  const user = await currentUser();
-  if (!user) return <div>Not logged in</div>;
-
-  const subscription = await getUserSubscription(user.id);
-  const userBots = bots; // In a real app, you'd fetch this for the user
+export default function Dashboard() {
+  // Mocks for subscription data as user is not available
+  const subscription = { plan: 'Free', botLimit: 1 };
+  const userBots = bots;
   const canCreateBot = userBots.length < (subscription.botLimit || 0);
 
   const CreateBotButton = () => (

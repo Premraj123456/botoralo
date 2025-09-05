@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/nextjs'
 
 const testimonials = [
   {
@@ -85,19 +84,9 @@ export default function LandingPage() {
           >
             Pricing
           </Link>
-          <SignedOut>
-            <SignInButton>
-              <Button variant="ghost" size="sm">Login</Button>
-            </SignInButton>
-            <SignUpButton>
-              <Button size="sm" className="glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">Get Started</Button>
-            </SignUpButton>
-          </SignedOut>
-           <SignedIn>
-            <Button asChild size="sm" className="glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
-          </SignedIn>
+          <Button asChild size="sm" className="glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
+            <Link href="/dashboard">Dashboard</Link>
+          </Button>
         </nav>
       </header>
       <main className="flex-1 z-10">

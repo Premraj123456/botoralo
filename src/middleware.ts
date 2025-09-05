@@ -1,15 +1,10 @@
-import { authMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-export default authMiddleware({
-  publicRoutes: [
-    "/", 
-    "/pricing", 
-    "/terms", 
-    "/privacy", 
-    "/sign-in", 
-    "/sign-up"
-  ],
-});
+// This is a placeholder middleware to disable the faulty Clerk integration.
+export function middleware(request: NextRequest) {
+  return NextResponse.next();
+}
 
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],

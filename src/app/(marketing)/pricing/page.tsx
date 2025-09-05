@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/card';
 import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, useUser } from '@clerk/nextjs';
 import { createStripeCheckout } from '@/lib/stripe/actions';
 import { toast } from '@/hooks/use-toast';
 import { useState } from 'react';
@@ -56,22 +55,23 @@ const plans = [
 ];
 
 export default function PricingPage() {
-  const { user } = useUser();
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
 
   const handleCheckout = async (priceId: string) => {
-    if (!user) {
-      toast({
-        title: 'Please sign in',
-        description: 'You must be signed in to purchase a plan.',
-        variant: 'destructive',
-      });
-      return;
-    }
+    // Temporarily disabled user check
+    // if (!user) {
+    //   toast({
+    //     title: 'Please sign in',
+    //     description: 'You must be signed in to purchase a plan.',
+    //     variant: 'destructive',
+    //   });
+    //   return;
+    // }
     setLoadingPriceId(priceId);
     try {
       const { sessionId, checkoutError } = await createStripeCheckout(
-        user.primaryEmailAddress!.emailAddress,
+        // Temporarily using a placeholder email
+        'test@example.com',
         priceId
       );
 
@@ -116,24 +116,12 @@ export default function PricingPage() {
           <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <SignedOut>
-            <SignInButton>
-              <Button variant="ghost" size="sm">
-                Login
-              </Button>
-            </SignInButton>
-            <SignUpButton>
-              <Button size="sm">Sign Up</Button>
-            </SignUpButton>
-          </SignedOut>
-          <SignedIn>
-            <Link
-              href="/dashboard"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Dashboard
-            </Link>
-          </SignedIn>
+          <Link
+            href="/dashboard"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Dashboard
+          </Link>
         </nav>
       </header>
       <main className="py-12 md:py-20 lg:py-24 z-10 relative">
