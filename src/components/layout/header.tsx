@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from '@/components/ui/button';
 import { Link } from './page-loader';
 import { LogOut } from 'lucide-react';
