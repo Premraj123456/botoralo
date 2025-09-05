@@ -1,11 +1,11 @@
+
 import type { Metadata } from 'next';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
-import { getLoggedInUser } from '@/lib/appwrite/actions';
+import { stackServerApp } from '@stackframe/stack/next-server/app';
 import { redirect } from 'next/navigation';
-
 
 export const metadata: Metadata = {
   title: 'BotPilot Dashboard',
@@ -17,7 +17,8 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getLoggedInUser();
+  const stack = await stackServerApp();
+  const user = await stack.getUser();
 
   if (!user) {
     redirect('/sign-in');

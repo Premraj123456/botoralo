@@ -1,47 +1,11 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { getLoggedInUser } from './lib/appwrite/actions';
 
-const publicRoutes = [
-    "/",
-    "/pricing",
-    "/terms",
-    "/privacy",
-    "/sign-in",
-    "/sign-up",
-];
+import { stackMiddleware } from "@stackframe/stack/next-server/app";
 
-const protectedRoutes = [
-    "/dashboard",
-    "/dashboard/bots",
-    "/dashboard/billing",
-    "/dashboard/settings",
-];
-
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  try {
-    const user = await getLoggedInUser();
-
-    if (user && (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up'))) {
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-    }
-    
-    if (!user && protectedRoutes.some(path => pathname.startsWith(path))) {
-        return NextResponse.redirect(new URL('/sign-in', request.url));
-    }
-
-  } catch (error) {
-     console.log("Middleware error:", error);
-     // If session check fails, redirect to sign-in for protected routes
-     if (protectedRoutes.some(path => pathname.startsWith(path))) {
-        return NextResponse.redirect(new URL('/sign-in', request.url));
-     }
-  }
-
-  return NextResponse.next();
-}
+export const middleware = stackMiddleware({
+  // The default is to redirect to `/sign-in`,
+  // but you can also provide a url to a different page.
+  unauthenticatedUrl: "/sign-in",
+});
 
 export const config = {
   matcher: [

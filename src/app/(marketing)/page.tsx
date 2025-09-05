@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button'
 import { Bot, Code, Rocket, ArrowRight, LayoutDashboard } from 'lucide-react'
 import { Link } from '@/components/layout/page-loader'
@@ -5,6 +6,7 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
+import { stackServerApp } from '@stackframe/stack/next-server/app'
 
 const testimonials = [
   {
@@ -47,8 +49,8 @@ const faqs = [
 ]
 
 export default async function LandingPage() {
-  // In a real app, you would check the user's auth state here
-  const user = null; // Mocked for now
+  const stack = await stackServerApp();
+  const user = await stack.getUser();
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
