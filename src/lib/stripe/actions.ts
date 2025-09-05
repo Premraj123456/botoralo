@@ -35,7 +35,7 @@ export async function createStripeCheckout(email: string, priceId: string) {
       cancel_url: `${origin}/pricing`,
     });
 
-    return { sessionId: session.id };
+    return { url: session.url };
   } catch (e) {
     console.error(e);
     return { checkoutError: (e as Error).message };
@@ -75,21 +75,30 @@ export async function seedStripeProducts() {
 
     // 3. Update the .env file
     const envPath = path.resolve(process.cwd(), '.env');
-    let envFileContent = await fs.readFile(envPath, 'utf-8');
+    let envFileContent = '';
+    try {
+        envFileContent = await fs.readFile(envPath, 'utf-8');
+    } catch (e) {
+        // File might not exist, that's okay.
+    }
 
-    // Update Pro plan price ID
-    envFileContent = envFileContent.replace(
-      /^NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID=.*/m,
-      `NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID=${proPrice.id}`
-    );
+    const updates = {
+      NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID: proPrice.id,
+      NEXT_PUBLIC_STRIPE_POWER_PLAN_PRICE_ID: powerPrice.id,
+    };
 
-    // Update Power plan price ID
-    envFileContent = envFileContent.replace(
-      /^NEXT_PUBLIC_STRIPE_POWER_PLAN_PRICE_ID=.*/m,
-      `NEXT_PUBLIC_STRIPE_POWER_PLAN_PRICE_ID=${powerPrice.id}`
-    );
-
-    await fs.writeFile(envPath, envFileContent);
+    for (const [key, value] of Object.entries(updates)) {
+        if (envFileContent.includes(key)) {
+            envFileContent = envFileContent.replace(
+                new RegExp(`^${key}=.*`, 'm'),
+                `${key}=${value}`
+            );
+        } else {
+            envFileContent += `\n${key}=${value}`;
+        }
+    }
+    
+    await fs.writeFile(envPath, envFileContent.trim());
     
     console.log('Successfully created products and updated .env file.');
     console.log(`Pro Plan Price ID: ${proPrice.id}`);

@@ -13,7 +13,6 @@ import { Link } from '@/components/layout/page-loader';
 import { createStripeCheckout } from '@/lib/stripe/actions';
 import { toast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import { getStripe } from '@/lib/stripe/client';
 
 const plans = [
   {
@@ -58,41 +57,24 @@ export default function PricingPage() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
 
   const handleCheckout = async (priceId: string) => {
-    // Temporarily disabled user check
-    // if (!user) {
-    //   toast({
-    //     title: 'Please sign in',
-    //     description: 'You must be signed in to purchase a plan.',
-    //     variant: 'destructive',
-    //   });
-    //   return;
-    // }
     setLoadingPriceId(priceId);
     try {
-      const { sessionId, checkoutError } = await createStripeCheckout(
+      const { url, checkoutError } = await createStripeCheckout(
         // Temporarily using a placeholder email
         'test@example.com',
         priceId
       );
 
-      if (!sessionId || checkoutError) {
+      if (!url || checkoutError) {
         throw new Error(checkoutError || 'Failed to create checkout session.');
       }
-
-      const stripe = await getStripe();
-      if (!stripe) {
-        throw new Error("Stripe.js has not loaded yet.");
+      
+      if (window.top) {
+        window.top.location.href = url;
+      } else {
+        window.location.href = url;
       }
 
-      const { error } = await stripe.redirectToCheckout({ sessionId });
-      if (error) {
-        console.error(error);
-        toast({
-          title: 'Checkout Error',
-          description: error.message || 'An unexpected error occurred.',
-          variant: 'destructive',
-        });
-      }
     } catch (error) {
       console.error(error);
       toast({
