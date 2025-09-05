@@ -4,6 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Link } from './page-loader';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 export function Header({ user }: { user: { displayName: string } | null }) {
@@ -21,15 +30,33 @@ export function Header({ user }: { user: { displayName: string } | null }) {
         {/* Optional: Add search or other header elements here */}
       </div>
       {user ? (
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground hidden sm:inline-block">
-            {user.displayName}
-          </span>
-          <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="secondary" size="icon" className="rounded-full">
+              <Avatar>
+                {/* Add AvatarImage if you have user avatars */}
+                {/* <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" /> */}
+                <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <span className="sr-only">Toggle user menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{user.displayName}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+              Settings
+            </DropdownMenuItem>
+             <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
+              Billing
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Log out</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ) : (
         <Button asChild>
           <Link href="/sign-in">
