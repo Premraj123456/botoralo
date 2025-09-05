@@ -19,8 +19,7 @@ const Page = () => {
             signupExpirationMinutes: 30,
             // B2B magic links require an organization_id.
             // You can get this from a URL slug, or have users select from a list.
-            // For this example, we'll use a placeholder.
-            organizationId: "organization-id-placeholder", 
+            organizationId: "organization-live-4080055a-5b0e-47b5-9336-a74b4eac38fa", 
           }
         }
       });
