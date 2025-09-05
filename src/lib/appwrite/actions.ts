@@ -1,8 +1,8 @@
 'use server';
 
-import { databases, users } from './auth.server';
-import { getLoggedInUser } from '@/lib/appwrite/auth.server';
-import { ID, Query } from 'node-appwrite';
+import { databases } from '@/lib/appwrite';
+import { getCurrentUser } from '@/lib/stack/auth';
+import { ID, Query } from 'appwrite';
 
 const BOTS_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
 const BOTS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_BOTS_COLLECTION_ID!;
@@ -14,7 +14,7 @@ export async function getUserSubscription() {
 }
 
 export async function createBot(data: { name: string, code: string }) {
-  const user = await getLoggedInUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error('Not authenticated');
 
   const bot = await databases.createDocument(
@@ -24,7 +24,7 @@ export async function createBot(data: { name: string, code: string }) {
     {
       name: data.name,
       code: data.code,
-      ownerId: user.$id,
+      ownerId: user.id,
       status: 'stopped',
     }
   );
@@ -33,19 +33,19 @@ export async function createBot(data: { name: string, code: string }) {
 }
 
 export async function getUserBots() {
-  const user = await getLoggedInUser();
+  const user = await getCurrentUser();
   if (!user) return [];
 
   const { documents } = await databases.listDocuments(
     BOTS_DATABASE_ID,
     BOTS_COLLECTION_ID,
-    [Query.equal('ownerId', user.$id)]
+    [Query.equal('ownerId', user.id)]
   );
   return documents;
 }
 
 export async function getBotById(botId: string) {
-  const user = await getLoggedInUser();
+  const user = await getCurrentUser();
   if (!user) throw new Error('Not authenticated');
 
   const bot = await databases.getDocument(
@@ -54,7 +54,7 @@ export async function getBotById(botId: string) {
     botId
   );
 
-  if (bot.ownerId !== user.$id) {
+  if (bot.ownerId !== user.id) {
     throw new Error('Not authorized');
   }
   

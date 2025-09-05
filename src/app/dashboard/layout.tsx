@@ -3,20 +3,17 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
-import { getLoggedInUser } from '@/lib/appwrite/auth.server';
 
 export const metadata: Metadata = {
   title: 'BotPilot Dashboard',
   description: 'Manage your crypto bots.',
 };
 
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getLoggedInUser();
-
   return (
     <div className="dark:bg-grid-white/[0.05] bg-grid-black/[0.02] relative min-h-screen">
       <aside className="fixed top-0 left-0 z-20 h-screen w-64 border-r border-border/50 bg-background hidden md:flex md:flex-col">
@@ -29,7 +26,7 @@ export default async function DashboardLayout({
         <SidebarNav />
       </aside>
       <div className="md:ml-64">
-        <Header user={user} />
+        <Header />
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
           {children}
         </main>

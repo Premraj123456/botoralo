@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { Link } from './page-loader';
 import { LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,17 +12,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { logout } from '@/lib/appwrite/auth';
-import type { Models } from 'appwrite';
+import { useUser, useSignOut } from '@stackframe/stack';
 
-export function Header({ user }: { user: Models.User<Models.Preferences> | null }) {
-    const router = useRouter();
-
-    const handleSignOut = async () => {
-        await logout();
-        router.push('/sign-in');
-        router.refresh();
-    };
+export function Header() {
+    const user = useUser();
+    const signOut = useSignOut();
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background/60 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30 backdrop-blur-sm">
@@ -35,22 +28,26 @@ export function Header({ user }: { user: Models.User<Models.Preferences> | null 
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
               <Avatar>
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
+            <DropdownMenuLabel>{user.displayName}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
-              Settings
-            </DropdownMenuItem>
-             <DropdownMenuItem onClick={() => router.push('/dashboard/billing')}>
-              Billing
-            </DropdownMenuItem>
+            <Link href="/dashboard/settings">
+              <DropdownMenuItem>
+                Settings
+              </DropdownMenuItem>
+            </Link>
+             <Link href="/dashboard/billing">
+              <DropdownMenuItem>
+                Billing
+              </DropdownMenuItem>
+            </Link>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
+            <DropdownMenuItem onClick={() => signOut(() => window.location.href = '/')}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>
