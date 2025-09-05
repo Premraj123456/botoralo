@@ -3,17 +3,32 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
+import { createClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+
 
 export const metadata: Metadata = {
   title: 'BotPilot Dashboard',
   description: 'Manage your crypto bots.',
 };
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    redirect('/auth');
+  }
+
   return (
     <div className="dark:bg-grid-white/[0.05] bg-grid-black/[0.02] relative min-h-screen">
       <aside className="fixed top-0 left-0 z-20 h-screen w-64 border-r border-border/50 bg-background hidden md:flex md:flex-col">
