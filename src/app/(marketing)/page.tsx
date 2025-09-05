@@ -5,8 +5,7 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { stackServerApp } from '@stackframe/stack/next-server';
 
 const testimonials = [
   {
@@ -49,9 +48,8 @@ const faqs = [
 ]
 
 export default async function LandingPage() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-  const { data: { session } } = await supabase.auth.getSession();
+  const stack = await stackServerApp();
+  const user = await stack.getUser();
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
@@ -91,7 +89,7 @@ export default async function LandingPage() {
             Pricing
           </Link>
           <div className="flex items-center gap-2">
-            {session ? (
+            {user ? (
               <Button asChild>
                 <Link href="/dashboard">
                   <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -100,7 +98,7 @@ export default async function LandingPage() {
               </Button>
             ) : (
               <Button asChild>
-                <Link href="/auth">
+                <Link href="/sign-in">
                   Get Started
                 </Link>
               </Button>
@@ -125,7 +123,7 @@ export default async function LandingPage() {
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
                    <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href="/dashboard">
+                    <Link href={user ? "/dashboard" : "/sign-in"}>
                       Get Started Free
                       <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </Link>
@@ -282,7 +280,7 @@ export default async function LandingPage() {
                 </p>
                 <div className="mt-8">
                    <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href="/dashboard">
+                    <Link href={user ? "/dashboard" : "/sign-in"}>
                       Start Deploying Now
                       <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </Link>

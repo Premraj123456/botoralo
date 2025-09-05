@@ -1,40 +1,26 @@
-import { type NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/middleware';
+import { stackMiddleware } from "@stackframe/stack/next-server";
 
-export async function middleware(request: NextRequest) {
-  const { supabase, response } = createClient(request);
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const { pathname } = request.nextUrl;
-
-  // Redirect to dashboard if user is logged in and tries to access auth page
-  if (session && pathname === '/auth') {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
-  // Redirect to auth if user is not logged in and tries to access a protected route
-  if (!session && pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/auth', request.url));
-  }
-  
-  // Refresh session if expired - important for server components
-  await supabase.auth.getUser();
-
-  return response;
-}
+export const middleware = stackMiddleware({
+  // The default is to redirect to `/sign-in`,
+  unauthenticated: "/sign-in",
+  publicRoutes: [
+    "/",
+    "/pricing",
+    "/terms",
+    "/privacy",
+  ],
+});
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/'
   ],
 };

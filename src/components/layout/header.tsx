@@ -1,21 +1,40 @@
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-import AuthButton from './auth-button';
+import { Button } from '@/components/ui/button';
+import { type User } from '@stackframe/stack';
+import { Link } from './page-loader';
+import { LogOut } from 'lucide-react';
+import { stackServerApp } from '@stackframe/stack/next-server';
 
-export async function Header() {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
+async function signOutAction() {
+  'use server';
+  const stack = await stackServerApp();
+  await stack.signOut();
+}
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export function Header({ user }: { user: User | null }) {
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background/60 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30 backdrop-blur-sm">
       <div className="w-full flex-1">
         {/* Optional: Add search or other header elements here */}
       </div>
-      <AuthButton user={user} />
+      {user ? (
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground hidden sm:inline-block">
+            {user.displayName}
+          </span>
+          <form action={signOutAction}>
+            <Button variant="outline" type="submit">
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </Button>
+          </form>
+        </div>
+      ) : (
+        <Button asChild>
+          <Link href="/sign-in">
+            Sign In
+          </Link>
+        </Button>
+      )}
     </header>
   )
 }

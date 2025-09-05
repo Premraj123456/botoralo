@@ -3,10 +3,7 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
-import { createClient } from '@/lib/supabase/server';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-
+import { stackServerApp } from '@stackframe/stack/next-server';
 
 export const metadata: Metadata = {
   title: 'BotPilot Dashboard',
@@ -18,15 +15,11 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = cookies();
-  const supabase = createClient(cookieStore);
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session) {
-    redirect('/auth');
+  const stack = await stackServerApp();
+  const user = await stack.getUser();
+  if (!user) {
+    // This should be handled by middleware, but as a backup
+    return new Response('Unauthorized', { status: 401 });
   }
 
   return (
@@ -41,7 +34,7 @@ export default async function DashboardLayout({
         <SidebarNav />
       </aside>
       <div className="md:ml-64">
-        <Header />
+        <Header user={user} />
         <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
           {children}
         </main>
