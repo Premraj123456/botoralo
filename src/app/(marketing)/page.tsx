@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/button'
-import { Bot, Code, Rocket, ArrowRight } from 'lucide-react'
+import { Bot, Code, Rocket, ArrowRight, LogIn, LayoutDashboard } from 'lucide-react'
 import { Link } from '@/components/layout/page-loader'
 import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
+import { createClient } from '@/lib/supabase/server'
+import { cookies } from 'next/headers'
 
 const testimonials = [
   {
@@ -46,7 +48,11 @@ const faqs = [
   }
 ]
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const cookieStore = cookies();
+  const supabase = createClient(cookieStore);
+  const { data: { session } } = await supabase.auth.getSession();
+
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
        <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.05] z-0">
@@ -84,6 +90,23 @@ export default function LandingPage() {
           >
             Pricing
           </Link>
+          <div className="flex items-center gap-2">
+            {session ? (
+              <Button asChild>
+                <Link href="/dashboard">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <Button asChild variant="outline">
+                <Link href="/auth">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign In
+                </Link>
+              </Button>
+            )}
+          </div>
         </nav>
       </header>
       <main className="flex-1 z-10">
