@@ -10,7 +10,8 @@ const AuthenticatePage = () => {
   useEffect(() => {
     const authenticateToken = async () => {
       try {
-        await stytch.magicLinks.authenticate(window.location.search);
+        // Use the B2B-specific authentication method
+        await stytch.magicLinks.email.authenticate();
         // Authentication successful, redirect to dashboard
         router.replace('/dashboard');
       } catch (error) {
