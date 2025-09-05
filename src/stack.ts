@@ -1,4 +1,4 @@
-import { Stack } from '@stackframe/stack/server';
+import { Stack } from '@stackframe/stack';
 
 export const stack = new Stack({
   project: 'projectnine',
