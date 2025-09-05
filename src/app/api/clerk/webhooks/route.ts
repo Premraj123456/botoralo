@@ -4,15 +4,6 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { users } from '@/lib/appwrite';
 import { NextResponse } from 'next/server';
 
-// This is a generic User type from Clerk, it might not have all fields
-type User = {
-  id: string;
-  email_addresses: { email_address: string }[];
-  first_name: string | null;
-  last_name: string | null;
-  image_url: string;
-}
-
 export async function POST(req: Request) {
 
   // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
@@ -58,26 +49,23 @@ export async function POST(req: Request) {
     })
   }
 
-  const { id } = evt.data;
   const eventType = evt.type;
   
-  console.log(`Webhook with an ID of ${id} and type of ${eventType}`)
-  
   if (eventType === 'user.created') {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
+    const { id, email_addresses, first_name, last_name } = evt.data;
     const email = email_addresses[0]?.email_address;
     
+    if (!id || !email) {
+       return NextResponse.json({ error: 'Missing user ID or email' }, { status: 400 });
+    }
+
     try {
-      // Appwrite expects a unique user ID, name, email, and password.
-      // Since Clerk handles passwords, we can use a secure random password or a placeholder.
-      // Here, we'll let Appwrite generate the user with a placeholder password,
-      // as Clerk is the source of truth for authentication.
       await users.create(
-        id, // Use Clerk's user ID as Appwrite's user ID
+        id,
         email,
         undefined, // phone
-        'password', // Placeholder, Clerk manages auth
-        `${first_name} ${last_name}`.trim()
+        undefined, // password - let Appwrite handle or set null if not needed
+        `${first_name || ''} ${last_name || ''}`.trim()
       );
       console.log(`User ${id} created in Appwrite.`);
     } catch (error) {
