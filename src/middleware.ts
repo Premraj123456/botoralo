@@ -1,7 +1,6 @@
 import { authMiddleware } from "@clerk/nextjs/server";
 
 export default authMiddleware({
-  // Ensure that creator-facing routes are protected
   publicRoutes: [
     "/",
     "/pricing",
@@ -13,5 +12,5 @@ export default authMiddleware({
 });
 
 export const config = {
-  matcher: ['/((?!.*\\..*|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };
