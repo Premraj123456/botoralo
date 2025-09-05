@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Bot, Code, Rocket, ArrowRight, LogIn, LayoutDashboard } from 'lucide-react'
+import { Bot, Code, Rocket, ArrowRight, LayoutDashboard } from 'lucide-react'
 import { Link } from '@/components/layout/page-loader'
 import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -99,9 +99,8 @@ export default async function LandingPage() {
                 </Link>
               </Button>
             ) : (
-              <Button asChild variant="outline">
+              <Button asChild>
                 <Link href="/auth">
-                  <LogIn className="mr-2 h-4 w-4" />
                   Get Started
                 </Link>
               </Button>
