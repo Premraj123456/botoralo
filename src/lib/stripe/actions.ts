@@ -6,14 +6,24 @@ import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
 
-// Mock database for user subscriptions
-const userSubscriptions: { [userId: string]: { plan: string; botLimit: number } } = {};
+// This is a mock database for user subscriptions.
+// In a real application, you would use a proper database.
+// The key is the 'client_reference_id' passed during checkout.
+const userSubscriptions: { [userId: string]: { plan: string; customerId: string | null } } = {
+  'user_placeholder': { plan: 'Free', customerId: null }
+};
 
-export async function getUserSubscription(userId: string) {
-  // In a real app, you would fetch this from your database.
-  // Here, we'll use a mock object and default to the free plan.
-  const subscription = userSubscriptions[userId] || { plan: 'Free', botLimit: 1 };
-  return subscription;
+// Hardcoded user for demo purposes, as there is no authentication.
+const MOCK_USER_ID = 'user_placeholder';
+
+export async function getUserSubscription() {
+  // In a real app, you would fetch this from your database based on the logged-in user.
+  return userSubscriptions[MOCK_USER_ID] || { plan: 'Free', customerId: null };
+}
+
+export async function updateUserSubscription(userId: string, plan: string, customerId: string) {
+    console.log(`Updating subscription for ${userId} to ${plan} with customer ID ${customerId}`);
+    userSubscriptions[userId] = { plan, customerId };
 }
 
 
@@ -29,9 +39,12 @@ export async function createStripeCheckout(email: string, priceId: string) {
           quantity: 1,
         },
       ],
+      // We are using a hardcoded user ID here because there is no authentication.
+      // In a real app, you would use the authenticated user's ID.
+      client_reference_id: MOCK_USER_ID, 
       customer_email: email,
       mode: 'subscription',
-      success_url: `${origin}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/dashboard?subscription_success=true`,
       cancel_url: `${origin}/pricing`,
     });
 
@@ -41,6 +54,28 @@ export async function createStripeCheckout(email: string, priceId: string) {
     return { checkoutError: (e as Error).message };
   }
 }
+
+export async function createStripeBillingPortalSession() {
+    try {
+        const subscription = await getUserSubscription();
+        if (!subscription.customerId) {
+            throw new Error("User does not have a subscription to manage.");
+        }
+
+        const origin = headers().get('origin') || 'http://localhost:9002';
+
+        const portalSession = await stripe.billingPortal.sessions.create({
+            customer: subscription.customerId,
+            return_url: `${origin}/dashboard/billing`,
+        });
+
+        return { url: portalSession.url };
+    } catch (e) {
+        console.error(e);
+        return { portalError: (e as Error).message };
+    }
+}
+
 
 // Action to create products and update .env file
 export async function seedStripeProducts() {
