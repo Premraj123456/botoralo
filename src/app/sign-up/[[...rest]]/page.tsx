@@ -6,15 +6,15 @@ import React from 'react';
 const sdkConfig: StytchLoginConfig = {
   products: ['emailMagicLinks', 'oauth'],
   emailMagicLinksOptions: {
-    loginRedirectURL: 'http://localhost:9002/authenticate',
-    signupRedirectURL: 'http://localhost:9002/authenticate',
+    loginRedirectURL: '/authenticate',
+    signupRedirectURL: '/authenticate',
     loginExpirationMinutes: 30,
     signupExpirationMinutes: 30,
   },
   oauthOptions: {
     providers: [{ type: 'google' }],
-    loginRedirectURL: 'http://localhost:9002/authenticate',
-    signupRedirectURL: 'http://localhost:9002/authenticate',
+    loginRedirectURL: '/authenticate',
+    signupRedirectURL: '/authenticate',
   },
 };
 
