@@ -1,21 +1,23 @@
+import { NextResponse, type NextRequest } from 'next/server';
+import { getLoggedInUser } from '@/lib/appwrite/auth.server';
 
-import { stackMiddleware } from "@stackframe/stack/next-server/app";
+export async function middleware(request: NextRequest) {
+  const user = await getLoggedInUser();
+  const { pathname } = request.nextUrl;
 
-export const middleware = stackMiddleware({
-  // The default is to redirect to `/sign-in`,
-  // but you can also provide a url to a different page.
-  unauthenticatedUrl: "/sign-in",
-});
+  const authRoutes = ['/sign-in', '/sign-up'];
+
+  if (user && authRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  if (!user && pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/sign-in', request.url));
+  }
+  
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

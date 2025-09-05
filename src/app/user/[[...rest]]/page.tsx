@@ -1,7 +1,7 @@
-import { UserProfile } from '@stackframe/stack';
+// This file is no longer needed with Appwrite authentication.
+// User profile can be managed in the dashboard settings.
+import { redirect } from 'next/navigation';
 
-const UserProfilePage = () => {
-  return <UserProfile />;
-};
-
-export default UserProfilePage;
+export default function UserProfilePage() {
+  redirect('/dashboard/settings');
+}

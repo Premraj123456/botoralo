@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button'
 import { Bot, Code, Rocket, ArrowRight, LayoutDashboard } from 'lucide-react'
 import { Link } from '@/components/layout/page-loader'
@@ -6,7 +5,7 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { stackServerApp } from '@stackframe/stack/next-server/app'
+import { getLoggedInUser } from '@/lib/appwrite/auth.server'
 
 const testimonials = [
   {
@@ -49,8 +48,7 @@ const faqs = [
 ]
 
 export default async function LandingPage() {
-  const stack = await stackServerApp();
-  const user = await stack.getUser();
+  const user = await getLoggedInUser();
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">
