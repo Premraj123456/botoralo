@@ -12,10 +12,11 @@ export const getCurrentUser = async () => {
     }
 
     try {
-        const session = await stytchClient.sessions.authenticate({
+        const { member, organization, session } = await stytchClient.sessions.authenticate({
             session_token,
         });
-        return session;
+        // The B2B user object is called a 'member'
+        return { session, user: member, organization };
     } catch (e) {
         // Session not found or invalid
         return { session: null, user: null };
