@@ -7,7 +7,7 @@ export default function AuthUI() {
     const supabase = createClient();
 
     return (
-        <div className="w-full max-w-md p-8 space-y-8 bg-card/80 backdrop-blur-sm border border-border/50 rounded-lg shadow-2xl">
+        <div className="w-full max-w-md">
             <Auth
                 supabaseClient={supabase}
                 appearance={{ 
@@ -19,6 +19,13 @@ export default function AuthUI() {
                                 brandAccent: 'hsl(var(--primary) / 0.8)',
                             }
                         }
+                    },
+                    style: {
+                      container: {
+                        border: 'none',
+                        boxShadow: 'none',
+                        padding: '0'
+                      }
                     }
                  }}
                 theme="dark"
