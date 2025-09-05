@@ -12,11 +12,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useUser, useSignOut } from '@stackframe/stack';
+import { useStytch, useStytchUser } from '@stytch/nextjs';
+import { useRouter } from 'next/navigation';
 
 export function Header() {
-    const user = useUser();
-    const signOut = useSignOut();
+    const { user } = useStytchUser();
+    const stytch = useStytch();
+    const router = useRouter();
+
+    const getInitials = () => {
+        const email = user?.emails?.[0]?.email;
+        if (email) {
+            return email.charAt(0).toUpperCase();
+        }
+        return 'U';
+    }
+    
+    const signOut = async () => {
+        await stytch.session.revoke();
+        router.push('/');
+    }
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background/60 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30 backdrop-blur-sm">
@@ -28,13 +43,13 @@ export function Header() {
           <DropdownMenuTrigger asChild>
             <Button variant="secondary" size="icon" className="rounded-full">
               <Avatar>
-                <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
+                <AvatarFallback>{getInitials()}</AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user.displayName}</DropdownMenuLabel>
+            <DropdownMenuLabel>{user.emails?.[0]?.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <Link href="/dashboard/settings">
               <DropdownMenuItem>
@@ -47,7 +62,7 @@ export function Header() {
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut(() => window.location.href = '/')}>
+            <DropdownMenuItem onClick={signOut}>
               <LogOut className="mr-2 h-4 w-4" />
               <span>Log out</span>
             </DropdownMenuItem>

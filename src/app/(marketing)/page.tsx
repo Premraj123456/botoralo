@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { getCurrentUser } from '@/lib/stack/auth'
+import { getCurrentUser } from '@/lib/stytch/auth'
 
 const testimonials = [
   {
@@ -48,7 +48,7 @@ const faqs = [
 ]
 
 export default async function LandingPage() {
-  const user = await getCurrentUser();
+  const { user } = await getCurrentUser();
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">

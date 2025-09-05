@@ -1,3 +1,31 @@
-import { stack } from '@/stack';
+'use client';
+import { StytchLogin } from '@stytch/nextjs';
+import { StytchLoginConfig } from '@stytch/vanilla-js';
+import React from 'react';
 
-export default stack.auth.SignInPage;
+const sdkConfig: StytchLoginConfig = {
+  products: ['emailMagicLinks', 'oauth'],
+  emailMagicLinksOptions: {
+    loginRedirectURL: 'http://localhost:9002/authenticate',
+    signupRedirectURL: 'http://localhost:9002/authenticate',
+    loginExpirationMinutes: 30,
+    signupExpirationMinutes: 30,
+  },
+  oauthOptions: {
+    providers: [{ type: 'google' }],
+    loginRedirectURL: 'http://localhost:9002/authenticate',
+    signupRedirectURL: 'http://localhost:9002/authenticate',
+  },
+};
+
+const Page = () => {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+      <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
+         <StytchLogin config={sdkConfig} />
+      </div>
+    </div>
+  );
+};
+
+export default Page;
