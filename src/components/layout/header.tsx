@@ -1,16 +1,18 @@
 import { Button } from '@/components/ui/button';
-import { type User } from '@stackframe/stack';
 import { Link } from './page-loader';
 import { LogOut } from 'lucide-react';
-import { stackServerApp } from '@stackframe/stack/next-server';
+import { useRouter } from 'next/navigation';
 
-async function signOutAction() {
-  'use server';
-  const stack = await stackServerApp();
-  await stack.signOut();
-}
 
-export function Header({ user }: { user: User | null }) {
+export function Header({ user }: { user: { displayName: string } | null }) {
+    const router = useRouter();
+
+    const handleSignOut = async () => {
+        // In a real app, you would call your auth provider's sign out method
+        console.log("Signing out...");
+        router.push('/sign-in');
+    };
+
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-background/60 px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30 backdrop-blur-sm">
       <div className="w-full flex-1">
@@ -21,12 +23,10 @@ export function Header({ user }: { user: User | null }) {
           <span className="text-sm text-muted-foreground hidden sm:inline-block">
             {user.displayName}
           </span>
-          <form action={signOutAction}>
-            <Button variant="outline" type="submit">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
-            </Button>
-          </form>
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+          </Button>
         </div>
       ) : (
         <Button asChild>

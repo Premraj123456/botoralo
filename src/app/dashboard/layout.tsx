@@ -3,7 +3,6 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
-import { stackServerApp } from '@stackframe/stack/next-server';
 
 export const metadata: Metadata = {
   title: 'BotPilot Dashboard',
@@ -15,8 +14,11 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const stack = await stackServerApp();
-  const user = await stack.getUser();
+  // In a real app, you would get the user from your auth provider
+  const user = {
+    displayName: "Demo User"
+  }; // Mocked for now
+
   if (!user) {
     // This should be handled by middleware, but as a backup
     return new Response('Unauthorized', { status: 401 });
