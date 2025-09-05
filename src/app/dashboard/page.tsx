@@ -2,13 +2,15 @@ import { Link } from '@/components/layout/page-loader';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
-import { bots } from '@/lib/data';
+import { getUserBots, getUserSubscription } from '@/lib/appwrite/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-export default function Dashboard() {
-  // Mocks for subscription data as user is not available
-  const subscription = { plan: 'Free', botLimit: 1 };
-  const userBots = bots;
+export default async function Dashboard() {
+  const [subscription, userBots] = await Promise.all([
+    getUserSubscription(),
+    getUserBots(),
+  ]);
+
   const canCreateBot = userBots.length < (subscription.botLimit || 0);
 
   const CreateBotButton = () => (
@@ -40,10 +42,10 @@ export default function Dashboard() {
           </TooltipProvider>
         )}
       </div>
-      {bots.length > 0 ? (
+      {userBots.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {bots.map((bot) => (
-            <BotCard key={bot.id} bot={bot} />
+          {userBots.map((bot: any) => (
+            <BotCard key={bot.$id} bot={bot} />
           ))}
         </div>
       ) : (

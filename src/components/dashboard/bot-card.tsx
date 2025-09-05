@@ -3,11 +3,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import type { Bot } from "@/lib/types";
 import { Bot as BotIcon, Cpu, Power, Terminal, ArrowRight } from "lucide-react";
+import type { Models } from 'appwrite';
 
 type BotCardProps = {
-  bot: Bot;
+  bot: Models.Document;
 };
 
 const statusConfig = {
@@ -17,8 +17,12 @@ const statusConfig = {
 };
 
 export function BotCard({ bot }: BotCardProps) {
-  const { text, color } = statusConfig[bot.status];
-  const ramPercentage = (bot.ramUsage / bot.ramMax) * 100;
+  const statusInfo = statusConfig[bot.status as keyof typeof statusConfig] || statusConfig.stopped;
+  // Mock data, as these are not in the Appwrite model
+  const ramUsage = 0;
+  const ramMax = 128;
+  const uptime = 'N/A';
+  const ramPercentage = ramMax > 0 ? (ramUsage / ramMax) * 100 : 0;
 
   return (
     <Card className="bg-card/50 border-border/50 backdrop-blur-sm transition-all hover:border-primary/50 hover:bg-card group">
@@ -31,26 +35,26 @@ export function BotCard({ bot }: BotCardProps) {
             <span>{bot.name}</span>
           </CardTitle>
           <CardDescription>
-            Uptime: {bot.uptime}
+            Uptime: {uptime}
           </CardDescription>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center">
-            <div className={cn("h-2 w-2 rounded-full mr-2", color)} />
-            {text}
+            <div className={cn("h-2 w-2 rounded-full mr-2", statusInfo.color)} />
+            {statusInfo.text}
           </div>
           <div className="flex items-center gap-1">
             <Cpu className="h-4 w-4" />
-            <span>{bot.ramUsage}MB / {bot.ramMax}MB</span>
+            <span>{ramUsage}MB / {ramMax}MB</span>
           </div>
         </div>
         <Progress value={ramPercentage} className="h-2" />
       </CardContent>
       <CardFooter>
         <Button className="w-full" asChild variant="outline">
-          <Link href={`/dashboard/bots/${bot.id}`}>
+          <Link href={`/dashboard/bots/${bot.$id}`}>
             Manage Bot
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>

@@ -13,15 +13,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { Models } from 'appwrite';
+import { logout } from '@/lib/appwrite/actions';
 
 
-export function Header({ user }: { user: { displayName: string } | null }) {
+export function Header({ user }: { user: Models.User<Models.Preferences> | null }) {
     const router = useRouter();
 
     const handleSignOut = async () => {
-        // In a real app, you would call your auth provider's sign out method
-        console.log("Signing out...");
+        await logout();
         router.push('/sign-in');
+        router.refresh();
     };
 
   return (
@@ -36,13 +38,13 @@ export function Header({ user }: { user: { displayName: string } | null }) {
               <Avatar>
                 {/* Add AvatarImage if you have user avatars */}
                 {/* <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" /> */}
-                <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
+                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <span className="sr-only">Toggle user menu</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user.displayName}</DropdownMenuLabel>
+            <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
               Settings

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getLoggedInUser } from './lib/appwrite/actions';
 
 const publicRoutes = [
     "/",
@@ -10,23 +11,36 @@ const publicRoutes = [
     "/sign-up",
 ];
 
-export function middleware(request: NextRequest) {
+const protectedRoutes = [
+    "/dashboard",
+    "/dashboard/bots",
+    "/dashboard/billing",
+    "/dashboard/settings",
+];
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if the route is public
-  if (publicRoutes.some(path => pathname.startsWith(path))) {
-    return NextResponse.next();
+  try {
+    const user = await getLoggedInUser();
+
+    if (user && (pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up'))) {
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    
+    if (!user && protectedRoutes.some(path => pathname.startsWith(path))) {
+        return NextResponse.redirect(new URL('/sign-in', request.url));
+    }
+
+  } catch (error) {
+     console.log("Middleware error:", error);
+     // If session check fails, redirect to sign-in for protected routes
+     if (protectedRoutes.some(path => pathname.startsWith(path))) {
+        return NextResponse.redirect(new URL('/sign-in', request.url));
+     }
   }
 
-  // In a real app, you would check for a valid session cookie
-  const hasSession = request.cookies.has('mock-session');
-
-  if (!hasSession) {
-    // Redirect to sign-in page if not authenticated
-    return NextResponse.redirect(new URL('/sign-in', request.url))
-  }
-
-  return NextResponse.next()
+  return NextResponse.next();
 }
 
 export const config = {
@@ -39,6 +53,5 @@ export const config = {
      * - favicon.ico (favicon file)
      */
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
-    '/'
   ],
 };

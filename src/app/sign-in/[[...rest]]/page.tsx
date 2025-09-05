@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Bot, Loader2 } from "lucide-react";
 import { Link } from "@/components/layout/page-loader";
 import { useToast } from "@/hooks/use-toast";
+import { login } from "@/lib/appwrite/actions";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -28,15 +29,9 @@ export default function SignInPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // In a real app, you'd call your auth provider (e.g., Firebase)
-      console.log("Signing in with:", email, password);
-      // Mock successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast({
-        title: "Success!",
-        description: "You have been signed in.",
-      });
+      await login(email, password);
       router.push("/dashboard");
+      router.refresh(); // Important to re-fetch server components
     } catch (error) {
       toast({
         title: "Error",

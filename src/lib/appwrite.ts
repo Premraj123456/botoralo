@@ -1,13 +1,11 @@
-import { Client, Databases, Users } from 'node-appwrite';
+import { Client, Account } from 'appwrite';
 
-const client = new Client()
-    .setEndpoint(process.env.APPWRITE_ENDPOINT!)
-    .setProject(process.env.APPWRITE_PROJECT_ID!)
-    .setKey(process.env.APPWRITE_API_KEY!);
+const client = new Client();
 
-export const users = new Users(client);
-export const databases = new Databases(client);
+client
+    .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT!)
+    .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID!);
 
-// You can create a database and collection in your Appwrite project
-export const USER_DATABASE_ID = 'users'; 
-export const USER_COLLECTION_ID = 'profiles';
+export const account = new Account(client);
+
+export default client;

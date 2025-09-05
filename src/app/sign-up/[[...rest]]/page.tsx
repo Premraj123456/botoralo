@@ -16,10 +16,12 @@ import { Label } from "@/components/ui/label";
 import { Bot, Loader2 } from "lucide-react";
 import { Link } from "@/components/layout/page-loader";
 import { useToast } from "@/hooks/use-toast";
+import { signup } from "@/lib/appwrite/actions";
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -28,15 +30,9 @@ export default function SignUpPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // In a real app, you'd call your auth provider (e.g., Firebase)
-      console.log("Signing up with:", email, password);
-      // Mock successful signup
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast({
-        title: "Success!",
-        description: "Your account has been created.",
-      });
+      await signup(email, password, name);
       router.push("/dashboard");
+      router.refresh();
     } catch (error) {
       toast({
         title: "Error",
@@ -59,11 +55,22 @@ export default function SignUpPage() {
           </div>
           <CardTitle className="text-2xl">Create an Account</CardTitle>
           <CardDescription>
-            Enter your email and password to get started.
+            Enter your details to get started.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
+             <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Your Name"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

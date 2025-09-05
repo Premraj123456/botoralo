@@ -3,6 +3,9 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
+import { getLoggedInUser } from '@/lib/appwrite/actions';
+import { redirect } from 'next/navigation';
+
 
 export const metadata: Metadata = {
   title: 'BotPilot Dashboard',
@@ -14,14 +17,10 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // In a real app, you would get the user from your auth provider
-  const user = {
-    displayName: "Demo User"
-  }; // Mocked for now
+  const user = await getLoggedInUser();
 
   if (!user) {
-    // This should be handled by middleware, but as a backup
-    return new Response('Unauthorized', { status: 401 });
+    redirect('/sign-in');
   }
 
   return (
