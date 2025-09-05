@@ -123,7 +123,7 @@ export default async function LandingPage() {
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
                    <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
                     <Link href={user ? "/dashboard" : "/sign-in"}>
-                      Get Started Free
+                      {user ? 'Go to Dashboard' : 'Get Started Free'}
                       <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </Button>
