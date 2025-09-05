@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { stytchClient } from './server';
-import { getStytchSession } from '@stytch/nextjs/server';
+import { getStytchSession } from '@stytch/nextjs';
 
 export const getCurrentUser = async () => {
     return getStytchSession();

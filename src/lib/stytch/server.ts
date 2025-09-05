@@ -1,4 +1,4 @@
-import { loadStytch } from '@stytch/nextjs/server';
+import { loadStytch } from '@stytch/nextjs';
 import * as stytch from 'stytch';
 
 let client: stytch.Client;
