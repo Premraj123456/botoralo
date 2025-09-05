@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { seedStripeProducts } from '@/lib/stripe/actions';
 import { Loader2, Rocket } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from 'lucide-react';
 
 export default function SeedProductsPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function SeedProductsPage() {
       }
       toast({
         title: 'Success!',
-        description: 'Stripe products and prices have been created and your .env file has been updated.',
+        description: 'Stripe products and prices have been created and your .env file has been updated. You may need to refresh the pricing page.',
       });
     } catch (error) {
       console.error(error);
@@ -47,6 +49,13 @@ export default function SeedProductsPage() {
             </CardDescription>
         </CardHeader>
         <CardContent>
+            <Alert className="mb-4">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>One-Time Setup Required</AlertTitle>
+                <AlertDescription>
+                    To fix pricing page errors, please click the button below. This will sync your application with your Stripe account.
+                </AlertDescription>
+            </Alert>
             <p className="text-sm text-muted-foreground mb-4">
             Click the button below to begin. This is a one-time setup step.
             </p>
