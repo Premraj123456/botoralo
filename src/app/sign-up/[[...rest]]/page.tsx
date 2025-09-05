@@ -1,30 +1,32 @@
 'use client';
 import { StytchLogin } from '@stytch/nextjs';
-import type { StytchLoginConfig } from '@stytch/vanilla-js';
+import type { StytchB2BUIConfig } from '@stytch/vanilla-js';
 import React from 'react';
 
 const Page = () => {
-  const [sdkConfig, setSdkConfig] = React.useState<StytchLoginConfig | null>(null);
+  const [sdkConfig, setSdkConfig] = React.useState<StytchB2BUIConfig | null>(null);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const redirectURL = `${window.location.origin}/authenticate`;
       setSdkConfig({
-        products: ['emailMagicLinks', 'oauth'],
-        emailMagicLinksOptions: {
-          loginRedirectURL: redirectURL,
-          signupRedirectURL: redirectURL,
-          loginExpirationMinutes: 30,
-          signupExpirationMinutes: 30,
-        },
-        oauthOptions: {
-          providers: [{ type: 'google' }],
-          loginRedirectURL: redirectURL,
-          signupRedirectURL: redirectURL,
-        },
+        products: ['emailMagicLinks'],
+        b2bOptions: {
+          magicLinksOptions: {
+            loginRedirectURL: redirectURL,
+            signupRedirectURL: redirectURL,
+            loginExpirationMinutes: 30,
+            signupExpirationMinutes: 30,
+            // B2B magic links require an organization_id.
+            // You can get this from a URL slug, or have users select from a list.
+            // For this example, we'll use a placeholder.
+            organizationId: "organization-id-placeholder", 
+          }
+        }
       });
     }
   }, []);
+
 
   if (!sdkConfig) {
     return null; // or a loading spinner
