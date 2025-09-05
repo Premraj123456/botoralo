@@ -2,10 +2,18 @@
 
 import { cookies } from 'next/headers';
 import { loadStytchClient } from './server';
-import { getStytchSession } from '@stytch/nextjs/server';
 
 export const getCurrentUser = async () => {
-    return getStytchSession();
+    const stytchClient = loadStytchClient();
+    try {
+        const session = await stytchClient.sessions.authenticate({
+            session_token: cookies().get('stytch_session')?.value,
+        });
+        return session;
+    } catch (e) {
+        // Session not found
+        return { session: null, user: null };
+    }
 };
 
 export const stytchLogout = async () => {

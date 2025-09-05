@@ -13,7 +13,9 @@ import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { createStripeCheckout } from '@/lib/stripe/actions';
 import { toast } from '@/hooks/use-toast';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { useStytchUser } from '@stytch/nextjs';
+import { useRouter } from 'next/navigation';
 
 const plans = [
   {
@@ -56,18 +58,19 @@ const plans = [
 
 export default function PricingPage() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-  const checkoutLinkRef = useRef<HTMLAnchorElement>(null);
+  const { user } = useStytchUser();
+  const router = useRouter();
 
 
   const handleCheckout = async (priceId: string) => {
+    if (!user) {
+        router.push('/sign-in');
+        return;
+    }
+
     setLoadingPriceId(priceId);
     try {
-      const { url, checkoutError } = await createStripeCheckout(
-        // Temporarily using a placeholder email
-        'test@example.com',
-        priceId
-      );
+      const { url, checkoutError } = await createStripeCheckout(priceId);
 
       if (!url || checkoutError) {
         throw new Error(checkoutError || 'Failed to create checkout session.');
@@ -164,8 +167,8 @@ export default function PricingPage() {
                       {plan.cta}
                     </Button>
                   ) : (
-                    <Button asChild className="w-full mt-4" variant="outline">
-                      <Link href="/dashboard">{plan.cta}</Link>
+                     <Button asChild className="w-full mt-4" variant="outline">
+                      <Link href={user ? "/dashboard" : "/sign-in"}>{plan.cta}</Link>
                     </Button>
                   )}
                 </CardContent>

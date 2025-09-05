@@ -5,6 +5,7 @@ import { stripe } from './server';
 import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
+import { getCurrentUser } from '@/lib/stytch/auth';
 
 // This is a mock database for user subscriptions.
 // In a real application, you would use a proper database.
@@ -13,12 +14,17 @@ const userSubscriptions: { [userId: string]: { plan: string; customerId: string 
   'user_placeholder': { plan: 'Free', customerId: null }
 };
 
-// Hardcoded user for demo purposes, as there is no authentication.
-const MOCK_USER_ID = 'user_placeholder';
+// This function will now be updated to get the real user ID
+async function getUserIdForSubscription() {
+    const { user } = await getCurrentUser();
+    // Fallback to mock user if no user is logged in
+    return user ? user.user_id : 'user_placeholder';
+}
 
 export async function getUserSubscription() {
+  const userId = await getUserIdForSubscription();
   // In a real app, you would fetch this from your database based on the logged-in user.
-  return userSubscriptions[MOCK_USER_ID] || { plan: 'Free', customerId: null };
+  return userSubscriptions[userId] || { plan: 'Free', customerId: null };
 }
 
 export async function updateUserSubscription(userId: string, plan: string, customerId: string) {
@@ -27,8 +33,14 @@ export async function updateUserSubscription(userId: string, plan: string, custo
 }
 
 
-export async function createStripeCheckout(email: string, priceId: string) {
+export async function createStripeCheckout(priceId: string) {
   try {
+    const { user } = await getCurrentUser();
+
+    if (!user || !user.emails[0].email) {
+        throw new Error('User must be logged in to make a purchase.');
+    }
+
     const origin = headers().get('origin') || 'http://localhost:9002';
 
     const session = await stripe.checkout.sessions.create({
@@ -39,10 +51,8 @@ export async function createStripeCheckout(email: string, priceId: string) {
           quantity: 1,
         },
       ],
-      // We are using a hardcoded user ID here because there is no authentication.
-      // In a real app, you would use the authenticated user's ID.
-      client_reference_id: MOCK_USER_ID, 
-      customer_email: email,
+      client_reference_id: user.user_id, 
+      customer_email: user.emails[0].email,
       mode: 'subscription',
       success_url: `${origin}/dashboard?subscription_success=true`,
       cancel_url: `${origin}/pricing`,

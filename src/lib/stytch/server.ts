@@ -1,4 +1,3 @@
-import { loadStytch } from '@stytch/nextjs/server';
 import * as stytch from 'stytch';
 
 let stytchClient: stytch.Client;
@@ -10,7 +9,7 @@ const loadStytchClient = () => {
       : stytch.envs.live;
     
     stytchClient = new stytch.Client({
-      project_id: process.env.NEXT_PUBLIC_STYTCH_PROJECT_ID!,
+      project_id: process.env.STYTCH_PROJECT_ID!,
       secret: process.env.STYTCH_SECRET!,
       env: stytchEnv,
     });
