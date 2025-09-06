@@ -75,7 +75,10 @@ const SignInPage = () => {
           providers={[]}
           redirectTo={getRedirectURL()}
           showLinks={true}
-          view="magic_link"
+          view="sign_in"
+          queryParams={{
+            type: 'email_otp',
+          }}
           localization={{
             variables: {
               sign_in: {
@@ -83,7 +86,7 @@ const SignInPage = () => {
                 password_label: 'Your password',
                 email_input_placeholder: 'Your email address',
                 password_input_placeholder: 'Your password',
-                button_label: 'Send OTP',
+                button_label: 'Sign in with OTP',
                 social_provider_text: 'Sign in with {{provider}}',
                 link_text: 'Already have an account? Sign in',
                 confirmation_text: 'Check your email for the OTP'
@@ -93,7 +96,7 @@ const SignInPage = () => {
                 password_label: 'Create a password',
                 email_input_placeholder: 'Your email address',
                 password_input_placeholder: 'Your password',
-                button_label: 'Send OTP',
+                button_label: 'Sign up with OTP',
                 social_provider_text: 'Sign up with {{provider}}',
                 link_text: "Don't have an an account? Sign up",
                 confirmation_text: 'Check your email for the OTP',
