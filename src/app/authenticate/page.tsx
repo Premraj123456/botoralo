@@ -1,5 +1,5 @@
 'use client';
-import { StytchLogin } from '@stytch/nextjs/ui';
+import StytchLogin from '@stytch/nextjs/ui';
 import type { StytchLoginProps } from '@stytch/nextjs/ui';
 import { Products } from '@stytch/vanilla-js';
 import React, { useState, useEffect } from 'react';
