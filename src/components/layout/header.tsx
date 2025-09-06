@@ -55,14 +55,14 @@ export function Header({ user }: { user: User | null }) {
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
-            <form action={signOut}>
-                <button type="submit" className="w-full">
-                    <DropdownMenuItem>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                    </DropdownMenuItem>
-                </button>
-            </form>
+            <DropdownMenuItem asChild>
+                <form action={signOut} className="w-full">
+                    <button type="submit" className="w-full text-left flex items-center">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                    </button>
+                </form>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
