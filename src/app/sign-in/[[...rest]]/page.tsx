@@ -1,5 +1,5 @@
 'use client';
-import StytchLogin from '@stytch/nextjs';
+import StytchLogin from '@stytch/nextjs/b2b';
 import type { StytchB2BUIConfig } from '@stytch/vanilla-js';
 import React from 'react';
 
