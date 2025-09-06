@@ -2,12 +2,15 @@
 'use client';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import { createSupabaseClient } from '@/lib/supabase/client';
+import { createBrowserClient } from '@supabase/ssr';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 
 const SignInPage = () => {
-  const supabase = createSupabaseClient();
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const getRedirectURL = () => {
     let url =
