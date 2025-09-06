@@ -24,6 +24,8 @@ const AuthenticatePage = () => {
         otpOptions: {
           methods: ['email'],
           expirationMinutes: 10,
+          loginRedirectURL: redirectURL,
+          signupRedirectURL: redirectURL,
         }
       });
     }
