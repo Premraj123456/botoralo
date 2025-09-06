@@ -1,5 +1,8 @@
 import { Client, Account, Databases } from 'appwrite';
 
+// This file is intended for client-side use.
+// For server-side actions, use src/lib/appwrite/server.ts
+
 const client = new Client();
 
 client
