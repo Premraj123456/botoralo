@@ -135,7 +135,7 @@ const SignInPage = () => {
                 password_input_placeholder: 'Your password',
                 button_label: 'Sign in',
                 social_provider_text: 'Sign in with {{provider}}',
-                link_text: 'Already have an account? Sign in',
+                link_text: '',
               },
               magic_link: {
                 email_input_label: 'Email address',
