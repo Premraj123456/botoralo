@@ -72,7 +72,6 @@ const SignInPage = () => {
           supabaseClient={supabase}
           appearance={{ theme: customTheme }}
           theme="dark"
-          view="sign_in"
           providers={[]}
           redirectTo={getRedirectURL()}
           showLinks={false}
@@ -95,7 +94,7 @@ const SignInPage = () => {
                 password_input_placeholder: 'Your password',
                 button_label: 'Sign up with OTP',
                 social_provider_text: 'Sign up with {{provider}}',
-                link_text: "Don't have an account? Sign up",
+                link_text: "Don't have an an account? Sign up",
                 confirmation_text: 'Check your email for the OTP',
               },
             },
