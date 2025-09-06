@@ -1,5 +1,5 @@
 'use client';
-import StytchProvider, { useStytchUser } from '@stytch/nextjs';
+import { StytchProvider, useStytchUser } from '@stytch/nextjs';
 import { createStytchUIClient } from '@stytch/nextjs/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
