@@ -72,50 +72,31 @@ const SignInPage = () => {
           supabaseClient={supabase}
           appearance={{ theme: customTheme }}
           theme="dark"
-          view="magic_link"
+          view="sign_in"
           providers={[]}
           redirectTo={getRedirectURL()}
+          showLinks={false}
           localization={{
             variables: {
-              sign_up: {
-                email_label: 'Email address',
-                password_label: 'Create a password',
-                email_input_placeholder: 'Your email address',
-                password_input_placeholder: 'Your password',
-                button_label: 'Sign up',
-                social_provider_text: 'Sign up with {{provider}}',
-                link_text: "Don't have an account? Sign up",
-                confirmation_text: 'Check your email for the confirmation link',
-              },
               sign_in: {
                 email_label: 'Email address',
                 password_label: 'Your password',
                 email_input_placeholder: 'Your email address',
                 password_input_placeholder: 'Your password',
-                button_label: 'Sign in',
+                button_label: 'Sign in with OTP',
                 social_provider_text: 'Sign in with {{provider}}',
-                link_text: '',
+                link_text: 'Already have an account? Sign in',
+                confirmation_text: 'Check your email for the OTP'
               },
-              magic_link: {
-                email_input_label: 'Email address',
-                email_input_placeholder: 'Your email address',
-                button_label: 'Send Magic Link',
-                link_text: 'Send a magic link email',
-                confirmation_text: 'Check your email for the magic link',
-              },
-              forgotten_password: {
+               sign_up: {
                 email_label: 'Email address',
-                password_label: 'Your Password',
+                password_label: 'Create a password',
                 email_input_placeholder: 'Your email address',
-                button_label: 'Send instructions',
-                link_text: 'Forgot your password?',
-                confirmation_text: 'Check your email for the password reset link',
-              },
-              common: {
-                password_label: 'Password',
-                loading: 'Loading...',
-                server_error: 'Something went wrong. Please try again.',
-                user_already_in_use: 'This account already exists. Please sign in.',
+                password_input_placeholder: 'Your password',
+                button_label: 'Sign up with OTP',
+                social_provider_text: 'Sign up with {{provider}}',
+                link_text: "Don't have an account? Sign up",
+                confirmation_text: 'Check your email for the OTP',
               },
             },
           }}
