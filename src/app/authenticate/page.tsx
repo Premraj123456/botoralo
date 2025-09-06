@@ -5,13 +5,31 @@ import { Products } from '@stytch/vanilla-js';
 import React, { useState, useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
-import { useStytchUser } from '@stytch/nextjs';
-import { useRouter } from 'next/navigation';
+import { useStytch, useStytchUser } from '@stytch/nextjs';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const AuthenticatePage = () => {
   const { user, isInitialized } = useStytchUser();
+  const stytch = useStytch();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [sdkConfig, setSdkConfig] = useState<StytchLoginProps['config'] | null>(null);
+
+  useEffect(() => {
+    if (stytch && !user && isInitialized) {
+      const token = searchParams.get('token');
+      const tokenType = searchParams.get('stytch_token_type');
+      if (token && tokenType === 'magic_links') {
+        stytch.magicLinks.authenticate(token, {
+          session_duration_minutes: 60,
+        }).then(() => {
+            // The useStytchUser hook will trigger the redirect to dashboard
+        }).catch(err => {
+            console.error("Authentication failed:", err);
+        });
+      }
+    }
+  }, [isInitialized, searchParams, stytch, user]);
 
   useEffect(() => {
     if (isInitialized && user) {
@@ -20,8 +38,6 @@ const AuthenticatePage = () => {
   }, [user, isInitialized, router]);
 
   useEffect(() => {
-    // We need to set the config here to ensure window.location.origin is available
-    // This code now runs only on the client, after the component has mounted.
     if (typeof window !== 'undefined') {
       setSdkConfig({
         products: [Products.emailMagicLinks],
