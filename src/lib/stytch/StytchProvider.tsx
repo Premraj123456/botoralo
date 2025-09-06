@@ -1,5 +1,5 @@
 'use client';
-import { StytchB2BProvider as StytchProvider, useStytchMember } from '@stytch/nextjs/b2b';
+import StytchProvider, { useStytchMember } from '@stytch/nextjs/b2b';
 import { createStytchB2BUIClient } from '@stytch/nextjs/b2b/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
