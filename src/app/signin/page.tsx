@@ -113,7 +113,7 @@ const SignInPage = () => {
           supabaseClient={supabase}
           appearance={{ theme: customTheme }}
           theme="dark"
-          providers={['google', 'github']}
+          view="magic_link"
           redirectTo={getRedirectURL()}
           localization={{
             variables: {
