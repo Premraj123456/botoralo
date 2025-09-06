@@ -1,3 +1,4 @@
+
 'use client';
 import { StytchLogin } from '@stytch/nextjs';
 import type { StytchLoginProps } from '@stytch/nextjs';
@@ -19,8 +20,8 @@ const AuthenticatePage = () => {
     if (stytch && !user && isInitialized) {
       const token = searchParams.get('token');
       const tokenType = searchParams.get('stytch_token_type');
-      if (token && tokenType === 'magic_links') {
-        stytch.magicLinks.authenticate(token, {
+      if (token && tokenType === 'otp') {
+        stytch.otps.authenticate(token, {
           session_duration_minutes: 60,
         }).then(() => {
             // The useStytchUser hook will trigger the redirect to dashboard
@@ -30,7 +31,7 @@ const AuthenticatePage = () => {
       }
     }
   }, [isInitialized, searchParams, stytch, user]);
-
+  
   useEffect(() => {
     if (isInitialized && user) {
       router.replace('/dashboard');
@@ -38,19 +39,14 @@ const AuthenticatePage = () => {
   }, [user, isInitialized, router]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setSdkConfig({
-        products: [Products.emailMagicLinks],
-        emailMagicLinksOptions: {
-          loginRedirectURL: `${window.location.origin}/authenticate`,
-          signupRedirectURL: `${window.location.origin}/authenticate`,
-          loginExpirationMinutes: 30,
-          signupExpirationMinutes: 30,
-        },
-      });
-    }
+    setSdkConfig({
+      products: [Products.otps],
+      otpOptions: {
+        methods: ['email'],
+        expirationMinutes: 10,
+      },
+    });
   }, []);
-
 
   if (!isInitialized || user) {
      return (
