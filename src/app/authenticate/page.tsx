@@ -1,6 +1,7 @@
 
 'use client';
 import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
@@ -66,56 +67,32 @@ const AuthenticatePage = () => {
   };
 
   const customTheme = {
+    ...ThemeSupa,
     default: {
+      ...ThemeSupa.default,
       colors: {
+        ...ThemeSupa.default.colors,
         brand: 'hsl(262.1 83.3% 57.8%)',
         brandAccent: 'hsl(262.1 83.3% 57.8%)',
         brandButtonText: 'white',
-        defaultButtonBackground: 'white',
-        defaultButtonBackgroundHover: '#eaeaea',
-        defaultButtonBorder: 'lightgray',
-        defaultButtonText: 'gray',
-        dividerBackground: '#eaeaea',
+        defaultButtonBackground: 'hsl(222 47% 11%)',
+        defaultButtonBackgroundHover: 'hsl(217.2 32.6% 17.5%)',
+        defaultButtonBorder: 'hsl(217.2 32.6% 17.5%)',
+        defaultButtonText: 'white',
+        dividerBackground: 'hsl(217.2 32.6% 17.5%)',
         inputBackground: 'transparent',
         inputBorder: 'hsl(217.2 32.6% 17.5%)',
         inputBorderHover: 'hsl(262.1 83.3% 57.8%)',
         inputBorderFocus: 'hsl(262.1 83.3% 57.8%)',
         inputText: 'white',
         inputLabelText: 'white',
-        inputPlaceholder: 'darkgray',
-        messageText: 'gray',
-        messageTextDanger: 'red',
-        anchorTextColor: 'gray',
-        anchorTextHoverColor: 'darkgray',
+        inputPlaceholder: 'hsl(215 20.2% 65.1%)',
+        messageText: 'hsl(215 20.2% 65.1%)',
+        messageTextDanger: 'hsl(0 62.8% 30.6%)',
+        anchorTextColor: 'hsl(215 20.2% 65.1%)',
+        anchorTextHoverColor: 'white',
       },
-      space: {
-        spaceSmall: '4px',
-        spaceMedium: '8px',
-        spaceLarge: '16px',
-        labelBottomMargin: '8px',
-        anchorBottomMargin: '4px',
-        emailInputSpacing: '4px',
-        socialAuthSpacing: '4px',
-        buttonPadding: '10px 15px',
-        inputPadding: '10px 15px',
-      },
-      fontSizes: {
-        baseBodySize: '13px',
-        baseInputSize: '14px',
-        baseLabelSize: '14px',
-        baseButtonSize: '14px',
-      },
-      fonts: {
-        bodyFontFamily: 'Inter, sans-serif',
-        buttonFontFamily: 'Inter, sans-serif',
-        inputFontFamily: 'Inter, sans-serif',
-        labelFontFamily: 'Inter, sans-serif',
-      },
-      borderWidths: {
-        buttonBorderWidth: '1px',
-        inputBorderWidth: '1px',
-      },
-      radii: {
+       radii: {
         borderRadiusButton: 'var(--radius)',
         buttonBorderRadius: 'var(--radius)',
         inputBorderRadius: 'var(--radius)',
@@ -124,14 +101,14 @@ const AuthenticatePage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-       <div className="absolute top-8">
-        <Link className="flex items-center justify-center" href="/">
-          <Bot className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
-        </Link>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
+        <div className="flex justify-center mb-6">
+            <Link className="flex items-center justify-center" href="/">
+            <Bot className="h-8 w-8 text-primary" />
+            <span className="ml-2 text-2xl font-semibold tracking-wider font-headline">BotPilot</span>
+            </Link>
+        </div>
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: customTheme }}
