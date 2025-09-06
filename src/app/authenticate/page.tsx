@@ -1,7 +1,7 @@
 
 'use client';
-import type { StytchLoginProps } from '@stytch/nextjs';
 import { StytchLogin } from '@stytch/nextjs';
+import type { StytchLoginProps } from '@stytch/nextjs';
 import { Products } from '@stytch/vanilla-js';
 import React, { useState, useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
@@ -14,26 +14,42 @@ const AuthenticatePage = () => {
   const stytch = useStytch();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [sdkConfig, setSdkConfig] = useState<StytchLoginProps['config'] | null>(null);
 
-  const sdkConfig: StytchLoginProps['config'] = {
-    products: [Products.otps],
-    otpOptions: {
-      methods: ['email'],
-      expirationMinutes: 10,
-    },
-  };
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const redirectURL = `${window.location.origin}/authenticate`;
+      setSdkConfig({
+        products: [Products.otps, Products.emailMagicLinks],
+        otpOptions: {
+          methods: ['email'],
+          expirationMinutes: 10,
+        },
+        emailMagicLinksOptions: {
+            loginRedirectURL: redirectURL,
+            signupRedirectURL: redirectURL,
+            loginExpirationMinutes: 60,
+            signupExpirationMinutes: 60,
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (stytch && !user && isInitialized) {
       const token = searchParams.get('token');
       const tokenType = searchParams.get('stytch_token_type');
-      if (token && tokenType === 'otp') {
+      if (token && tokenType === 'magic_links') {
+        stytch.magicLinks.authenticate(token, {
+          session_duration_minutes: 60,
+        }).catch(err => {
+            console.error("Magic Link Authentication failed:", err);
+        });
+      } else if (token && tokenType === 'otp') {
         stytch.otps.authenticate(token, {
           session_duration_minutes: 60,
-        }).then(() => {
-            // The useStytchUser hook will trigger the redirect to dashboard
         }).catch(err => {
-            console.error("Authentication failed:", err);
+            console.error("OTP Authentication failed:", err);
         });
       }
     }
@@ -45,7 +61,7 @@ const AuthenticatePage = () => {
     }
   }, [user, isInitialized, router]);
 
-  if (!isInitialized || user) {
+  if (!isInitialized || user || !sdkConfig) {
      return (
        <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
