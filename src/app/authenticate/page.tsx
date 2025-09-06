@@ -1,8 +1,9 @@
 'use client';
-import { StytchLogin, StytchLoginProps } from '@stytch/nextjs/ui';
+import { StytchLogin } from '@stytch/nextjs/ui';
+import type { StytchLoginProps } from '@stytch/nextjs/ui';
 import { Products } from '@stytch/vanilla-js';
 import React from 'react';
-import { Bot } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { useStytchUser } from '@stytch/nextjs';
 import { useRouter } from 'next/navigation';
