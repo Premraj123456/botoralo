@@ -1,29 +1,27 @@
 'use client';
-import { StytchB2B } from '@stytch/nextjs/b2b';
-import type { StytchB2BUIConfig } from '@stytch/vanilla-js';
+import StytchLogin from '@stytch/nextjs/ui';
+import type { StytchLoginConfig } from '@stytch/nextjs';
 import React from 'react';
+import { Bot } from 'lucide-react';
+import Link from 'next/link';
 
 const Page = () => {
-  const [sdkConfig, setSdkConfig] = React.useState<StytchB2BUIConfig | null>(null);
+  const [sdkConfig, setSdkConfig] = React.useState<StytchLoginConfig | null>(null);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
       const redirectURL = `${window.location.origin}/authenticate`;
       setSdkConfig({
         products: ['emailMagicLinks'],
-        b2bOptions: {
-          magicLinksOptions: {
-            loginRedirectURL: redirectURL,
-            signupRedirectURL: redirectURL,
-            loginExpirationMinutes: 30,
-            signupExpirationMinutes: 30,
-            organizationId: "organization-live-4080055a-5b0e-47b5-9336-a74b4eac38fa", 
-          }
-        }
+        emailMagicLinksOptions: {
+          loginRedirectURL: redirectURL,
+          signupRedirectURL: redirectURL,
+          loginExpirationMinutes: 30,
+          signupExpirationMinutes: 30,
+        },
       });
     }
   }, []);
-
 
   if (!sdkConfig) {
     return null;
@@ -31,9 +29,21 @@ const Page = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
-         <StytchB2B.EmailMagicLinks config={sdkConfig} />
+       <div className="absolute top-8">
+        <Link className="flex items-center justify-center" href="/">
+          <Bot className="h-6 w-6 text-primary" />
+          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
+        </Link>
       </div>
+      <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
+         <StytchLogin config={sdkConfig} />
+      </div>
+       <p className="text-center text-sm text-muted-foreground mt-4">
+        Don&apos;t have an account?{' '}
+        <Link href="/sign-up" className="underline underline-offset-4 hover:text-primary">
+          Sign Up
+        </Link>
+      </p>
     </div>
   );
 };

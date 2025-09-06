@@ -1,6 +1,6 @@
 import * as stytch from 'stytch';
 
-let stytchClient: stytch.B2BClient;
+let stytchClient: stytch.Client;
 
 const loadStytchClient = () => {
   if (!stytchClient) {
@@ -8,7 +8,7 @@ const loadStytchClient = () => {
       ? stytch.envs.test
       : stytch.envs.live;
     
-    stytchClient = new stytch.B2BClient({
+    stytchClient = new stytch.Client({
       project_id: process.env.STYTCH_PROJECT_ID!,
       secret: process.env.STYTCH_SECRET!,
       env: stytchEnv,

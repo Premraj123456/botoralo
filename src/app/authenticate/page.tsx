@@ -2,6 +2,7 @@
 import { useStytch } from '@stytch/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 const AuthenticatePage = () => {
   const stytch = useStytch();
@@ -10,13 +11,10 @@ const AuthenticatePage = () => {
   useEffect(() => {
     const authenticateToken = async () => {
       try {
-        // Use the B2B-specific authentication method
-        await stytch.magicLinks.email.authenticate();
-        // Authentication successful, redirect to dashboard
+        await stytch.magicLinks.authenticate();
         router.replace('/dashboard');
       } catch (error) {
         console.error('Authentication failed:', error);
-        // Handle error, maybe redirect to login with an error message
         router.replace('/sign-in');
       }
     };
@@ -25,7 +23,10 @@ const AuthenticatePage = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p>Authenticating, please wait...</p>
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p>Authenticating, please wait...</p>
+      </div>
     </div>
   );
 };
