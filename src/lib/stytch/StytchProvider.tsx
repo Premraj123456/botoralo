@@ -1,5 +1,5 @@
 'use client';
-import { StytchProvider as StytchProviderBase, useStytchMember } from '@stytch/nextjs/b2b';
+import { StytchB2BProvider as StytchProvider, useStytchMember } from '@stytch/nextjs/b2b';
 import { createStytchB2BUIClient } from '@stytch/nextjs/b2b/ui';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 const stytch = createStytchB2BUIClient(process.env.NEXT_PUBLIC_STYTCH_PUBLIC_TOKEN!);
 
 export function StytchPublicProvider({ children }: { children: React.ReactNode }) {
-  return <StytchProviderBase stytch={stytch}>{children}</StytchProviderBase>;
+  return <StytchProvider stytch={stytch}>{children}</StytchProvider>;
 }
 
 function ProtectedContent({ children }: { children: React.ReactNode }) {
@@ -30,8 +30,8 @@ function ProtectedContent({ children }: { children: React.ReactNode }) {
 
 export function StytchProtectedProvider({ children }: { children: React.ReactNode }) {
     return (
-        <StytchProviderBase stytch={stytch}>
+        <StytchProvider stytch={stytch}>
             <ProtectedContent>{children}</ProtectedContent>
-        </StytchProviderBase>
+        </StytchProvider>
     );
 }
