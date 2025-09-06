@@ -97,7 +97,7 @@ export default async function LandingPage() {
               </Button>
             ) : (
               <Button asChild>
-                <Link href="/authenticate">
+                <Link href="/signin">
                   Get Started
                 </Link>
               </Button>
@@ -122,7 +122,7 @@ export default async function LandingPage() {
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
                    <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href={user ? "/dashboard" : "/authenticate"}>
+                    <Link href={user ? "/dashboard" : "/signin"}>
                       {user ? 'Go to Dashboard' : 'Get Started Free'}
                       <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </Link>
@@ -279,7 +279,7 @@ export default async function LandingPage() {
                 </p>
                 <div className="mt-8">
                    <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href={user ? "/dashboard" : "/authenticate"}>
+                    <Link href={user ? "/dashboard" : "/signin"}>
                       Start Deploying Now
                       <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                     </Link>

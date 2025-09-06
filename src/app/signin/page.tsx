@@ -9,16 +9,11 @@ import { Link } from '@/components/layout/page-loader';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 
-// This page is deprecated and will be removed. Please use /signin instead.
-const AuthenticatePage = () => {
+const SignInPage = () => {
   const supabase = createSupabaseClient();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    router.replace('/signin');
-  },[router]);
 
   useEffect(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -126,4 +121,4 @@ const AuthenticatePage = () => {
   );
 };
 
-export default AuthenticatePage;
+export default SignInPage;

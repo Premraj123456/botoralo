@@ -67,7 +67,7 @@ export function Header({ user }: { user: User | null }) {
         </DropdownMenu>
       ) : (
         <Button asChild>
-          <Link href="/authenticate">
+          <Link href="/signin">
             Sign In
           </Link>
         </Button>
