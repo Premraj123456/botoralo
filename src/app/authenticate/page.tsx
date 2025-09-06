@@ -1,6 +1,6 @@
 'use client';
-import StytchLogin from '@stytch/nextjs/ui';
-import type { StytchLoginProps } from '@stytch/nextjs/ui';
+import { StytchLogin } from '@stytch/nextjs';
+import type { StytchLoginProps } from '@stytch/nextjs';
 import { Products } from '@stytch/vanilla-js';
 import React, { useState, useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
@@ -21,6 +21,7 @@ const AuthenticatePage = () => {
 
   useEffect(() => {
     // We need to set the config here to ensure window.location.origin is available
+    // This code now runs only on the client, after the component has mounted.
     if (typeof window !== 'undefined') {
       setSdkConfig({
         products: [Products.emailMagicLinks],
@@ -35,7 +36,7 @@ const AuthenticatePage = () => {
   }, []);
 
 
-  if (!isInitialized || user || !sdkConfig) {
+  if (!isInitialized || user) {
      return (
        <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
@@ -55,7 +56,7 @@ const AuthenticatePage = () => {
         </Link>
       </div>
       <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
-        <StytchLogin config={sdkConfig} />
+        {sdkConfig && <StytchLogin config={sdkConfig} />}
       </div>
     </div>
   );
