@@ -20,12 +20,12 @@ const AuthenticatePage = () => {
     if (typeof window !== 'undefined') {
       const redirectURL = `${window.location.origin}/authenticate`;
       setSdkConfig({
-        products: [Products.otps],
-        otpOptions: {
-          methods: ['email'],
-          expirationMinutes: 10,
+        products: [Products.emailMagicLinks],
+        emailMagicLinksOptions: {
           loginRedirectURL: redirectURL,
           signupRedirectURL: redirectURL,
+          loginExpirationMinutes: 30,
+          signupExpirationMinutes: 30,
         }
       });
     }
@@ -40,12 +40,6 @@ const AuthenticatePage = () => {
           session_duration_minutes: 60,
         }).catch(err => {
             console.error("Magic Link Authentication failed:", err);
-        });
-      } else if (token && tokenType === 'otp') {
-        stytch.otps.authenticate(token, {
-          session_duration_minutes: 60,
-        }).catch(err => {
-            console.error("OTP Authentication failed:", err);
         });
       }
     }
