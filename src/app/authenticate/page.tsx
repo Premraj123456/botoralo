@@ -2,16 +2,16 @@
 import { StytchLogin } from '@stytch/nextjs/ui';
 import type { StytchLoginProps } from '@stytch/nextjs/ui';
 import { Products } from '@stytch/vanilla-js';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { useStytchUser } from '@stytch/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
 
 const AuthenticatePage = () => {
   const { user, isInitialized } = useStytchUser();
   const router = useRouter();
+  const [sdkConfig, setSdkConfig] = useState<StytchLoginProps['config'] | null>(null);
 
   useEffect(() => {
     if (isInitialized && user) {
@@ -19,17 +19,23 @@ const AuthenticatePage = () => {
     }
   }, [user, isInitialized, router]);
 
-  const sdkConfig: StytchLoginProps['config'] = {
-    products: [Products.emailMagicLinks],
-    emailMagicLinksOptions: {
-      loginRedirectURL: `${window.location.origin}/authenticate`,
-      signupRedirectURL: `${window.location.origin}/authenticate`,
-      loginExpirationMinutes: 30,
-      signupExpirationMinutes: 30,
-    },
-  };
+  useEffect(() => {
+    // We need to set the config here to ensure window.location.origin is available
+    if (typeof window !== 'undefined') {
+      setSdkConfig({
+        products: [Products.emailMagicLinks],
+        emailMagicLinksOptions: {
+          loginRedirectURL: `${window.location.origin}/authenticate`,
+          signupRedirectURL: `${window.location.origin}/authenticate`,
+          loginExpirationMinutes: 30,
+          signupExpirationMinutes: 30,
+        },
+      });
+    }
+  }, []);
 
-  if (!isInitialized || user) {
+
+  if (!isInitialized || user || !sdkConfig) {
      return (
        <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
