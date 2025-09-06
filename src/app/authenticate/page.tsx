@@ -1,7 +1,7 @@
 
 'use client';
-import { StytchLogin } from '@stytch/nextjs';
 import type { StytchLoginProps } from '@stytch/nextjs';
+import { StytchLogin } from '@stytch/nextjs';
 import { Products } from '@stytch/vanilla-js';
 import React, { useState, useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
@@ -14,7 +14,14 @@ const AuthenticatePage = () => {
   const stytch = useStytch();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [sdkConfig, setSdkConfig] = useState<StytchLoginProps['config'] | null>(null);
+
+  const sdkConfig: StytchLoginProps['config'] = {
+    products: [Products.otps],
+    otpOptions: {
+      methods: ['email'],
+      expirationMinutes: 10,
+    },
+  };
 
   useEffect(() => {
     if (stytch && !user && isInitialized) {
@@ -38,16 +45,6 @@ const AuthenticatePage = () => {
     }
   }, [user, isInitialized, router]);
 
-  useEffect(() => {
-    setSdkConfig({
-      products: [Products.otps],
-      otpOptions: {
-        methods: ['email'],
-        expirationMinutes: 10,
-      },
-    });
-  }, []);
-
   if (!isInitialized || user) {
      return (
        <div className="flex items-center justify-center min-h-screen">
@@ -68,7 +65,7 @@ const AuthenticatePage = () => {
         </Link>
       </div>
       <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
-        {sdkConfig && <StytchLogin config={sdkConfig} />}
+        <StytchLogin config={sdkConfig} />
       </div>
     </div>
   );
