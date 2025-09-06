@@ -74,7 +74,8 @@ const SignInPage = () => {
           theme="dark"
           providers={[]}
           redirectTo={getRedirectURL()}
-          showLinks={false}
+          showLinks={true}
+          view="magic_link"
           localization={{
             variables: {
               sign_in: {
@@ -82,7 +83,7 @@ const SignInPage = () => {
                 password_label: 'Your password',
                 email_input_placeholder: 'Your email address',
                 password_input_placeholder: 'Your password',
-                button_label: 'Sign in with OTP',
+                button_label: 'Send OTP',
                 social_provider_text: 'Sign in with {{provider}}',
                 link_text: 'Already have an account? Sign in',
                 confirmation_text: 'Check your email for the OTP'
@@ -92,10 +93,17 @@ const SignInPage = () => {
                 password_label: 'Create a password',
                 email_input_placeholder: 'Your email address',
                 password_input_placeholder: 'Your password',
-                button_label: 'Sign up with OTP',
+                button_label: 'Send OTP',
                 social_provider_text: 'Sign up with {{provider}}',
                 link_text: "Don't have an an account? Sign up",
                 confirmation_text: 'Check your email for the OTP',
+              },
+               magic_link: {
+                email_input_label: 'Email address',
+                email_input_placeholder: 'Your email address',
+                button_label: 'Send OTP',
+                loading_button_label: 'Sending...',
+                confirmation_text: 'Check your email for the one-time password'
               },
             },
           }}
