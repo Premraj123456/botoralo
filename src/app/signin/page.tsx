@@ -114,6 +114,7 @@ const SignInPage = () => {
           appearance={{ theme: customTheme }}
           theme="dark"
           view="magic_link"
+          providers={[]}
           redirectTo={getRedirectURL()}
           localization={{
             variables: {
