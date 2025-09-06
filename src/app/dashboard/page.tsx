@@ -2,8 +2,15 @@ import { Link } from '@/components/layout/page-loader';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
-import { getUserBots, getUserSubscription } from '@/lib/appwrite/actions';
+import { getUserBots } from '@/lib/appwrite/actions';
+import { getUserSubscription } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
+const planLimits = {
+  Free: 1,
+  Pro: 5,
+  Power: 20,
+};
 
 export default async function Dashboard() {
   const [subscription, userBots] = await Promise.all([
@@ -11,7 +18,8 @@ export default async function Dashboard() {
     getUserBots(),
   ]);
 
-  const canCreateBot = userBots.length < (subscription.botLimit || 0);
+  const botLimit = planLimits[subscription.plan as keyof typeof planLimits] || 1;
+  const canCreateBot = userBots.length < botLimit;
 
   const CreateBotButton = () => (
     <Button asChild disabled={!canCreateBot}>

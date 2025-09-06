@@ -7,12 +7,6 @@ import { ID, Query } from 'appwrite';
 const BOTS_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
 const BOTS_COLLECTION_ID = process.env.NEXT_PUBLIC_APPWRITE_BOTS_COLLECTION_ID!;
 
-// This is a mock implementation.
-// In a real app, you would fetch this from your database.
-export async function getUserSubscription() {
-  return { plan: 'Free', botLimit: 2, customerId: null };
-}
-
 export async function createBot(data: { name: string, code: string }) {
   const { user } = await getCurrentUser();
   if (!user) throw new Error('Not authenticated');
