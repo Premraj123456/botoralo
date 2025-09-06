@@ -1,5 +1,5 @@
 'use client';
-import StytchLogin from '@stytch/nextjs/ui';
+import { StytchLogin } from '@stytch/nextjs/ui';
 import type { StytchLoginConfig } from '@stytch/nextjs';
 import React from 'react';
 import { Bot } from 'lucide-react';
