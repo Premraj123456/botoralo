@@ -13,9 +13,11 @@ import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { createStripeCheckout } from '@/lib/stripe/actions';
 import { toast } from '@/hooks/use-toast';
-import { useState } from 'react';
-import { useStytchUser } from '@stytch/nextjs';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createSupabaseClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
+
 
 const plans = [
   {
@@ -58,8 +60,17 @@ const plans = [
 
 export default function PricingPage() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
-  const { user } = useStytchUser();
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const supabase = createSupabaseClient();
+  
+  useEffect(() => {
+    const getUser = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+    };
+    getUser();
+  }, [supabase]);
 
 
   const handleCheckout = async (priceId: string) => {

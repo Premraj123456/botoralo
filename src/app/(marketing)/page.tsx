@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { getCurrentUser } from '@/lib/stytch/auth'
+import { getCurrentUser } from '@/lib/supabase/auth'
 
 const testimonials = [
   {

@@ -5,7 +5,7 @@ import { stripe } from './server';
 import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
-import { getCurrentUser } from '@/lib/stytch/auth';
+import { getCurrentUser } from '@/lib/supabase/auth';
 
 // This is a mock database for user subscriptions.
 // In a real application, you would use a proper database.
@@ -18,7 +18,7 @@ const userSubscriptions: { [userId: string]: { plan: string; customerId: string 
 async function getUserIdForSubscription() {
     const { user } = await getCurrentUser();
     // Fallback to mock user if no user is logged in
-    return user ? user.user_id : 'user_placeholder';
+    return user ? user.id : 'user_placeholder';
 }
 
 export async function getUserSubscription() {
@@ -37,7 +37,7 @@ export async function createStripeCheckout(priceId: string) {
   try {
     const { user } = await getCurrentUser();
 
-    if (!user || !user.emails[0].email) {
+    if (!user || !user.email) {
         throw new Error('User must be logged in to make a purchase.');
     }
 
@@ -51,8 +51,8 @@ export async function createStripeCheckout(priceId: string) {
           quantity: 1,
         },
       ],
-      client_reference_id: user.user_id, 
-      customer_email: user.emails[0].email,
+      client_reference_id: user.id, 
+      customer_email: user.email,
       mode: 'subscription',
       success_url: `${origin}/dashboard?subscription_success=true`,
       cancel_url: `${origin}/pricing`,

@@ -1,4 +1,5 @@
-"use client";
+
+'use client';
 
 import { Button } from '@/components/ui/button';
 import { Link } from './page-loader';
@@ -12,25 +13,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useStytch, useStytchUser } from '@stytch/nextjs';
-import { useRouter } from 'next/navigation';
+import { signOut } from '@/lib/supabase/auth';
+import type { User } from '@supabase/supabase-js';
 
-export function Header() {
-    const { user } = useStytchUser();
-    const stytch = useStytch();
-    const router = useRouter();
+export function Header({ user }: { user: User | null }) {
 
     const getInitials = () => {
-        const email = user?.emails?.[0]?.email;
+        const email = user?.email;
         if (email) {
             return email.charAt(0).toUpperCase();
         }
         return 'U';
-    }
-    
-    const signOut = async () => {
-        await stytch.session.revoke();
-        router.push('/');
     }
 
   return (
@@ -49,7 +42,7 @@ export function Header() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user.emails?.[0]?.email}</DropdownMenuLabel>
+            <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <Link href="/dashboard/settings">
               <DropdownMenuItem>
@@ -62,15 +55,19 @@ export function Header() {
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
-            </DropdownMenuItem>
+            <form action={signOut}>
+                <button type="submit" className="w-full">
+                    <DropdownMenuItem>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                    </DropdownMenuItem>
+                </button>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
         <Button asChild>
-          <Link href="/sign-in">
+          <Link href="/authenticate">
             Sign In
           </Link>
         </Button>

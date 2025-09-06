@@ -1,77 +1,74 @@
 
 'use client';
-import { StytchLogin } from '@stytch/nextjs';
-import type { StytchLoginProps } from '@stytch/nextjs';
-import { Products } from '@stytch/vanilla-js';
-import React, { useState, useEffect } from 'react';
+import { Auth } from '@supabase/auth-ui-react';
+import { ThemeSupa } from '@supabase/auth-ui-shared';
+import { createSupabaseClient } from '@/lib/supabase/client';
+import { useEffect, useState } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
-import { useStytch, useStytchUser } from '@stytch/nextjs';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
 
 const AuthenticatePage = () => {
-  const { user, isInitialized } = useStytchUser();
-  const stytch = useStytch();
+  const supabase = createSupabaseClient();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [sdkConfig, setSdkConfig] = useState<StytchLoginProps['config'] | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const redirectURL = `${window.location.origin}/authenticate`;
-      setSdkConfig({
-        products: [Products.emailMagicLinks],
-        emailMagicLinksOptions: {
-          loginRedirectURL: redirectURL,
-          signupRedirectURL: redirectURL,
-          loginExpirationMinutes: 30,
-          signupExpirationMinutes: 30,
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+            router.replace('/dashboard');
         }
-      });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (stytch && !user && isInitialized) {
-      const token = searchParams.get('token');
-      const tokenType = searchParams.get('stytch_token_type');
-      if (token && tokenType === 'magic_links') {
-        stytch.magicLinks.authenticate(token, {
-          session_duration_minutes: 60,
-        }).catch(err => {
-            console.error("Magic Link Authentication failed:", err);
-        });
+        setLoading(false);
       }
-    }
-  }, [isInitialized, searchParams, stytch, user]);
-  
-  useEffect(() => {
-    if (isInitialized && user) {
-      router.replace('/dashboard');
-    }
-  }, [user, isInitialized, router]);
+    );
 
-  if (!isInitialized || user || !sdkConfig) {
-     return (
-       <div className="flex items-center justify-center min-h-screen">
+    // Initial check
+    const checkUser = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+        if (user) {
+            router.replace('/dashboard');
+        }
+        setLoading(false);
+    };
+    checkUser();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [supabase, router]);
+
+  if (loading || user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p>Loading...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <p>Loading...</p>
         </div>
-       </div>
-     );
+      </div>
+    );
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <div className="absolute top-8">
+       <div className="absolute top-8">
         <Link className="flex items-center justify-center" href="/">
           <Bot className="h-6 w-6 text-primary" />
           <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
         </Link>
       </div>
       <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
-        <StytchLogin config={sdkConfig} />
+        <Auth
+          supabaseClient={supabase}
+          appearance={{ theme: ThemeSupa }}
+          theme="dark"
+          providers={['google', 'github']}
+          redirectTo={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/callback`}
+        />
       </div>
     </div>
   );

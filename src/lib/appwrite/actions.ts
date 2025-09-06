@@ -1,7 +1,7 @@
 'use server';
 
 import { databases } from '@/lib/appwrite';
-import { getCurrentUser } from '@/lib/stytch/auth';
+import { getCurrentUser } from '@/lib/supabase/auth';
 import { ID, Query } from 'appwrite';
 
 const BOTS_DATABASE_ID = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
@@ -18,7 +18,7 @@ export async function createBot(data: { name: string, code: string }) {
     {
       name: data.name,
       code: data.code,
-      ownerId: user.user_id,
+      ownerId: user.id,
       status: 'stopped',
     }
   );
@@ -33,7 +33,7 @@ export async function getUserBots() {
   const { documents } = await databases.listDocuments(
     BOTS_DATABASE_ID,
     BOTS_COLLECTION_ID,
-    [Query.equal('ownerId', user.user_id)]
+    [Query.equal('ownerId', user.id)]
   );
   return documents;
 }
@@ -48,7 +48,7 @@ export async function getBotById(botId: string) {
     botId
   );
 
-  if (bot.ownerId !== user.user_id) {
+  if (bot.ownerId !== user.id) {
     throw new Error('Not authorized');
   }
   
