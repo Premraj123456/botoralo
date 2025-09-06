@@ -17,7 +17,7 @@ function ProtectedContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isInitialized && !user) {
-      router.push('/sign-in');
+      router.push('/authenticate');
     }
   }, [user, isInitialized, router]);
 

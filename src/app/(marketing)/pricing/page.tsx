@@ -64,7 +64,7 @@ export default function PricingPage() {
 
   const handleCheckout = async (priceId: string) => {
     if (!user) {
-        router.push('/sign-in');
+        router.push('/authenticate');
         return;
     }
 
@@ -168,7 +168,7 @@ export default function PricingPage() {
                     </Button>
                   ) : (
                      <Button asChild className="w-full mt-4" variant="outline">
-                      <Link href={user ? "/dashboard" : "/sign-in"}>{plan.cta}</Link>
+                      <Link href={user ? "/dashboard" : "/authenticate"}>{plan.cta}</Link>
                     </Button>
                   )}
                 </CardContent>
