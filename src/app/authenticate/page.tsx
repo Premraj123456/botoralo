@@ -20,16 +20,10 @@ const AuthenticatePage = () => {
     if (typeof window !== 'undefined') {
       const redirectURL = `${window.location.origin}/authenticate`;
       setSdkConfig({
-        products: [Products.otps, Products.emailMagicLinks],
+        products: [Products.otps],
         otpOptions: {
           methods: ['email'],
           expirationMinutes: 10,
-        },
-        emailMagicLinksOptions: {
-            loginRedirectURL: redirectURL,
-            signupRedirectURL: redirectURL,
-            loginExpirationMinutes: 60,
-            signupExpirationMinutes: 60,
         }
       });
     }
