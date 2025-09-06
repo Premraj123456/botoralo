@@ -2,7 +2,7 @@ import { Link } from '@/components/layout/page-loader';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
-import { getUserBots } from '@/lib/appwrite/actions';
+import { getUserBots } from '@/lib/supabase/actions';
 import { getUserSubscription } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -53,7 +53,7 @@ export default async function Dashboard() {
       {userBots.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {userBots.map((bot: any) => (
-            <BotCard key={bot.$id} bot={bot} />
+            <BotCard key={bot.id} bot={bot} />
           ))}
         </div>
       ) : (

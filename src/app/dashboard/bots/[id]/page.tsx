@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { getBotById } from "@/lib/appwrite/actions";
+import { getBotById } from "@/lib/supabase/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Square, Trash2, Bot as BotIcon, Cpu, Clock } from "lucide-react";
+import { Play, Square, Trash2, Bot as BotIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogViewer } from "@/components/bots/log-viewer";
 import { Badge } from "@/components/ui/badge";
@@ -23,11 +23,11 @@ export default async function BotDetailPage({ params }: { params: { id: string }
     notFound();
   }
   
-  // Appwrite doesn't store logs in the bot document, so we'll use a placeholder.
-  // A real implementation would fetch logs from a 'logs' collection.
+  // Supabase doesn't store logs directly in the bot table in this example.
+  // A real implementation would fetch logs from a 'logs' table.
   const botLogs = []; 
 
-  const status = statusConfig[bot.status as keyof typeof statusConfig];
+  const status = statusConfig[bot.status as keyof typeof statusConfig] || statusConfig.stopped;
 
   return (
     <div className="flex flex-col gap-6">
@@ -40,9 +40,6 @@ export default async function BotDetailPage({ params }: { params: { id: string }
                 <CardTitle className="text-2xl">{bot.name}</CardTitle>
                 <CardDescription className="flex items-center gap-4 mt-1">
                   <Badge variant={status.variant} className={status.className}>{status.text}</Badge>
-                  {/* These were mock values, will need real data source if required */}
-                  {/* <span className="flex items-center gap-1 text-xs"><Cpu className="h-3 w-3" />{bot.ramUsage}MB / {bot.ramMax}MB</span> */}
-                  {/* <span className="flex items-center gap-1 text-xs"><Clock className="h-3 w-3" />{bot.uptime}</span> */}
                 </CardDescription>
               </div>
             </div>
@@ -69,7 +66,7 @@ export default async function BotDetailPage({ params }: { params: { id: string }
           <SummarizeLogs logs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />
         </TabsContent>
         <TabsContent value="anomalies">
-          <AnalyzeAnomalies botId={bot.$id} logs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />
+          <AnalyzeAnomalies botId={bot.id} logs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />
         </TabsContent>
         <TabsContent value="fixes">
            <SuggestFixes botCode={bot.code} botLogs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />

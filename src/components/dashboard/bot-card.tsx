@@ -3,22 +3,28 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Bot as BotIcon, Cpu, Power, Terminal, ArrowRight } from "lucide-react";
-import type { Models } from 'appwrite';
+import { Bot as BotIcon, Cpu, Power, ArrowRight } from "lucide-react";
+
+type Bot = {
+  id: string;
+  name: string;
+  status: string;
+  // Add other bot properties as needed
+};
 
 type BotCardProps = {
-  bot: Models.Document;
+  bot: Bot;
 };
 
 const statusConfig = {
-  running: { text: "Running", color: "bg-green-500", icon: <Power className="h-4 w-4" /> },
-  stopped: { text: "Stopped", color: "bg-gray-500", icon: <Power className="h-4 w-4" /> },
-  error: { text: "Error", color: "bg-red-500", icon: <Power className="h-4 w-4" /> },
+  running: { text: "Running", color: "bg-green-500" },
+  stopped: { text: "Stopped", color: "bg-gray-500" },
+  error: { text: "Error", color: "bg-red-500" },
 };
 
 export function BotCard({ bot }: BotCardProps) {
   const statusInfo = statusConfig[bot.status as keyof typeof statusConfig] || statusConfig.stopped;
-  // Mock data, as these are not in the Appwrite model
+  // Mock data for display purposes
   const ramUsage = 0;
   const ramMax = 128;
   const uptime = 'N/A';
@@ -54,7 +60,7 @@ export function BotCard({ bot }: BotCardProps) {
       </CardContent>
       <CardFooter>
         <Button className="w-full" asChild variant="outline">
-          <Link href={`/dashboard/bots/${bot.$id}`}>
+          <Link href={`/dashboard/bots/${bot.id}`}>
             Manage Bot
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>

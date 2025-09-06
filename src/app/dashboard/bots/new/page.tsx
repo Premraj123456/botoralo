@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Bot, Save, Loader2 } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { createBot } from "@/lib/appwrite/actions";
+import { createBot } from "@/lib/supabase/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -36,7 +36,7 @@ export default function NewBotPage() {
       const newBot = await createBot(values);
       if (newBot) {
         toast({ title: "Success", description: "Your bot has been deployed." });
-        router.push(`/dashboard/bots/${newBot.$id}`);
+        router.push(`/dashboard/bots/${newBot.id}`);
       } else {
         throw new Error("Failed to create bot.");
       }
