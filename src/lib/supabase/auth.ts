@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -25,6 +26,8 @@ export async function signInWithOtp(email: string) {
     email,
     options: {
       shouldCreateUser: true,
+      // This is the crucial part: it prevents Supabase from generating a magic link.
+      emailRedirectTo: '', 
     },
   });
 
