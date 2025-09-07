@@ -87,14 +87,8 @@ export default function PricingPage() {
         throw new Error(checkoutError || 'Failed to create checkout session.');
       }
       
-      // Use a link to navigate, which is more robust in iframes
-      const a = document.createElement('a');
-      a.href = url;
-      // This tells the browser to navigate the top-level window, breaking out of the iframe
-      a.target = '_top'; 
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+      // Redirect the top-level window to the Stripe checkout page.
+      window.top.location.href = url;
 
     } catch (error) {
       console.error(error);
