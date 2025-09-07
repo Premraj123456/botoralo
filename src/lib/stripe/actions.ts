@@ -42,6 +42,10 @@ export async function createStripeCheckout(priceId: string) {
     if (!user || !user.email) {
         throw new Error('User must be logged in to make a purchase.');
     }
+    
+    if (!priceId) {
+        throw new Error('Price ID is missing.');
+    }
 
     const origin = headers().get('origin') || 'https://botpilot.app';
 
@@ -57,7 +61,7 @@ export async function createStripeCheckout(priceId: string) {
       customer_email: user.email,
       mode: 'subscription',
       success_url: `${origin}/dashboard?subscription_success=true`,
-      cancel_url: `${origin}/pricing`,
+      cancel_url: `${origin}/pricing?canceled=true`,
     });
 
     if (!session.url) {
@@ -66,7 +70,7 @@ export async function createStripeCheckout(priceId: string) {
 
     return { url: session.url, checkoutError: null };
   } catch (e) {
-    console.error(e);
+    console.error("Stripe Checkout Error:", e);
     return { url: null, checkoutError: (e as Error).message };
   }
 }
@@ -89,10 +93,10 @@ export async function createStripeBillingPortalSession() {
             throw new Error('Failed to create a billing portal session.');
         }
 
-        return { url: portalSession.url };
+        return { url: portalSession.url, portalError: null };
     } catch (e) {
         console.error(e);
-        return { portalError: (e as Error).message };
+        return { url: null, portalError: (e as Error).message };
     }
 }
 
@@ -162,6 +166,7 @@ export async function seedStripeProducts() {
     return {
       proPlan: { productId: proProduct.id, priceId: proPrice.id },
       powerPlan: { productId: powerProduct.id, priceId: powerPrice.id },
+      error: null,
     };
 
   } catch (error) {

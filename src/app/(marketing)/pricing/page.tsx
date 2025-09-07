@@ -18,52 +18,52 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-
-const plans = [
-  {
-    name: 'Free',
-    price: '$0',
-    priceId: null,
-    description: 'For hobbyists and testing things out.',
-    ram: '128MB RAM',
-    features: ['1 Bot Slot', '24/7 Uptime', 'Basic Logging', 'Community Support'],
-    cta: 'Start for Free',
-    isPrimary: false,
-  },
-  {
-    name: 'Pro',
-    price: '$9',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID!,
-    description: 'For serious traders who need more power.',
-    ram: '512MB RAM',
-    features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
-    cta: 'Upgrade to Pro',
-    isPrimary: true,
-  },
-  {
-    name: 'Power',
-    price: '$29',
-    priceId: process.env.NEXT_PUBLIC_STRIPE_POWER_PLAN_PRICE_ID!,
-    description: 'For professionals running multiple complex bots.',
-    ram: '1GB RAM',
-    features: [
-      '20 Bot Slots',
-      '24/7 Uptime',
-      'Advanced Logging',
-      'AI Log Analysis',
-      'Priority Support',
-    ],
-    cta: 'Go Power',
-    isPrimary: false,
-  },
-];
-
 export default function PricingPage() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const supabase = createSupabaseClient();
   
+  // Moved plans array inside the component to access process.env
+  const plans = [
+    {
+      name: 'Free',
+      price: '$0',
+      priceId: null,
+      description: 'For hobbyists and testing things out.',
+      ram: '128MB RAM',
+      features: ['1 Bot Slot', '24/7 Uptime', 'Basic Logging', 'Community Support'],
+      cta: 'Start for Free',
+      isPrimary: false,
+    },
+    {
+      name: 'Pro',
+      price: '$9',
+      priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID,
+      description: 'For serious traders who need more power.',
+      ram: '512MB RAM',
+      features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
+      cta: 'Upgrade to Pro',
+      isPrimary: true,
+    },
+    {
+      name: 'Power',
+      price: '$29',
+      priceId: process.env.NEXT_PUBLIC_STRIPE_POWER_PLAN_PRICE_ID,
+      description: 'For professionals running multiple complex bots.',
+      ram: '1GB RAM',
+      features: [
+        '20 Bot Slots',
+        '24/7 Uptime',
+        'Advanced Logging',
+        'AI Log Analysis',
+        'Priority Support',
+      ],
+      cta: 'Go Power',
+      isPrimary: false,
+    },
+  ];
+
   useEffect(() => {
     const getUser = async () => {
         const { data: { session } } = await supabase.auth.getSession();
@@ -72,16 +72,29 @@ export default function PricingPage() {
     getUser();
   }, [supabase]);
 
-
-  const handleCheckout = async (priceId: string) => {
+  const handleCheckout = async (priceId: string | undefined | null) => {
     if (!user) {
         router.push('/signin');
         return;
+    }
+    
+    // 1. Check that your priceId is being set correctly
+    console.log("Checkout with priceId:", priceId);
+    if (!priceId) {
+      toast({
+        title: 'Error',
+        description: 'The Price ID for this plan is not configured. Please contact support.',
+        variant: 'destructive',
+      });
+      return;
     }
 
     setLoadingPriceId(priceId);
     try {
       const result = await createStripeCheckout(priceId);
+
+      // 3. Debug in your browser
+      console.log("Stripe result:", result);
 
       if (result?.checkoutError || !result?.url) {
         throw new Error(result?.checkoutError || 'Could not create checkout session.');
@@ -127,7 +140,7 @@ export default function PricingPage() {
       <Button
         className="w-full mt-4"
         variant={plan.isPrimary ? 'default' : 'outline'}
-        onClick={() => handleCheckout(plan.priceId!)}
+        onClick={() => handleCheckout(plan.priceId)}
         disabled={loadingPriceId === plan.priceId}
       >
         {loadingPriceId === plan.priceId && (
