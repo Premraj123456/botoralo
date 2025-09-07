@@ -5,7 +5,7 @@ import { stripe } from './server';
 import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
-import { getCurrentUser } from '@/lib/supabase/auth';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 // This is a mock database for user subscriptions.
 // In a real application, you would use a proper database.
@@ -16,7 +16,8 @@ const userSubscriptions: { [userId: string]: { plan: string; customerId: string 
 
 // This function will now be updated to get the real user ID
 async function getUserIdForSubscription() {
-    const { user } = await getCurrentUser();
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
     // Fallback to mock user if no user is logged in
     return user ? user.id : 'user_placeholder';
 }
@@ -35,7 +36,8 @@ export async function updateUserSubscription(userId: string, plan: string, custo
 
 export async function createStripeCheckout(priceId: string) {
   try {
-    const { user } = await getCurrentUser();
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user || !user.email) {
         throw new Error('User must be logged in to make a purchase.');
