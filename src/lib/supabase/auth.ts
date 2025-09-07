@@ -40,7 +40,7 @@ export async function signInWithOtp(email: string) {
   return { data };
 }
 
-export async function verifyOtp(email: string, token: string, type: EmailOtpType = 'signup') {
+export async function verifyOtp(email: string, token: string, type: EmailOtpType = 'email') {
     const supabase = createSupabaseServerClient();
     const { data, error } = await supabase.auth.verifyOtp({
         email,
