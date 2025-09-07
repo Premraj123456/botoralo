@@ -8,10 +8,10 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { signInWithOtp, verifyOtp } from "@/lib/supabase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { createSupabaseClient } from "@/lib/supabase/client";
 
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -30,6 +30,7 @@ export function SignInForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const supabase = createSupabaseClient();
 
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailSchema),
@@ -44,9 +45,15 @@ export function SignInForm() {
   const handleEmailSubmit = async (values: EmailFormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await signInWithOtp(values.email);
+      const { error } = await supabase.auth.signInWithOtp({
+        email: values.email,
+        options: {
+          shouldCreateUser: true,
+        },
+      });
+
       if (error) {
-        throw new Error(error);
+        throw error;
       }
       setEmail(values.email);
       setStep("otp");
@@ -68,24 +75,33 @@ export function SignInForm() {
   const handleOtpSubmit = async (values: OtpFormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await verifyOtp(email, values.otp, 'email');
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token: values.otp,
+        type: 'email',
+      });
 
       if (error) {
-        throw new Error(error);
+        throw error;
       }
       
-      toast({
-        title: "Success!",
-        description: "You have been successfully signed in.",
-      });
-      // Important: Refresh the page to update server components and session state
-      // before pushing to the new route.
-      router.refresh();
-      router.push("/dashboard");
+      if (data.session) {
+        toast({
+          title: "Success!",
+          description: "You have been successfully signed in.",
+        });
+        // router.refresh() is essential to update server-side rendered components
+        // with the new session data before redirecting.
+        router.refresh();
+        router.push("/dashboard");
+      } else {
+        throw new Error("Could not sign you in. Please try again.");
+      }
+      
     } catch (error) {
       toast({
         title: "Error",
-        description: (error as Error).message,
+        description: (error as Error).message || "Invalid or expired OTP.",
         variant: "destructive",
       });
     } finally {
