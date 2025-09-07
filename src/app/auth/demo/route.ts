@@ -25,6 +25,6 @@ export async function POST(request: NextRequest) {
   }
 
   // After a successful sign-in, a session cookie is set.
-  // Redirecting to the dashboard will now pass the middleware check.
-  return NextResponse.redirect(`${origin}/dashboard`);
+  // Redirecting to the root will now pass the middleware check.
+  return NextResponse.redirect(`${origin}/`);
 }
