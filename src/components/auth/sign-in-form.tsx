@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { createSupabaseClient } from "@/lib/supabase/client";
 
 const emailSchema = z.object({
@@ -29,7 +28,6 @@ export function SignInForm() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const router = useRouter();
   const supabase = createSupabaseClient();
 
   const emailForm = useForm<EmailFormValues>({
@@ -88,12 +86,10 @@ export function SignInForm() {
       if (data.session) {
         toast({
           title: "Success!",
-          description: "You have been successfully signed in.",
+          description: "You have been successfully signed in. Redirecting...",
         });
-        // router.refresh() is essential to update server-side rendered components
-        // with the new session data before redirecting.
-        router.refresh();
-        router.push("/dashboard");
+        // Force a full page reload to ensure the new session cookie is sent to the server.
+        window.location.href = '/dashboard';
       } else {
         throw new Error("Could not sign you in. Please try again.");
       }
