@@ -1,7 +1,16 @@
+
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/supabase/auth';
+import { getUserSubscription } from '@/lib/stripe/actions';
+
+const planLimits = {
+  Free: 1,
+  Pro: 5,
+  Power: 20,
+};
+
 
 // --- BOT ACTIONS ---
 
@@ -10,6 +19,21 @@ export async function createBot(data: { name: string, code: string }) {
   if (!user) throw new Error('Not authenticated');
 
   const supabase = createSupabaseServerClient();
+
+  // Enforce plan limits on the server
+  const [subscription, { count }] = await Promise.all([
+    getUserSubscription(),
+    supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
+  ]);
+
+  const botLimit = planLimits[subscription.plan as keyof typeof planLimits] ?? 1;
+  const currentBotCount = count ?? 0;
+
+  if (currentBotCount >= botLimit) {
+    throw new Error('You have reached your bot limit. Please upgrade your plan to create more bots.');
+  }
+
+
   const { data: newBot, error } = await supabase
     .from('bots')
     .insert({
