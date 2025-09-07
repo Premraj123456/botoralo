@@ -1,9 +1,19 @@
+
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { Button } from '@/components/ui/button';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 
-const SignInPage = () => {
+const SignInPage = async () => {
+  const supabase = createSupabaseServerClient();
+  const { data: { session } } = await supabase.auth.getSession();
+
+  if (session) {
+    redirect('/dashboard');
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
@@ -26,11 +36,11 @@ const SignInPage = () => {
             </span>
           </div>
         </div>
-         <Button asChild variant="secondary" className="w-full">
-          <Link href="/dashboard">
-            Demo Direct Login
-          </Link>
-        </Button>
+         <form action="/auth/demo" method="post" className="w-full">
+            <Button variant="secondary" className="w-full" type="submit">
+                Demo Direct Login
+            </Button>
+         </form>
       </div>
     </div>
   );
