@@ -64,10 +64,10 @@ export async function createStripeCheckout(priceId: string) {
       throw new Error('Failed to create a checkout session.');
     }
 
-    return { url: session.url };
+    return { url: session.url, checkoutError: null };
   } catch (e) {
     console.error(e);
-    return { checkoutError: (e as Error).message };
+    return { url: null, checkoutError: (e as Error).message };
   }
 }
 

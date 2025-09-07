@@ -81,14 +81,14 @@ export default function PricingPage() {
 
     setLoadingPriceId(priceId);
     try {
-      const { url, checkoutError } = await createStripeCheckout(priceId);
+      const result = await createStripeCheckout(priceId);
 
-      if (checkoutError || !url) {
-        throw new Error(checkoutError || 'Could not create checkout session.');
+      if (result?.checkoutError || !result?.url) {
+        throw new Error(result?.checkoutError || 'Could not create checkout session.');
       }
       
       // Redirect to the Stripe checkout page.
-      window.location.href = url;
+      window.location.href = result.url;
 
     } catch (error) {
       console.error('Checkout Error:', error);
