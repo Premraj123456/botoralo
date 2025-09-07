@@ -83,18 +83,18 @@ export default function PricingPage() {
     try {
       const { url, checkoutError } = await createStripeCheckout(priceId);
 
-      if (!url || checkoutError) {
-        throw new Error(checkoutError || 'Failed to create checkout session.');
+      if (checkoutError || !url) {
+        throw new Error(checkoutError || 'Could not create checkout session.');
       }
       
       // Redirect to the Stripe checkout page.
       window.location.href = url;
 
     } catch (error) {
-      console.error(error);
+      console.error('Checkout Error:', error);
       toast({
         title: 'Error',
-        description: (error as Error).message || 'Something went wrong.',
+        description: (error as Error).message || 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
     } finally {

@@ -58,6 +58,10 @@ export async function createStripeCheckout(priceId: string) {
       cancel_url: `${origin}/pricing`,
     });
 
+    if (!session.url) {
+      throw new Error('Failed to create a checkout session.');
+    }
+
     return { url: session.url };
   } catch (e) {
     console.error(e);
