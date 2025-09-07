@@ -5,7 +5,8 @@ import { stripe } from './server';
 import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
-import { getCurrentUser } from '@/lib/supabase/auth';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 // This is a mock database for user subscriptions.
 // In a real application, you would use a proper database.
@@ -16,7 +17,8 @@ const userSubscriptions: { [userId: string]: { plan: string; customerId: string 
 
 // This function will now be updated to get the real user ID
 async function getUserIdForSubscription() {
-    const { user } = await getCurrentUser();
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
     // Fallback to mock user if no user is logged in
     return user ? user.id : 'user_placeholder';
 }
@@ -35,13 +37,18 @@ export async function updateUserSubscription(userId: string, plan: string, custo
 
 export async function createStripeCheckout(priceId: string) {
   try {
-    const { user } = await getCurrentUser();
+    const supabase = createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     if (!user || !user.email) {
         throw new Error('User must be logged in to make a purchase.');
     }
+    
+    if (!priceId) {
+        throw new Error('Price ID is missing.');
+    }
 
-    const origin = headers().get('origin') || 'http://localhost:9002';
+    const origin = headers().get('origin') || 'https://botpilot.app';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -55,13 +62,19 @@ export async function createStripeCheckout(priceId: string) {
       customer_email: user.email,
       mode: 'subscription',
       success_url: `${origin}/dashboard?subscription_success=true`,
-      cancel_url: `${origin}/pricing`,
+      cancel_url: `${origin}/pricing?canceled=true`,
     });
 
-    return { url: session.url };
+    if (!session.url) {
+      throw new Error('Failed to create a checkout session.');
+    }
+    
+    revalidatePath('/pricing');
+    return { url: session.url, checkoutError: null };
   } catch (e) {
-    console.error(e);
-    return { checkoutError: (e as Error).message };
+    console.error("Stripe Checkout Error:", e);
+    revalidatePath('/pricing');
+    return { url: null, checkoutError: (e as Error).message };
   }
 }
 
@@ -79,10 +92,14 @@ export async function createStripeBillingPortalSession() {
             return_url: `${origin}/dashboard/billing`,
         });
 
-        return { url: portalSession.url };
+        if (!portalSession.url) {
+            throw new Error('Failed to create a billing portal session.');
+        }
+
+        return { url: portalSession.url, portalError: null };
     } catch (e) {
         console.error(e);
-        return { portalError: (e as Error).message };
+        return { url: null, portalError: (e as Error).message };
     }
 }
 
@@ -152,6 +169,7 @@ export async function seedStripeProducts() {
     return {
       proPlan: { productId: proProduct.id, priceId: proPrice.id },
       powerPlan: { productId: powerProduct.id, priceId: powerPrice.id },
+      error: null,
     };
 
   } catch (error) {
