@@ -26,8 +26,9 @@ export async function signInWithOtp(email: string) {
     email,
     options: {
       shouldCreateUser: true,
-      // This is the crucial part: it prevents Supabase from generating a magic link.
-      emailRedirectTo: '', 
+      data: {
+        flow_type: 'signup', // This forces the OTP email template instead of the magic link one.
+      }
     },
   });
 
