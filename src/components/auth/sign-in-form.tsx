@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -77,8 +78,10 @@ export function SignInForm() {
         title: "Success!",
         description: "You have been successfully signed in.",
       });
+      // Important: Refresh the page to update server components and session state
+      // before pushing to the new route.
+      router.refresh();
       router.push("/dashboard");
-      router.refresh(); // Important to re-fetch server components and update session state
     } catch (error) {
       toast({
         title: "Error",
