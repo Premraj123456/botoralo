@@ -41,7 +41,7 @@ export async function createStripeCheckout(priceId: string) {
         throw new Error('User must be logged in to make a purchase.');
     }
 
-    const origin = headers().get('origin') || 'http://localhost:9002';
+    const origin = headers().get('origin') || 'https://botpilot.app';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -82,6 +82,10 @@ export async function createStripeBillingPortalSession() {
             customer: subscription.customerId,
             return_url: `${origin}/dashboard/billing`,
         });
+
+        if (!portalSession.url) {
+            throw new Error('Failed to create a billing portal session.');
+        }
 
         return { url: portalSession.url };
     } catch (e) {
