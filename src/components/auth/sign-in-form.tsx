@@ -11,7 +11,6 @@ import { signInWithOtp, verifyOtp } from "@/lib/supabase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { EmailOtpType } from "@supabase/supabase-js";
 
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -68,18 +67,10 @@ export function SignInForm() {
   const handleOtpSubmit = async (values: OtpFormValues) => {
     setIsSubmitting(true);
     try {
-      // Supabase sends different OTP types for sign-up vs. sign-in.
-      // We'll try both to ensure a smooth flow for new and returning users.
-      let result;
-      // First, try verifying as a returning user
-      result = await verifyOtp(email, values.otp, 'magiclink');
-      if (result.error) {
-          // If that fails, try as a new user
-         result = await verifyOtp(email, values.otp, 'signup');
-      }
+      const { error } = await verifyOtp(email, values.otp, 'email');
 
-      if (result.error) {
-        throw new Error(result.error);
+      if (error) {
+        throw new Error(error);
       }
       
       toast({
