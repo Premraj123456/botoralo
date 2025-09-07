@@ -66,8 +66,8 @@ export default function PricingPage() {
   
   useEffect(() => {
     const getUser = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
     };
     getUser();
   }, [supabase]);
@@ -100,6 +100,42 @@ export default function PricingPage() {
     } finally {
       setLoadingPriceId(null);
     }
+  };
+
+  const renderCtaButton = (plan: typeof plans[0]) => {
+    // Free plan always links to dashboard or signin
+    if (!plan.priceId) {
+      return (
+        <Button asChild className="w-full mt-4" variant="outline">
+          <Link href={user ? "/dashboard" : "/signin"}>{plan.cta}</Link>
+        </Button>
+      );
+    }
+
+    // Paid plans
+    // If user is not logged in, the button should link to signin
+    if (!user) {
+       return (
+        <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
+          <Link href="/signin">{plan.cta}</Link>
+        </Button>
+      );
+    }
+
+    // If user is logged in, the button should trigger checkout
+    return (
+      <Button
+        className="w-full mt-4"
+        variant={plan.isPrimary ? 'default' : 'outline'}
+        onClick={() => handleCheckout(plan.priceId!)}
+        disabled={loadingPriceId === plan.priceId}
+      >
+        {loadingPriceId === plan.priceId && (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        )}
+        {plan.cta}
+      </Button>
+    );
   };
 
   return (
@@ -159,23 +195,7 @@ export default function PricingPage() {
                       </li>
                     ))}
                   </ul>
-                  {plan.priceId ? (
-                    <Button
-                      className="w-full mt-4"
-                      variant={plan.isPrimary ? 'default' : 'outline'}
-                      onClick={() => handleCheckout(plan.priceId!)}
-                      disabled={loadingPriceId === plan.priceId}
-                    >
-                      {loadingPriceId === plan.priceId && (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      )}
-                      {plan.cta}
-                    </Button>
-                  ) : (
-                     <Button asChild className="w-full mt-4" variant="outline">
-                      <Link href={user ? "/dashboard" : "/signin"}>{plan.cta}</Link>
-                    </Button>
-                  )}
+                  {renderCtaButton(plan)}
                 </CardContent>
               </Card>
             ))}
