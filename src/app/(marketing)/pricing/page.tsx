@@ -87,8 +87,8 @@ export default function PricingPage() {
         throw new Error(checkoutError || 'Failed to create checkout session.');
       }
       
-      // Redirect the top-level window to the Stripe checkout page.
-      window.top.location.href = url;
+      // Redirect to the Stripe checkout page.
+      window.location.href = url;
 
     } catch (error) {
       console.error(error);
