@@ -5,8 +5,10 @@ import { SignInForm } from '@/components/auth/sign-in-form';
 import { Button } from '@/components/ui/button';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Terminal } from 'lucide-react';
 
-const SignInPage = async () => {
+const SignInPage = async ({ searchParams }: { searchParams: { error?: string } }) => {
   const supabase = createSupabaseServerClient();
   const { data: { session } } = await supabase.auth.getSession();
 
@@ -25,6 +27,15 @@ const SignInPage = async () => {
             </span>
           </Link>
         </div>
+        {searchParams.error === 'demo_login_failed' && (
+            <Alert variant="destructive" className="mb-4">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Demo Login Failed</AlertTitle>
+                <AlertDescription>
+                    Please create a user in your Supabase project with the email <strong>demo@user.com</strong> and password <strong>password</strong> to enable this feature.
+                </AlertDescription>
+            </Alert>
+        )}
         <SignInForm />
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
