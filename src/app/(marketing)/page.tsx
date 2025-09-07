@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Button } from '@/components/ui/button'
 import { Bot, Code, Rocket, ArrowRight, LayoutDashboard } from 'lucide-react'
 import { Link } from '@/components/layout/page-loader'
@@ -5,7 +8,9 @@ import Image from 'next/image'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { getCurrentUser } from '@/lib/supabase/auth'
+import { useState, useEffect } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { createSupabaseClient } from '@/lib/supabase/client';
 
 const testimonials = [
   {
@@ -47,8 +52,18 @@ const faqs = [
   }
 ]
 
-export default async function LandingPage() {
-  const { user } = await getCurrentUser();
+export default function LandingPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const supabase = createSupabaseClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+    };
+    getUser();
+  }, [supabase]);
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground overflow-x-hidden">

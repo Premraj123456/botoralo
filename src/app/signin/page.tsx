@@ -1,19 +1,28 @@
 
+'use client';
+
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { SignInForm } from '@/components/auth/sign-in-form';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
+import { createSupabaseClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-const SignInPage = async ({ searchParams }: { searchParams: { error?: string } }) => {
-  const supabase = createSupabaseServerClient();
-  const { data: { session } } = await supabase.auth.getSession();
 
-  if (session) {
-    redirect('/dashboard');
-  }
+const SignInPage = () => {
+  const supabase = createSupabaseClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        router.push('/dashboard');
+      }
+    };
+    checkSession();
+  }, [router, supabase.auth]);
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
@@ -26,15 +35,6 @@ const SignInPage = async ({ searchParams }: { searchParams: { error?: string } }
             </span>
           </Link>
         </div>
-        {searchParams.error === 'demo_login_failed' && (
-            <Alert variant="destructive" className="mb-4">
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>Demo Login Failed</AlertTitle>
-                <AlertDescription>
-                    Please create a user in your Supabase project with the email <strong>demo@user.com</strong> and password <strong>password</strong> to enable this feature.
-                </AlertDescription>
-            </Alert>
-        )}
         <SignInForm />
       </div>
     </div>

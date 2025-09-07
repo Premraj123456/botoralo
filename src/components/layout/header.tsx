@@ -13,10 +13,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { signOut } from '@/lib/supabase/auth';
 import type { User } from '@supabase/supabase-js';
+import { createSupabaseClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
 
 export function Header({ user }: { user: User | null }) {
+    const supabase = createSupabaseClient();
+    const router = useRouter();
 
     const getInitials = () => {
         const email = user?.email;
@@ -24,6 +27,12 @@ export function Header({ user }: { user: User | null }) {
             return email.charAt(0).toUpperCase();
         }
         return 'U';
+    }
+
+    const handleSignOut = async () => {
+        await supabase.auth.signOut();
+        router.push('/');
+        router.refresh();
     }
 
   return (
@@ -55,13 +64,9 @@ export function Header({ user }: { user: User | null }) {
               </DropdownMenuItem>
             </Link>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <form action={signOut} className="w-full">
-                    <button type="submit" className="w-full text-left flex items-center">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>Log out</span>
-                    </button>
-                </form>
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

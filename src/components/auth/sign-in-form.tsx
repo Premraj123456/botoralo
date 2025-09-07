@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal } from "lucide-react";
 
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -29,6 +31,7 @@ export function SignInForm() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
+  const [demoError, setDemoError] = useState(false);
   const { toast } = useToast();
   const supabase = createSupabaseClient();
   const router = useRouter();
@@ -91,7 +94,8 @@ export function SignInForm() {
           title: "Success!",
           description: "You have been successfully signed in. Redirecting...",
         });
-        window.location.href = '/dashboard';
+        router.push('/dashboard');
+        router.refresh(); // Force a refresh to ensure layout re-renders with user state
       } else {
         throw new Error("Could not sign you in. Please try again.");
       }
@@ -109,16 +113,18 @@ export function SignInForm() {
 
   const handleDemoLogin = async () => {
     setIsDemoSubmitting(true);
+    setDemoError(false);
     try {
         const { error } = await supabase.auth.signInWithPassword({
             email: 'demo@user.com',
             password: 'password',
         });
         if (error) {
-            router.push('/signin?error=demo_login_failed');
+            setDemoError(true);
             throw error;
         }
-        window.location.href = '/dashboard';
+        router.push('/dashboard');
+        router.refresh();
     } catch (error) {
         console.error("Demo login failed", error);
     } finally {
@@ -183,6 +189,15 @@ export function SignInForm() {
 
   return (
     <div>
+        {demoError && (
+            <Alert variant="destructive" className="mb-4">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Demo Login Failed</AlertTitle>
+                <AlertDescription>
+                    Please create a user in your Supabase project with the email <strong>demo@user.com</strong> and password <strong>password</strong> to enable this feature.
+                </AlertDescription>
+            </Alert>
+        )}
         {renderForms()}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">

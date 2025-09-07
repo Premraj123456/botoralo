@@ -1,24 +1,46 @@
+
+'use client';
+
 import type { Metadata } from 'next';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
-import { getCurrentUser } from '@/lib/supabase/auth';
-import { redirect } from 'next/navigation';
+import { createSupabaseClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { Loader2 } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'BotPilot Dashboard',
-  description: 'Manage your crypto bots.',
-};
-
-export default async function DashboardLayout({
+export default function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { user } = await getCurrentUser();
-  if (!user) {
-    redirect('/signin');
+  const supabase = createSupabaseClient();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/signin');
+      } else {
+        setUser(session.user);
+        setLoading(false);
+      }
+    };
+    checkUser();
+  }, [router, supabase.auth]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
