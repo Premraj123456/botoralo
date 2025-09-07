@@ -2,7 +2,6 @@
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { SignInForm } from '@/components/auth/sign-in-form';
-import { Button } from '@/components/ui/button';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -37,21 +36,6 @@ const SignInPage = async ({ searchParams }: { searchParams: { error?: string } }
             </Alert>
         )}
         <SignInForm />
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Or
-            </span>
-          </div>
-        </div>
-         <form action="/auth/demo" method="post" className="w-full">
-            <Button variant="secondary" className="w-full" type="submit">
-                Demo Direct Login
-            </Button>
-         </form>
       </div>
     </div>
   );

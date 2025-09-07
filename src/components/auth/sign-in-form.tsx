@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { createSupabaseClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 const emailSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -27,8 +28,10 @@ export function SignInForm() {
   const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
   const { toast } = useToast();
   const supabase = createSupabaseClient();
+  const router = useRouter();
 
   const emailForm = useForm<EmailFormValues>({
     resolver: zodResolver(emailSchema),
@@ -88,7 +91,6 @@ export function SignInForm() {
           title: "Success!",
           description: "You have been successfully signed in. Redirecting...",
         });
-        // Force a full page reload to ensure the new session cookie is sent to the server.
         window.location.href = '/dashboard';
       } else {
         throw new Error("Could not sign you in. Please try again.");
@@ -105,29 +107,74 @@ export function SignInForm() {
     }
   };
 
-  if (step === "otp") {
+  const handleDemoLogin = async () => {
+    setIsDemoSubmitting(true);
+    try {
+        const { error } = await supabase.auth.signInWithPassword({
+            email: 'demo@user.com',
+            password: 'password',
+        });
+        if (error) {
+            router.push('/signin?error=demo_login_failed');
+            throw error;
+        }
+        window.location.href = '/dashboard';
+    } catch (error) {
+        console.error("Demo login failed", error);
+    } finally {
+        setIsDemoSubmitting(false);
+    }
+  }
+
+  const renderForms = () => {
+    if (step === "otp") {
+      return (
+        <Form {...otpForm}>
+          <form onSubmit={otpForm.handleSubmit(handleOtpSubmit)} className="space-y-6">
+            <p className="text-sm text-center text-muted-foreground">
+              An OTP has been sent to <strong>{email}</strong>.
+            </p>
+            <FormField
+              control={otpForm.control}
+              name="otp"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>One-Time Password</FormLabel>
+                  <FormControl>
+                    <Input placeholder="123456" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="mr-2 animate-spin" />}
+              Verify & Sign In
+            </Button>
+          </form>
+        </Form>
+      );
+    }
+
     return (
-      <Form {...otpForm}>
-        <form onSubmit={otpForm.handleSubmit(handleOtpSubmit)} className="space-y-6">
-           <p className="text-sm text-center text-muted-foreground">
-            An OTP has been sent to <strong>{email}</strong>.
-          </p>
+      <Form {...emailForm}>
+        <form onSubmit={emailForm.handleSubmit(handleEmailSubmit)} className="space-y-6">
           <FormField
-            control={otpForm.control}
-            name="otp"
+            control={emailForm.control}
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>One-Time Password</FormLabel>
+                <FormLabel>Email Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="123456" {...field} />
+                  <Input placeholder="you@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full" disabled={isSubmitting || isDemoSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 animate-spin" />}
-            Verify & Sign In
+            Sign In with OTP
           </Button>
         </form>
       </Form>
@@ -135,26 +182,22 @@ export function SignInForm() {
   }
 
   return (
-    <Form {...emailForm}>
-      <form onSubmit={emailForm.handleSubmit(handleEmailSubmit)} className="space-y-6">
-        <FormField
-          control={emailForm.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email Address</FormLabel>
-              <FormControl>
-                <Input placeholder="you@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 animate-spin" />}
-          Sign In with OTP
+    <div>
+        {renderForms()}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-card px-2 text-muted-foreground">
+              Or
+            </span>
+          </div>
+        </div>
+        <Button variant="secondary" className="w-full" onClick={handleDemoLogin} disabled={isDemoSubmitting || isSubmitting}>
+            {isDemoSubmitting && <Loader2 className="mr-2 animate-spin" />}
+            Demo Direct Login
         </Button>
-      </form>
-    </Form>
+    </div>
   );
 }
