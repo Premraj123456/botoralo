@@ -37,6 +37,8 @@ export async function upsertUserProfile({
   if (customerId) {
     profileData.stripe_customer_id = customerId;
   }
+  // Only add the plan to the data object if it's explicitly provided.
+  // This prevents it from overwriting an existing plan with the default value.
   if (plan) {
     profileData.plan = plan;
   }
