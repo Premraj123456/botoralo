@@ -78,7 +78,6 @@ export default function PricingPage() {
         return;
     }
     
-    console.log("Checkout with priceId:", priceId);
     if (!priceId) {
       toast({
         title: 'Error',
@@ -91,7 +90,6 @@ export default function PricingPage() {
     setLoadingPriceId(priceId);
     try {
       const result = await createStripeCheckout(priceId);
-      console.log("Stripe result:", result);
 
       if (result?.checkoutError || !result?.url) {
         throw new Error(result?.checkoutError || 'Could not create checkout session.');
