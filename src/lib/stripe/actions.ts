@@ -41,22 +41,28 @@ export async function updateUserSubscription(userId: string, plan: string, custo
         throw new Error("Could not find user to update subscription.");
     }
 
-    const { error } = await supabase
+    // First, try to update the existing profile
+    const { error: updateError } = await supabase
         .from('profiles')
         .update({ plan: plan, stripe_customer_id: customerId })
         .eq('id', userId);
 
-    if (error) {
-        // If the update fails, it might be because the profile doesn't exist yet.
-        console.log("Update failed, trying to upsert profile for user:", userId);
-        await upsertUserProfile(userId, userData.user.email, customerId);
-         const { error: secondError } = await supabase
+    if (updateError) {
+        console.log(`Update failed for user ${userId}, attempting to upsert profile. Error: ${updateError.message}`);
+        
+        // If the update fails (e.g., row doesn't exist), create the profile
+        const { error: upsertError } = await supabase
             .from('profiles')
-            .update({ plan: plan, stripe_customer_id: customerId })
-            .eq('id', userId);
-        if (secondError) {
-             console.error(`Failed to update subscription for ${userId}:`, secondError);
-             throw new Error(`Failed to update subscription for user ${userId}`);
+            .upsert({ 
+                id: userId, 
+                email: userData.user.email,
+                plan: plan, 
+                stripe_customer_id: customerId 
+            });
+
+        if (upsertError) {
+             console.error(`Failed to upsert subscription for ${userId}:`, upsertError);
+             throw new Error(`Failed to update or create subscription for user ${userId}`);
         }
     }
 }
