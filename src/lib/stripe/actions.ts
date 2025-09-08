@@ -64,7 +64,7 @@ export async function createStripeCheckout(priceId: string) {
             metadata: { supabase_id: user.id }
         });
         customerId = customer.id;
-        await upsertUserProfile(user.id, user.email, customerId);
+        await upsertUserProfile({ userId: user.id, email: user.email, customerId });
     }
     
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
