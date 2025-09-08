@@ -18,14 +18,7 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-export default function PricingPage() {
-  const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const router = useRouter();
-  const supabase = createSupabaseClient();
-  
-  // Moved plans array inside the component to access process.env
-  const plans = [
+const plans = [
     {
       name: 'Free',
       price: '$0',
@@ -62,7 +55,14 @@ export default function PricingPage() {
       cta: 'Go Power',
       isPrimary: false,
     },
-  ];
+];
+
+export default function PricingPage() {
+  const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+  const supabase = createSupabaseClient();
+  
 
   useEffect(() => {
     const getUser = async () => {
@@ -78,8 +78,6 @@ export default function PricingPage() {
         return;
     }
     
-    // 1. Check that your priceId is being set correctly
-    console.log("Checkout with priceId:", priceId);
     if (!priceId) {
       toast({
         title: 'Error',
@@ -93,18 +91,13 @@ export default function PricingPage() {
     try {
       const result = await createStripeCheckout(priceId);
 
-      // 3. Debug in your browser
-      console.log("Stripe result:", result);
-
       if (result?.checkoutError || !result?.url) {
         throw new Error(result?.checkoutError || 'Could not create checkout session.');
       }
       
-      // Redirect to the Stripe checkout page.
       window.location.href = result.url;
 
     } catch (error) {
-      console.error('Checkout Error:', error);
       toast({
         title: 'Error',
         description: (error as Error).message || 'Something went wrong. Please try again.',
@@ -119,7 +112,7 @@ export default function PricingPage() {
     // Free plan always links to dashboard or signin
     if (!plan.priceId) {
       return (
-        <Button asChild className="w-full mt-4" variant="outline">
+        <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
           <Link href={user ? "/dashboard" : "/signin"}>{plan.cta}</Link>
         </Button>
       );
