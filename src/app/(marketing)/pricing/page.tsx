@@ -12,7 +12,7 @@ import {
 import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { createStripeCheckout } from '@/lib/stripe/actions';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase/client';
@@ -62,6 +62,7 @@ export default function PricingPage() {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const supabase = createSupabaseClient();
+  const { toast } = useToast();
   
 
   useEffect(() => {
@@ -78,6 +79,7 @@ export default function PricingPage() {
         return;
     }
     
+    console.log("Checkout with priceId:", priceId);
     if (!priceId) {
       toast({
         title: 'Error',
@@ -90,6 +92,7 @@ export default function PricingPage() {
     setLoadingPriceId(priceId);
     try {
       const result = await createStripeCheckout(priceId);
+      console.log("Stripe result:", result);
 
       if (result?.checkoutError || !result?.url) {
         throw new Error(result?.checkoutError || 'Could not create checkout session.');
@@ -103,23 +106,11 @@ export default function PricingPage() {
         description: (error as Error).message || 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setLoadingPriceId(null);
     }
   };
 
   const renderCtaButton = (plan: typeof plans[0]) => {
-    // Free plan always links to dashboard or signin
-    if (!plan.priceId) {
-      return (
-        <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
-          <Link href={user ? "/dashboard" : "/signin"}>{plan.cta}</Link>
-        </Button>
-      );
-    }
-
-    // Paid plans
-    // If user is not logged in, the button should link to signin
     if (!user) {
        return (
         <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
@@ -128,7 +119,14 @@ export default function PricingPage() {
       );
     }
 
-    // If user is logged in, the button should trigger checkout
+    if (!plan.priceId) {
+       return (
+        <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
+          <Link href="/dashboard">{plan.cta}</Link>
+        </Button>
+      );
+    }
+
     return (
       <Button
         className="w-full mt-4"

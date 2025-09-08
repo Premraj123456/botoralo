@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 
 // This is a mock database for user subscriptions.
 // In a real application, you would use a proper database.
@@ -47,7 +48,7 @@ export async function createStripeCheckout(priceId: string) {
         throw new Error('Price ID is missing.');
     }
 
-    const origin = headers().get('origin') || 'https://botpilot.app';
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -60,9 +61,11 @@ export async function createStripeCheckout(priceId: string) {
       client_reference_id: user.id, 
       customer_email: user.email,
       mode: 'subscription',
-      success_url: `${origin}/dashboard?subscription_success=true`,
-      cancel_url: `${origin}/pricing?canceled=true`,
+      success_url: `${appUrl}/dashboard?subscription_success=true`,
+      cancel_url: `${appUrl}/pricing?canceled=true`,
     });
+    
+    console.log("Stripe checkout session:", session);
 
     if (!session.url) {
       throw new Error('Failed to create a checkout session.');
@@ -81,12 +84,12 @@ export async function createStripeBillingPortalSession() {
         if (!subscription.customerId) {
             throw new Error("User does not have a subscription to manage.");
         }
-
-        const origin = headers().get('origin') || 'http://localhost:9002';
+        
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
 
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: subscription.customerId,
-            return_url: `${origin}/dashboard/billing`,
+            return_url: `${appUrl}/dashboard/billing`,
         });
 
         if (!portalSession.url) {
