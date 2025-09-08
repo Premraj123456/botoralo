@@ -29,6 +29,44 @@ export async function upsertUserProfile(userId: string, email: string, customerI
     return data;
 }
 
+export async function getUserProfile() {
+  const { user } = await getCurrentUser();
+  if (!user) return null;
+
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching profile:", error.message);
+    return null;
+  }
+
+  return data;
+}
+
+export async function updateUserProfile(data: { name: string }) {
+  const { user } = await getCurrentUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase
+    .from('profiles')
+    .update({ full_name: data.name })
+    .eq('id', user.id);
+
+  if (error) {
+    console.error("Error updating profile:", error.message);
+    throw new Error('Failed to update profile.');
+  }
+
+  return { success: true };
+}
+
+
 // --- BOT ACTIONS ---
 
 export async function createBot(data: { name: string, code: string }) {
@@ -39,7 +77,7 @@ export async function createBot(data: { name: string, code: string }) {
 
   // Enforce plan limits on the server
   const [subscription, { count }] = await Promise.all([
-    getUserSubscription(),
+    getUserSubscription(user.id),
     supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
   ]);
 

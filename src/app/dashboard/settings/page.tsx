@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SettingsForm } from "@/components/dashboard/settings-form";
 
 export default function SettingsPage() {
   return (
@@ -8,7 +9,7 @@ export default function SettingsPage() {
         <CardDescription>Manage your account settings and preferences.</CardDescription>
       </CardHeader>
       <CardContent>
-        <p>Account settings form will go here.</p>
+        <SettingsForm />
       </CardContent>
     </Card>
   );
