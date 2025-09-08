@@ -27,6 +27,7 @@ export default function PricingPage() {
   const supabase = createSupabaseClient();
   const { toast } = useToast();
   
+  // Define plans inside the component to access environment variables
   const plans = [
     {
       name: 'Free',
@@ -71,7 +72,7 @@ export default function PricingPage() {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
         if (session) {
-          const sub = await getUserSubscription();
+          const sub = await getUserSubscription(session.user.id);
           setSubscription(sub);
         }
     };
@@ -140,7 +141,7 @@ export default function PricingPage() {
       );
     }
     
-    const ctaText = subscription?.plan === 'Free' ? plan.cta : 'Change Plan';
+    const ctaText = (!subscription || subscription.plan === 'Free') ? plan.cta : 'Change Plan';
 
     return (
       <Button

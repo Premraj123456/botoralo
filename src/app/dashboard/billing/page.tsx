@@ -9,17 +9,21 @@ import { useToast } from "@/hooks/use-toast";
 import { createStripeBillingPortalSession, getUserSubscription } from "@/lib/stripe/actions";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/components/layout/page-loader";
+import { createSupabaseClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export default function BillingPage() {
+  const [user, setUser] = useState<User | null>(null);
   const [subscription, setSubscription] = useState<{ plan: string; customerId: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isManaging, setIsManaging] = useState(false);
   const { toast } = useToast();
+  const supabase = createSupabaseClient();
 
-  const fetchSubscription = useCallback(async () => {
+  const fetchSubscription = useCallback(async (userId: string) => {
     setIsLoading(true);
     try {
-      const sub = await getUserSubscription();
+      const sub = await getUserSubscription(userId);
       setSubscription(sub);
     } catch (error) {
       toast({ title: "Error", description: "Could not fetch subscription details.", variant: "destructive" });
@@ -29,13 +33,26 @@ export default function BillingPage() {
   }, [toast]);
 
   useEffect(() => {
-    fetchSubscription();
-  }, [fetchSubscription]);
+    const getSessionAndSubscription = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchSubscription(session.user.id);
+      } else {
+        setIsLoading(false); // No user, so stop loading
+      }
+    };
+    getSessionAndSubscription();
+  }, [supabase, fetchSubscription]);
 
   const handleManageSubscription = async () => {
+    if (!user) {
+        toast({ title: "Not logged in", description: "You must be logged in to manage your subscription.", variant: "destructive" });
+        return;
+    }
     setIsManaging(true);
     try {
-      const { url, portalError } = await createStripeBillingPortalSession();
+      const { url, portalError } = await createStripeBillingPortalSession(user.id);
       if (portalError || !url) {
         throw new Error(portalError || "Could not create billing portal session.");
       }
@@ -61,12 +78,14 @@ export default function BillingPage() {
           <div className="flex items-center justify-center h-24">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
+        ) : !user ? (
+            <p className="text-muted-foreground">Please log in to view your billing details.</p>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-lg">
               <div>
                 <p className="text-sm text-muted-foreground">Current Plan</p>
-                <p className="text-xl font-semibold">{subscription?.plan}</p>
+                <p className="text-xl font-semibold">{subscription?.plan || 'Free'}</p>
               </div>
               <Badge variant={subscription?.plan !== 'Free' ? 'default' : 'secondary'}>
                 {subscription?.plan !== 'Free' ? 'Active' : 'Inactive'}

@@ -8,20 +8,9 @@ import path from 'path';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { upsertUserProfile } from '../supabase/actions';
 
-// This function will now be updated to get the real user ID
-async function getUserIdForSubscription() {
-    const supabase = createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error("User must be logged in.");
-    }
-    return user.id;
-}
-
-export async function getUserSubscription() {
+export async function getUserSubscription(userId: string) {
   try {
     const supabase = createSupabaseServerClient();
-    const userId = await getUserIdForSubscription();
     
     const { data: profile } = await supabase
       .from('profiles')
@@ -30,12 +19,14 @@ export async function getUserSubscription() {
       .single();
       
     if (!profile) {
+      console.warn(`No profile found for user ${userId}. Defaulting to Free plan.`);
       return { plan: 'Free', customerId: null };
     }
     
     return { plan: profile.plan || 'Free', customerId: profile.stripe_customer_id };
   } catch (error) {
     console.error("Error getting user subscription:", (error as Error).message);
+    // Return a default value in case of an error to prevent crashes
     return { plan: 'Free', customerId: null };
   }
 }
@@ -114,9 +105,9 @@ export async function createStripeCheckout(priceId: string) {
   }
 }
 
-export async function createStripeBillingPortalSession() {
+export async function createStripeBillingPortalSession(userId: string) {
     try {
-        const subscription = await getUserSubscription();
+        const subscription = await getUserSubscription(userId);
         if (!subscription.customerId) {
             throw new Error("User does not have a subscription to manage.");
         }
