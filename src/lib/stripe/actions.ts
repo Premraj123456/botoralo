@@ -35,26 +35,17 @@ export async function updateUserSubscription(userId: string, plan: string, custo
     const supabase = createSupabaseServerClient();
     console.log(`Updating subscription for ${userId} to ${plan} with customer ID ${customerId}`);
     
-    const { data: { user } , error: userError } = await supabase.auth.admin.getUserById(userId);
-    if(userError || !user?.email) {
-        console.error("Could not find user to update subscription:", userError?.message);
-        throw new Error("Could not find user to update subscription.");
-    }
-
-    // Use upsert to handle both new user creation and existing user updates in one atomic operation.
-    // This resolves the race condition where a webhook could arrive before the user profile is created.
-    const { error: upsertError } = await supabase
+    const { error: updateError } = await supabase
         .from('profiles')
-        .upsert({ 
-            id: userId, 
-            email: user.email,
+        .update({ 
             plan: plan, 
             stripe_customer_id: customerId 
-        });
+        })
+        .eq('id', userId);
 
-    if (upsertError) {
-            console.error(`Failed to upsert subscription for ${userId}:`, upsertError);
-            throw new Error(`Failed to update or create subscription for user ${userId}`);
+    if (updateError) {
+        console.error(`Failed to update subscription for ${userId}:`, updateError);
+        throw new Error(`Failed to update subscription for user ${userId}`);
     }
 }
 

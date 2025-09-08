@@ -13,15 +13,22 @@ const planLimits = {
 
 export async function upsertUserProfile(userId: string, email: string, customerId?: string) {
     const supabase = createSupabaseServerClient();
+    
+    const profileData: { id: string, email: string, stripe_customer_id?: string } = {
+        id: userId,
+        email: email,
+    };
+
+    if (customerId) {
+        profileData.stripe_customer_id = customerId;
+    }
+
     const { data, error } = await supabase
         .from('profiles')
-        .upsert({
-            id: userId,
-            email: email,
-            stripe_customer_id: customerId
-        })
+        .upsert(profileData)
         .select()
         .single();
+
     if (error) {
         console.error("Error upserting user profile:", error);
         throw new Error("Could not upsert user profile.");
