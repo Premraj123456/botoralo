@@ -35,35 +35,26 @@ export async function updateUserSubscription(userId: string, plan: string, custo
     const supabase = createSupabaseServerClient();
     console.log(`Updating subscription for ${userId} to ${plan} with customer ID ${customerId}`);
     
-    const { error: userError, data: userData } = await supabase.auth.admin.getUserById(userId);
-    if(userError || !userData?.user?.email) {
+    const { data: { user } , error: userError } = await supabase.auth.admin.getUserById(userId);
+    if(userError || !user?.email) {
         console.error("Could not find user to update subscription:", userError?.message);
         throw new Error("Could not find user to update subscription.");
     }
 
-    // First, try to update the existing profile
-    const { error: updateError } = await supabase
+    // Use upsert to handle both new user creation and existing user updates in one atomic operation.
+    // This resolves the race condition where a webhook could arrive before the user profile is created.
+    const { error: upsertError } = await supabase
         .from('profiles')
-        .update({ plan: plan, stripe_customer_id: customerId })
-        .eq('id', userId);
+        .upsert({ 
+            id: userId, 
+            email: user.email,
+            plan: plan, 
+            stripe_customer_id: customerId 
+        });
 
-    if (updateError) {
-        console.log(`Update failed for user ${userId}, attempting to upsert profile. Error: ${updateError.message}`);
-        
-        // If the update fails (e.g., row doesn't exist), create the profile
-        const { error: upsertError } = await supabase
-            .from('profiles')
-            .upsert({ 
-                id: userId, 
-                email: userData.user.email,
-                plan: plan, 
-                stripe_customer_id: customerId 
-            });
-
-        if (upsertError) {
-             console.error(`Failed to upsert subscription for ${userId}:`, upsertError);
-             throw new Error(`Failed to update or create subscription for user ${userId}`);
-        }
+    if (upsertError) {
+            console.error(`Failed to upsert subscription for ${userId}:`, upsertError);
+            throw new Error(`Failed to update or create subscription for user ${userId}`);
     }
 }
 
