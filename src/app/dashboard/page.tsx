@@ -1,3 +1,4 @@
+
 import { Link } from '@/components/layout/page-loader';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { getUserBots } from '@/lib/supabase/actions';
 import { getUserSubscription } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { SubscriptionRefresher } from '@/components/dashboard/subscription-refresher';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const planLimits = {
   Free: 1,
@@ -14,8 +16,28 @@ const planLimits = {
 };
 
 export default async function Dashboard() {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    // This should not happen due to middleware, but as a fallback
+    return (
+        <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-20">
+            <div className="flex flex-col items-center gap-2 text-center">
+                <h3 className="text-2xl font-bold tracking-tight">Could not find user information.</h3>
+                <p className="text-sm text-muted-foreground">Please try signing in again.</p>
+                <div className="mt-4">
+                    <Button asChild>
+                        <Link href="/signin">Sign In</Link>
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+  }
+
   const [subscription, userBots] = await Promise.all([
-    getUserSubscription(),
+    getUserSubscription(user.id),
     getUserBots(),
   ]);
 
