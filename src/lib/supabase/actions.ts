@@ -11,10 +11,10 @@ const planLimits = {
   Power: 20,
 };
 
-export async function upsertUserProfile(userId: string, email: string, customerId?: string) {
+export async function upsertUserProfile(userId: string, email: string, customerId?: string, plan?: string) {
     const supabase = createSupabaseServerClient();
     
-    const profileData: { id: string, email: string, stripe_customer_id?: string } = {
+    const profileData: { id: string, email: string, stripe_customer_id?: string, plan?: string } = {
         id: userId,
         email: email,
     };
@@ -22,10 +22,13 @@ export async function upsertUserProfile(userId: string, email: string, customerI
     if (customerId) {
         profileData.stripe_customer_id = customerId;
     }
+    if (plan) {
+        profileData.plan = plan;
+    }
 
     const { data, error } = await supabase
         .from('profiles')
-        .upsert(profileData)
+        .upsert(profileData, { onConflict: 'id' })
         .select()
         .single();
 

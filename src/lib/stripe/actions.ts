@@ -31,25 +31,6 @@ export async function getUserSubscription(userId: string) {
   }
 }
 
-export async function updateUserSubscription(userId: string, plan: string, customerId: string) {
-    const supabase = createSupabaseServerClient();
-    console.log(`Updating subscription for ${userId} to ${plan} with customer ID ${customerId}`);
-    
-    const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-            plan: plan, 
-            stripe_customer_id: customerId 
-        })
-        .eq('id', userId);
-
-    if (updateError) {
-        console.error(`Failed to update subscription for ${userId}:`, updateError);
-        throw new Error(`Failed to update subscription for user ${userId}`);
-    }
-}
-
-
 export async function createStripeCheckout(priceId: string) {
   try {
     const supabase = createSupabaseServerClient();
