@@ -1,6 +1,6 @@
 
 import { Link } from '@/components/layout/page-loader';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
 import { getUserBots } from '@/lib/supabase/actions';
@@ -8,6 +8,7 @@ import { getUserSubscription } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { SubscriptionRefresher } from '@/components/dashboard/subscription-refresher';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const planLimits = {
   Free: 1,
@@ -15,7 +16,7 @@ const planLimits = {
   Power: 20,
 };
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined }}) {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -43,6 +44,7 @@ export default async function Dashboard() {
 
   const botLimit = planLimits[subscription.plan as keyof typeof planLimits] || 1;
   const canCreateBot = userBots.length < botLimit;
+  const showSuccessAlert = searchParams?.subscription_success === 'true';
 
   const CreateBotButton = () => (
     <Button asChild disabled={!canCreateBot}>
@@ -55,6 +57,16 @@ export default async function Dashboard() {
   return (
     <div className="flex flex-col gap-6">
       <SubscriptionRefresher />
+      {showSuccessAlert && (
+          <Alert>
+              <Terminal className="h-4 w-4" />
+              <AlertTitle>Subscription Processing</AlertTitle>
+              <AlertDescription>
+                  Your checkout was successful! Your plan will be updated momentarily. If you are developing locally, please ensure you are running the Stripe CLI to forward webhooks:
+                  <pre className="mt-2 p-2 bg-muted rounded-md text-sm font-mono">stripe listen --forward-to localhost:9002/api/stripe/webhook</pre>
+              </AlertDescription>
+          </Alert>
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold md:text-3xl">My Bots</h1>
         {canCreateBot ? (
