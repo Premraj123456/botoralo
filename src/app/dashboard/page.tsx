@@ -4,11 +4,11 @@ import { PlusCircle, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
 import { getUserBots } from '@/lib/supabase/actions';
-import { getUserSubscription } from '@/lib/stripe/actions';
+import { getUserSubscription, updatePlanFromStripeSession } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { SubscriptionRefresher } from '@/components/dashboard/subscription-refresher';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { revalidatePath } from 'next/cache';
 
 const planLimits = {
   Free: 1,
@@ -16,9 +16,33 @@ const planLimits = {
   Power: 20,
 };
 
+// A new component to handle the server-side update
+async function SubscriptionSuccess({ sessionId, userId }: { sessionId: string, userId: string }) {
+  try {
+    await updatePlanFromStripeSession(sessionId, userId);
+    // Revalidate the path to ensure the UI updates with the new plan info
+    revalidatePath('/dashboard'); 
+  } catch (error) {
+    console.error("Failed to update plan from Stripe session:", error);
+    // Optionally, you could display an error message here
+  }
+  return (
+    <Alert>
+        <Terminal className="h-4 w-4" />
+        <AlertTitle>Subscription Updated!</AlertTitle>
+        <AlertDescription>
+            Your checkout was successful and your plan has been updated.
+        </AlertDescription>
+    </Alert>
+  );
+}
+
+
 export default async function Dashboard({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined }}) {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
+  
+  const sessionId = searchParams?.session_id as string | undefined;
 
   if (!user) {
     // This should not happen due to middleware, but as a fallback
@@ -37,6 +61,12 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
     );
   }
 
+  // If a session_id is present, the update action will be triggered here.
+  // We await it to ensure the subscription data below is fresh.
+  if (sessionId) {
+    await updatePlanFromStripeSession(sessionId, user.id);
+  }
+
   const [subscription, userBots] = await Promise.all([
     getUserSubscription(user.id),
     getUserBots(),
@@ -44,7 +74,6 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
 
   const botLimit = planLimits[subscription.plan as keyof typeof planLimits] || 1;
   const canCreateBot = userBots.length < botLimit;
-  const showSuccessAlert = searchParams?.subscription_success === 'true';
 
   const CreateBotButton = () => (
     <Button asChild disabled={!canCreateBot}>
@@ -56,14 +85,12 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
 
   return (
     <div className="flex flex-col gap-6">
-      <SubscriptionRefresher />
-      {showSuccessAlert && (
+      {sessionId && (
           <Alert>
               <Terminal className="h-4 w-4" />
-              <AlertTitle>Subscription Processing</AlertTitle>
+              <AlertTitle>Subscription Updated!</AlertTitle>
               <AlertDescription>
-                  Your checkout was successful! Your plan will be updated momentarily. If you are developing locally, please ensure you are running the Stripe CLI to forward webhooks:
-                  <pre className="mt-2 p-2 bg-muted rounded-md text-sm font-mono">stripe listen --forward-to localhost:9002/api/stripe/webhook</pre>
+                  Your checkout was successful and your plan has been updated.
               </AlertDescription>
           </Alert>
       )}

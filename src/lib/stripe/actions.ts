@@ -6,7 +6,10 @@ import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { upsertUserProfile } from '../supabase/actions';
+import { updateUserPlan, upsertUserProfile } from '../supabase/actions';
+
+const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID!;
+const powerPriceId = process.env.NEXT_PUBLIC_STRIPE_POWER_PLAN_PRICE_ID!;
 
 export async function getUserSubscription(userId: string) {
   try {
@@ -76,7 +79,7 @@ export async function createStripeCheckout(priceId: string) {
       ],
       client_reference_id: user.id, 
       mode: 'subscription',
-      success_url: `${baseUrl}/dashboard?subscription_success=true`,
+      success_url: `${baseUrl}/dashboard?subscription_success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/pricing?canceled=true`,
     });
     
@@ -116,6 +119,47 @@ export async function createStripeBillingPortalSession(userId: string) {
         console.error(e);
         return { url: null, portalError: (e as Error).message };
     }
+}
+
+export async function updatePlanFromStripeSession(sessionId: string, userId: string) {
+  try {
+    if (!sessionId) {
+      throw new Error("No session ID provided.");
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['line_items'],
+    });
+
+    if (session.payment_status !== 'paid') {
+      throw new Error("Checkout session was not paid.");
+    }
+    
+    const customerId = session.customer as string;
+    if (!customerId) {
+      throw new Error("Could not find customer ID in session.");
+    }
+
+    const priceId = session.line_items?.data[0]?.price?.id;
+    if (!priceId) {
+      throw new Error("Could not find price ID in line items.");
+    }
+
+    let plan = 'Free';
+    if (priceId === proPriceId) {
+        plan = 'Pro';
+    } else if (priceId === powerPriceId) {
+        plan = 'Power';
+    }
+
+    await updateUserPlan({ userId, plan, customerId });
+    console.log(`Successfully updated plan for ${userId} to ${plan} from session ${sessionId}`);
+    
+  } catch (error) {
+    console.error("Error updating plan from Stripe session:", error);
+    // Re-throw the error to be handled by the caller
+    throw error;
+  }
 }
 
 
