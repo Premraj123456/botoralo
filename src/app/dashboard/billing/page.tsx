@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, ExternalLink } from "lucide-react";
@@ -16,19 +16,21 @@ export default function BillingPage() {
   const [isManaging, setIsManaging] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function fetchSubscription() {
-      try {
-        const sub = await getUserSubscription();
-        setSubscription(sub);
-      } catch (error) {
-        toast({ title: "Error", description: "Could not fetch subscription details.", variant: "destructive" });
-      } finally {
-        setIsLoading(false);
-      }
+  const fetchSubscription = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const sub = await getUserSubscription();
+      setSubscription(sub);
+    } catch (error) {
+      toast({ title: "Error", description: "Could not fetch subscription details.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
-    fetchSubscription();
   }, [toast]);
+
+  useEffect(() => {
+    fetchSubscription();
+  }, [fetchSubscription]);
 
   const handleManageSubscription = async () => {
     setIsManaging(true);
