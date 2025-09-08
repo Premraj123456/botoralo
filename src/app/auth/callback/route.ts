@@ -2,6 +2,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { upsertUserProfile } from '@/lib/supabase/actions';
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -10,8 +11,10 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = createSupabaseServerClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && data.user) {
+      // Create a profile for the new user
+      await upsertUserProfile(data.user.id, data.user.email!);
       return NextResponse.redirect(`${origin}/dashboard`);
     }
   }

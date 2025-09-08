@@ -11,6 +11,23 @@ const planLimits = {
   Power: 20,
 };
 
+export async function upsertUserProfile(userId: string, email: string, customerId?: string) {
+    const supabase = createSupabaseServerClient();
+    const { data, error } = await supabase
+        .from('profiles')
+        .upsert({
+            id: userId,
+            email: email,
+            stripe_customer_id: customerId
+        })
+        .select()
+        .single();
+    if (error) {
+        console.error("Error upserting user profile:", error);
+        throw new Error("Could not upsert user profile.");
+    }
+    return data;
+}
 
 // --- BOT ACTIONS ---
 
@@ -65,6 +82,8 @@ export async function getUserBots() {
 
   if (error) {
     console.error("Error fetching user bots from Supabase:", error);
+    // If the table doesn't exist, Supabase might throw an error.
+    // It's better to return an empty array than crash the app.
     return [];
   }
 

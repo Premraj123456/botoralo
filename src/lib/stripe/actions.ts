@@ -6,31 +6,68 @@ import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-
-// This is a mock database for user subscriptions.
-// In a real application, you would use a proper database.
-// The key is the 'client_reference_id' passed during checkout.
-const userSubscriptions: { [userId: string]: { plan: string; customerId: string | null } } = {
-  'user_placeholder': { plan: 'Free', customerId: null }
-};
+import { upsertUserProfile } from '../supabase/actions';
 
 // This function will now be updated to get the real user ID
 async function getUserIdForSubscription() {
     const supabase = createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
-    // Fallback to mock user if no user is logged in
-    return user ? user.id : 'user_placeholder';
+    if (!user) {
+      throw new Error("User must be logged in.");
+    }
+    return user.id;
 }
 
 export async function getUserSubscription() {
-  const userId = await getUserIdForSubscription();
-  // In a real app, you would fetch this from your database based on the logged-in user.
-  return userSubscriptions[userId] || { plan: 'Free', customerId: null };
+  try {
+    const supabase = createSupabaseServerClient();
+    const userId = await getUserIdForSubscription();
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('plan, stripe_customer_id')
+      .eq('id', userId)
+      .single();
+      
+    if (!profile) {
+      return { plan: 'Free', customerId: null };
+    }
+    
+    return { plan: profile.plan || 'Free', customerId: profile.stripe_customer_id };
+  } catch (error) {
+    console.error("Error getting user subscription:", (error as Error).message);
+    return { plan: 'Free', customerId: null };
+  }
 }
 
 export async function updateUserSubscription(userId: string, plan: string, customerId: string) {
+    const supabase = createSupabaseServerClient();
     console.log(`Updating subscription for ${userId} to ${plan} with customer ID ${customerId}`);
-    userSubscriptions[userId] = { plan, customerId };
+    
+    const { error: userError, data: userData } = await supabase.auth.admin.getUserById(userId);
+    if(userError || !userData?.user?.email) {
+        console.error("Could not find user to update subscription:", userError?.message);
+        throw new Error("Could not find user to update subscription.");
+    }
+
+    const { error } = await supabase
+        .from('profiles')
+        .update({ plan: plan, stripe_customer_id: customerId })
+        .eq('id', userId);
+
+    if (error) {
+        // If the update fails, it might be because the profile doesn't exist yet.
+        console.log("Update failed, trying to upsert profile for user:", userId);
+        await upsertUserProfile(userId, userData.user.email, customerId);
+         const { error: secondError } = await supabase
+            .from('profiles')
+            .update({ plan: plan, stripe_customer_id: customerId })
+            .eq('id', userId);
+        if (secondError) {
+             console.error(`Failed to update subscription for ${userId}:`, secondError);
+             throw new Error(`Failed to update subscription for user ${userId}`);
+        }
+    }
 }
 
 

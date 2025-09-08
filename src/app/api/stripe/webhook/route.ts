@@ -1,7 +1,9 @@
+
 import { stripe } from '@/lib/stripe/server';
 import { headers } from 'next/headers';
 import type { Stripe } from 'stripe';
 import { updateUserSubscription } from '@/lib/stripe/actions';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 const proPriceId = process.env.NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID!;
@@ -51,10 +53,18 @@ export async function POST(req: Request) {
       }
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        // This is a mock implementation. In a real app, you would look up the user by customer ID.
-        // For this demo, we'll assume there's only one user.
-        const userId = 'user_placeholder'; 
-        await updateUserSubscription(userId, 'Free', subscription.customer as string);
+        const supabase = createSupabaseServerClient();
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('stripe_customer_id', subscription.customer as string)
+            .single();
+
+        if (!profile) {
+            throw new Error(`Could not find user for customer ${subscription.customer}`);
+        }
+
+        await updateUserSubscription(profile.id, 'Free', subscription.customer as string);
         console.log(`Subscription cancelled for customer ${subscription.customer}. User downgraded to Free.`);
         break;
       }
