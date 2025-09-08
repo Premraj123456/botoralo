@@ -4,13 +4,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ExternalLink } from "lucide-react";
+import { Loader2, ExternalLink, Terminal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createStripeBillingPortalSession, getUserSubscription } from "@/lib/stripe/actions";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/components/layout/page-loader";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function BillingPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -74,6 +75,17 @@ export default function BillingPage() {
         <CardDescription>Manage your subscription and view payment history.</CardDescription>
       </CardHeader>
       <CardContent>
+        <Alert className="mb-6">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>One-Time Setup for Billing Portal</AlertTitle>
+            <AlertDescription>
+                To manage your subscription, you must first configure your Customer Portal in Stripe.
+                <a href="https://dashboard.stripe.com/test/settings/billing/portal" target="_blank" rel="noopener noreferrer" className="text-primary underline font-medium ml-1">
+                    Configure it here.
+                </a>
+            </AlertDescription>
+        </Alert>
+
         {isLoading ? (
           <div className="flex items-center justify-center h-24">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
