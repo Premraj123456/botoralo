@@ -6,7 +6,6 @@ import { headers } from 'next/headers';
 import fs from 'fs/promises';
 import path from 'path';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
 
 // This is a mock database for user subscriptions.
 // In a real application, you would use a proper database.
@@ -65,7 +64,7 @@ export async function createStripeCheckout(priceId: string) {
       cancel_url: `${appUrl}/pricing?canceled=true`,
     });
     
-    console.log("Stripe checkout session:", session);
+    console.log("Stripe checkout session created:", session.id);
 
     if (!session.url) {
       throw new Error('Failed to create a checkout session.');
