@@ -15,12 +15,10 @@ export async function upsertUserProfile({
   userId,
   email,
   customerId,
-  plan,
 }: {
   userId: string;
   email: string;
   customerId?: string;
-  plan?: string;
 }) {
   const supabase = createSupabaseServerClient();
 
@@ -28,7 +26,6 @@ export async function upsertUserProfile({
     id: string;
     email: string;
     stripe_customer_id?: string;
-    plan?: string;
   } = {
     id: userId,
     email: email,
@@ -36,11 +33,6 @@ export async function upsertUserProfile({
 
   if (customerId) {
     profileData.stripe_customer_id = customerId;
-  }
-  // Only add the plan to the data object if it's explicitly provided.
-  // This prevents it from overwriting an existing plan with the default value.
-  if (plan) {
-    profileData.plan = plan;
   }
 
   const { data, error } = await supabase
@@ -55,6 +47,21 @@ export async function upsertUserProfile({
   }
   return data;
 }
+
+export async function updateUserPlan({ userId, plan, customerId }: { userId: string, plan: string, customerId: string }) {
+    const supabase = createSupabaseServerClient();
+    const { error } = await supabase
+        .from('profiles')
+        .update({ plan, stripe_customer_id: customerId })
+        .eq('id', userId);
+    
+    if (error) {
+        console.error('Error updating user plan:', error);
+        throw new Error('Could not update user plan.');
+    }
+    console.log(`Successfully updated plan for ${userId} to ${plan}`);
+}
+
 
 export async function getUserProfile() {
   const { user } = await getCurrentUser();

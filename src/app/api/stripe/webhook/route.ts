@@ -2,7 +2,7 @@
 import { stripe } from '@/lib/stripe/server';
 import { headers } from 'next/headers';
 import type { Stripe } from 'stripe';
-import { upsertUserProfile } from '@/lib/supabase/actions';
+import { updateUserPlan } from '@/lib/supabase/actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
@@ -33,10 +33,9 @@ export async function POST(req: Request) {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.client_reference_id as string;
         const customerId = session.customer as string;
-        const customerEmail = session.customer_details?.email as string;
 
-        if (!userId || !customerId || !customerEmail) {
-            throw new Error('Missing client_reference_id, customer, or email in checkout session.');
+        if (!userId || !customerId) {
+            throw new Error('Missing client_reference_id or customer in checkout session.');
         }
 
         const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
@@ -49,7 +48,7 @@ export async function POST(req: Request) {
             plan = 'Power';
         }
         
-        await upsertUserProfile({ userId, email: customerEmail, customerId, plan });
+        await updateUserPlan({ userId, plan, customerId });
         console.log(`Checkout session completed for ${userId}. Plan updated to: ${plan}`);
         break;
       }
@@ -57,7 +56,7 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const { data: profile } = await supabase
             .from('profiles')
-            .select('id, email')
+            .select('id')
             .eq('stripe_customer_id', subscription.customer as string)
             .single();
 
@@ -65,7 +64,7 @@ export async function POST(req: Request) {
             throw new Error(`Could not find user for customer ${subscription.customer}`);
         }
 
-        await upsertUserProfile({ userId: profile.id, email: profile.email!, customerId: subscription.customer as string, plan: 'Free' });
+        await updateUserPlan({ userId: profile.id, plan: 'Free', customerId: subscription.customer as string });
         console.log(`Subscription cancelled for customer ${subscription.customer}. User downgraded to Free.`);
         break;
       }
@@ -73,7 +72,7 @@ export async function POST(req: Request) {
         const subscription = event.data.object as Stripe.Subscription;
         const { data: profile } = await supabase
           .from('profiles')
-          .select('id, email')
+          .select('id')
           .eq('stripe_customer_id', subscription.customer as string)
           .single();
 
@@ -89,7 +88,7 @@ export async function POST(req: Request) {
           plan = 'Power';
         }
 
-        await upsertUserProfile({ userId: profile.id, email: profile.email!, customerId: subscription.customer as string, plan });
+        await updateUserPlan({ userId: profile.id, plan, customerId: subscription.customer as string });
         console.log(`Subscription updated for customer ${subscription.customer}. New plan: ${plan}`);
         break;
       }

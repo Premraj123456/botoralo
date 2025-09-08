@@ -44,26 +44,22 @@ export async function createStripeCheckout(priceId: string) {
         throw new Error('Price ID is missing.');
     }
     
-    // Ensure profile and stripe customer exist
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
         .from('profiles')
         .select('stripe_customer_id')
         .eq('id', user.id)
         .single();
-    
-    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = 'No rows found'
-        throw new Error(`Database error: ${profileError.message}`);
-    }
 
     let customerId = profile?.stripe_customer_id;
 
     if (!customerId) {
         const customer = await stripe.customers.create({
             email: user.email,
-            name: user.email, // Can be updated later from profile
+            name: user.email,
             metadata: { supabase_id: user.id }
         });
         customerId = customer.id;
+        // Save the new customer ID to the user's profile
         await upsertUserProfile({ userId: user.id, email: user.email, customerId });
     }
     
