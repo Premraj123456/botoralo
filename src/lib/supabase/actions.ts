@@ -11,32 +11,47 @@ const planLimits = {
   Power: 20,
 };
 
-export async function upsertUserProfile(userId: string, email: string, customerId?: string, plan?: string) {
-    const supabase = createSupabaseServerClient();
-    
-    const profileData: { id: string, email: string, stripe_customer_id?: string, plan?: string } = {
-        id: userId,
-        email: email,
-    };
+export async function upsertUserProfile({
+  userId,
+  email,
+  customerId,
+  plan,
+}: {
+  userId: string;
+  email: string;
+  customerId?: string;
+  plan?: string;
+}) {
+  const supabase = createSupabaseServerClient();
 
-    if (customerId) {
-        profileData.stripe_customer_id = customerId;
-    }
-    if (plan) {
-        profileData.plan = plan;
-    }
+  const profileData: {
+    id: string;
+    email: string;
+    stripe_customer_id?: string;
+    plan?: string;
+  } = {
+    id: userId,
+    email: email,
+  };
 
-    const { data, error } = await supabase
-        .from('profiles')
-        .upsert(profileData, { onConflict: 'id' })
-        .select()
-        .single();
+  if (customerId) {
+    profileData.stripe_customer_id = customerId;
+  }
+  if (plan) {
+    profileData.plan = plan;
+  }
 
-    if (error) {
-        console.error("Error upserting user profile:", error);
-        throw new Error("Could not upsert user profile.");
-    }
-    return data;
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(profileData, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error upserting user profile:', error);
+    throw new Error('Could not upsert user profile.');
+  }
+  return data;
 }
 
 export async function getUserProfile() {

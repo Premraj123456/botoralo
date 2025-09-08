@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data.user) {
       // Create a profile for the new user
-      await upsertUserProfile(data.user.id, data.user.email!);
+      await upsertUserProfile({ userId: data.user.id, email: data.user.email! });
       return NextResponse.redirect(`${origin}/dashboard`);
     }
   }

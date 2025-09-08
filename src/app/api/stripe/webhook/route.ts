@@ -31,11 +31,11 @@ export async function POST(req: Request) {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const clientReferenceId = session.client_reference_id as string;
+        const userId = session.client_reference_id as string;
         const customerId = session.customer as string;
         const customerEmail = session.customer_details?.email as string;
 
-        if (!clientReferenceId || !customerId || !customerEmail) {
+        if (!userId || !customerId || !customerEmail) {
             throw new Error('Missing client_reference_id, customer, or email in checkout session.');
         }
 
@@ -49,8 +49,8 @@ export async function POST(req: Request) {
             plan = 'Power';
         }
         
-        await upsertUserProfile(clientReferenceId, customerEmail, customerId, plan);
-        console.log(`Checkout session completed for ${clientReferenceId}. Plan updated to: ${plan}`);
+        await upsertUserProfile({ userId, email: customerEmail, customerId, plan });
+        console.log(`Checkout session completed for ${userId}. Plan updated to: ${plan}`);
         break;
       }
       case 'customer.subscription.deleted': {
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
             throw new Error(`Could not find user for customer ${subscription.customer}`);
         }
 
-        await upsertUserProfile(profile.id, profile.email!, subscription.customer as string, 'Free');
+        await upsertUserProfile({ userId: profile.id, email: profile.email!, customerId: subscription.customer as string, plan: 'Free' });
         console.log(`Subscription cancelled for customer ${subscription.customer}. User downgraded to Free.`);
         break;
       }
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
           plan = 'Power';
         }
 
-        await upsertUserProfile(profile.id, profile.email!, subscription.customer as string, plan);
+        await upsertUserProfile({ userId: profile.id, email: profile.email!, customerId: subscription.customer as string, plan });
         console.log(`Subscription updated for customer ${subscription.customer}. New plan: ${plan}`);
         break;
       }
