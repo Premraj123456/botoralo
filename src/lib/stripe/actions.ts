@@ -47,7 +47,7 @@ export async function createStripeCheckout(priceId: string) {
         throw new Error('Price ID is missing.');
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -60,8 +60,8 @@ export async function createStripeCheckout(priceId: string) {
       client_reference_id: user.id, 
       customer_email: user.email,
       mode: 'subscription',
-      success_url: `${appUrl}/dashboard?subscription_success=true`,
-      cancel_url: `${appUrl}/pricing?canceled=true`,
+      success_url: `${baseUrl}/dashboard?subscription_success=true`,
+      cancel_url: `${baseUrl}/pricing?canceled=true`,
     });
     
     console.log("Stripe checkout session created:", session.id);
@@ -84,11 +84,11 @@ export async function createStripeBillingPortalSession() {
             throw new Error("User does not have a subscription to manage.");
         }
         
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
 
         const portalSession = await stripe.billingPortal.sessions.create({
             customer: subscription.customerId,
-            return_url: `${appUrl}/dashboard/billing`,
+            return_url: `${baseUrl}/dashboard/billing`,
         });
 
         if (!portalSession.url) {
