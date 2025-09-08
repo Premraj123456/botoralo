@@ -8,6 +8,7 @@ import { Loader2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createStripeBillingPortalSession, getUserSubscription } from "@/lib/stripe/actions";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@/components/layout/page-loader";
 
 export default function BillingPage() {
   const [subscription, setSubscription] = useState<{ plan: string; customerId: string | null } | null>(null);
@@ -36,7 +37,7 @@ export default function BillingPage() {
       if (portalError || !url) {
         throw new Error(portalError || "Could not create billing portal session.");
       }
-      window.top.location.href = url;
+      window.location.href = url;
     } catch (error) {
       toast({
         title: "Error",
@@ -70,22 +71,26 @@ export default function BillingPage() {
               </Badge>
             </div>
             {subscription?.plan !== 'Free' && subscription?.customerId ? (
-              <Button onClick={handleManageSubscription} disabled={isManaging} className="w-full">
-                {isManaging ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                )}
-                Manage Subscription & Billing
-              </Button>
+              <>
+                <Button onClick={handleManageSubscription} disabled={isManaging} className="w-full">
+                  {isManaging ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                  )}
+                  Manage Subscription & Billing
+                </Button>
+                 <p className="text-xs text-muted-foreground text-center pt-2">
+                    You will be redirected to our payment provider, Stripe, to manage your subscription.
+                 </p>
+              </>
             ) : (
-              <p className="text-sm text-muted-foreground text-center">
-                You are on the Free plan. Upgrade to manage your subscription.
-              </p>
+               <Button asChild className="w-full">
+                <Link href="/pricing">
+                  Upgrade Plan
+                </Link>
+              </Button>
             )}
-             <p className="text-xs text-muted-foreground text-center pt-2">
-                You will be redirected to our payment provider, Stripe, to manage your subscription.
-             </p>
           </div>
         )}
       </CardContent>

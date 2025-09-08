@@ -11,16 +11,18 @@ import {
 } from '@/components/ui/card';
 import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
-import { createStripeCheckout } from '@/lib/stripe/actions';
+import { createStripeCheckout, getUserSubscription } from '@/lib/stripe/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
+import { cn } from '@/lib/utils';
 
 export default function PricingPage() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [subscription, setSubscription] = useState<{ plan: string } | null>(null);
   const router = useRouter();
   const supabase = createSupabaseClient();
   const { toast } = useToast();
@@ -65,11 +67,15 @@ export default function PricingPage() {
   ];
 
   useEffect(() => {
-    const getUser = async () => {
+    const getSessionData = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);
+        if (session) {
+          const sub = await getUserSubscription();
+          setSubscription(sub);
+        }
     };
-    getUser();
+    getSessionData();
   }, [supabase]);
 
   const handleCheckout = async (priceId: string | undefined | null) => {
@@ -108,6 +114,16 @@ export default function PricingPage() {
   };
 
   const renderCtaButton = (plan: typeof plans[0]) => {
+    const isCurrentPlan = subscription?.plan === plan.name;
+
+    if (isCurrentPlan) {
+      return (
+        <Button className="w-full mt-4" disabled>
+          Current Plan
+        </Button>
+      );
+    }
+
     if (!user) {
        return (
         <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
@@ -123,6 +139,8 @@ export default function PricingPage() {
         </Button>
       );
     }
+    
+    const ctaText = subscription?.plan === 'Free' ? plan.cta : 'Change Plan';
 
     return (
       <Button
@@ -134,7 +152,7 @@ export default function PricingPage() {
         {loadingPriceId === plan.priceId && (
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
         )}
-        {plan.cta}
+        {ctaText}
       </Button>
     );
   };
@@ -172,9 +190,10 @@ export default function PricingPage() {
             {plans.map((plan) => (
               <Card
                 key={plan.name}
-                className={`bg-card/50 border-border/50 backdrop-blur-sm flex flex-col ${
-                  plan.isPrimary ? 'border-primary ring-2 ring-primary shadow-2xl shadow-primary/20' : ''
-                }`}
+                className={cn(`bg-card/50 border-border/50 backdrop-blur-sm flex flex-col`,
+                  plan.isPrimary && 'border-primary ring-2 ring-primary shadow-2xl shadow-primary/20',
+                  subscription?.plan === plan.name && 'border-primary ring-2 ring-primary'
+                )}
               >
                 <CardHeader className="text-center">
                   <CardTitle className="text-2xl font-headline">{plan.name}</CardTitle>
