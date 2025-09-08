@@ -19,7 +19,7 @@ export async function getUserSubscription(userId: string) {
       .single();
       
     if (!profile) {
-      console.warn(`No profile found for user ${userId}. Defaulting to Free plan.`);
+      console.log(`No profile found for user ${userId}. This is expected for new users. Defaulting to Free plan.`);
       return { plan: 'Free', customerId: null };
     }
     
@@ -80,11 +80,35 @@ export async function createStripeCheckout(priceId: string) {
     if (!priceId) {
         throw new Error('Price ID is missing.');
     }
+    
+    // Ensure profile and stripe customer exist
+    const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
+        .single();
+    
+    if (profileError && profileError.code !== 'PGRST116') { // PGRST116 = 'No rows found'
+        throw new Error(`Database error: ${profileError.message}`);
+    }
 
+    let customerId = profile?.stripe_customer_id;
+
+    if (!customerId) {
+        const customer = await stripe.customers.create({
+            email: user.email,
+            name: user.email, // Can be updated later from profile
+            metadata: { supabase_id: user.id }
+        });
+        customerId = customer.id;
+        await upsertUserProfile(user.id, user.email, customerId);
+    }
+    
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      customer: customerId,
       line_items: [
         {
           price: priceId,
@@ -92,7 +116,6 @@ export async function createStripeCheckout(priceId: string) {
         },
       ],
       client_reference_id: user.id, 
-      customer_email: user.email,
       mode: 'subscription',
       success_url: `${baseUrl}/dashboard?subscription_success=true`,
       cancel_url: `${baseUrl}/pricing?canceled=true`,

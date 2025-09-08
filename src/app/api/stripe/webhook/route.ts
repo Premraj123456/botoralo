@@ -64,8 +64,33 @@ export async function POST(req: Request) {
             throw new Error(`Could not find user for customer ${subscription.customer}`);
         }
 
-        await updateUserSubscription(profile.id, 'Free', subscription.customer as string);
+        await updateUserSubscription(profile.id, 'Free', null);
         console.log(`Subscription cancelled for customer ${subscription.customer}. User downgraded to Free.`);
+        break;
+      }
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const supabase = createSupabaseServerClient();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('stripe_customer_id', subscription.customer as string)
+          .single();
+
+        if (!profile) {
+          throw new Error(`Could not find user for customer ${subscription.customer}`);
+        }
+
+        const priceId = subscription.items.data[0].price.id;
+        let plan = 'Free';
+        if (priceId === proPriceId) {
+          plan = 'Pro';
+        } else if (priceId === powerPriceId) {
+          plan = 'Power';
+        }
+
+        await updateUserSubscription(profile.id, plan, subscription.customer as string);
+        console.log(`Subscription updated for customer ${subscription.customer}. New plan: ${plan}`);
         break;
       }
       default:
