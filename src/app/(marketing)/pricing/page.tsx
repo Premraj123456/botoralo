@@ -18,7 +18,14 @@ import { useRouter } from 'next/navigation';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-const plans = [
+export default function PricingPage() {
+  const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const router = useRouter();
+  const supabase = createSupabaseClient();
+  const { toast } = useToast();
+  
+  const plans = [
     {
       name: 'Free',
       price: '$0',
@@ -55,15 +62,7 @@ const plans = [
       cta: 'Go Power',
       isPrimary: false,
     },
-];
-
-export default function PricingPage() {
-  const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const router = useRouter();
-  const supabase = createSupabaseClient();
-  const { toast } = useToast();
-  
+  ];
 
   useEffect(() => {
     const getUser = async () => {
