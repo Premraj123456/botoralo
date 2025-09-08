@@ -5,6 +5,7 @@ import { BotCard } from '@/components/dashboard/bot-card';
 import { getUserBots } from '@/lib/supabase/actions';
 import { getUserSubscription } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { SubscriptionRefresher } from '@/components/dashboard/subscription-refresher';
 
 const planLimits = {
   Free: 1,
@@ -31,6 +32,7 @@ export default async function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
+      <SubscriptionRefresher />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold md:text-3xl">My Bots</h1>
         {canCreateBot ? (
