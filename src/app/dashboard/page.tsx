@@ -5,6 +5,7 @@ import { BotCard } from '@/components/dashboard/bot-card';
 import { getUserBots } from '@/lib/supabase/actions';
 import { getUserSubscription } from '@/lib/stripe/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { revalidatePath } from 'next/cache';
 
 const planLimits = {
   Free: 1,
@@ -13,6 +14,8 @@ const planLimits = {
 };
 
 export default async function Dashboard() {
+  revalidatePath('/dashboard', 'layout');
+  
   const [subscription, userBots] = await Promise.all([
     getUserSubscription(),
     getUserBots(),
