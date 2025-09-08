@@ -9,7 +9,7 @@ const sourceCodePro = Source_Code_Pro({ subsets: ['latin'], variable: '--font-so
 
 
 export const metadata: Metadata = {
-  title: 'BotPilot',
+  title: 'Botoralo',
   description: 'Host your crypto bots without any VPS or complex setups.',
 };
 

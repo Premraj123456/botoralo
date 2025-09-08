@@ -166,7 +166,7 @@ export default function PricingPage() {
       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
         <Link className="flex items-center justify-center" href="/">
           <Bot className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
+          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">Botoralo</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link

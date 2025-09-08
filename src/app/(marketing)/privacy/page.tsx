@@ -9,7 +9,7 @@ export default function PrivacyPolicyPage() {
       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
         <Link className="flex items-center justify-center" href="/">
           <Bot className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
+          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">Botoralo</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
             <Link href="/dashboard" className="text-sm font-medium text-primary">Dashboard</Link>
@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
                <section>
                 <h2 className="text-2xl font-semibold">5. Your Choices</h2>
                 <p>
-                  You may update, correct or delete information about you at any time by logging into your online account. If you wish to delete or deactivate your account, please email us at support@botpilot.app, but note that we may retain certain information as required by law or for legitimate business purposes.
+                  You may update, correct or delete information about you at any time by logging into your online account. If you wish to delete or deactivate your account, please email us at support@botoralo.app, but note that we may retain certain information as required by law or for legitimate business purposes.
                 </p>
               </section>
               <section>
@@ -65,7 +65,7 @@ export default function PrivacyPolicyPage() {
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-border/50 z-10">
         <p className="text-xs text-muted-foreground">
-          © 2024 BotPilot. All rights reserved.
+          © 2024 Botoralo. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link className="text-xs hover:underline underline-offset-4" href="/terms">

@@ -14,7 +14,7 @@ import { createSupabaseClient } from '@/lib/supabase/client';
 
 const testimonials = [
   {
-    quote: "BotPilot revolutionized my workflow. I went from spending hours managing servers to deploying bots in minutes. The AI-powered insights are a game-changer.",
+    quote: "Botoralo revolutionized my workflow. I went from spending hours managing servers to deploying bots in minutes. The AI-powered insights are a game-changer.",
     name: "Alex T.",
     title: "Algorithmic Trader",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704a"
@@ -26,7 +26,7 @@ const testimonials = [
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704b"
   },
   {
-    quote: "The uptime and reliability are top-notch. I sleep better at night knowing my trading strategies are running on BotPilot's solid infrastructure.",
+    quote: "The uptime and reliability are top-notch. I sleep better at night knowing my trading strategies are running on Botoralo's solid infrastructure.",
     name: "David L.",
     title: "Crypto Fund Manager",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704c"
@@ -36,7 +36,7 @@ const testimonials = [
 const faqs = [
   {
     question: "What languages can I use for my bots?",
-    answer: "BotPilot is language-agnostic. As long as your script can run in a standard Linux container, you can host it with us. We have pre-configured environments for Python, JavaScript/TypeScript (Node.js), and Rust, but you can customize your environment."
+    answer: "Botoralo is language-agnostic. As long as your script can run in a standard Linux container, you can host it with us. We have pre-configured environments for Python, JavaScript/TypeScript (Node.js), and Rust, but you can customize your environment."
   },
   {
     question: "How is my code kept secure?",
@@ -44,7 +44,7 @@ const faqs = [
   },
   {
     question: "Can I try the platform for free?",
-    answer: "Absolutely! We offer a free tier that allows you to deploy one bot with sufficient resources for testing and hobby projects. It's a great way to experience the power of BotPilot without any commitment."
+    answer: "Absolutely! We offer a free tier that allows you to deploy one bot with sufficient resources for testing and hobby projects. It's a great way to experience the power of Botoralo without any commitment."
   },
   {
     question: "What makes the AI insights special?",
@@ -75,7 +75,7 @@ export default function LandingPage() {
       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
         <Link className="flex items-center justify-center" href="/">
           <Bot className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
+          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">Botoralo</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link
@@ -131,7 +131,7 @@ export default function LandingPage() {
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl font-body">
                     Focus on your strategy. We handle the infrastructure.
-                    BotPilot provides a secure, reliable, and easy-to-use
+                    Botoralo provides a secure, reliable, and easy-to-use
                     platform for hosting your crypto trading bots.
                   </p>
                 </div>
@@ -226,7 +226,7 @@ export default function LandingPage() {
                   Trusted by Traders and Developers
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed font-body">
-                  Hear from our community about how BotPilot has transformed their trading and development process.
+                  Hear from our community about how Botoralo has transformed their trading and development process.
                 </p>
               </div>
             </div>
@@ -289,7 +289,7 @@ export default function LandingPage() {
                     Ready to Automate Your Strategy?
                 </h2>
                 <p className="mt-4 max-w-xl mx-auto text-muted-foreground md:text-xl">
-                    Join hundreds of developers and traders who trust BotPilot.
+                    Join hundreds of developers and traders who trust Botoralo.
                     Deploy your first bot for free and experience the future of automated trading.
                 </p>
                 <div className="mt-8">
@@ -307,7 +307,7 @@ export default function LandingPage() {
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-border/50 z-10">
         <p className="text-xs text-muted-foreground">
-          © 2024 BotPilot. All rights reserved.
+          © 2024 Botoralo. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link className="text-xs hover:underline underline-offset-4" href="/terms">

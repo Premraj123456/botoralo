@@ -9,7 +9,7 @@ export default function TermsOfServicePage() {
       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
         <Link className="flex items-center justify-center" href="/">
           <Bot className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">BotPilot</span>
+          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">Botoralo</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
             <Link href="/dashboard" className="text-sm font-medium text-primary">Dashboard</Link>
@@ -26,7 +26,7 @@ export default function TermsOfServicePage() {
               <section>
                 <h2 className="text-2xl font-semibold">1. Introduction</h2>
                 <p>
-                  Welcome to BotPilot ("Company", "we", "our", "us")! These Terms of Service ("Terms") govern your use of our website located at botpilot.app (the "Service") and form a binding contractual agreement between you, the user of the Service, and us.
+                  Welcome to Botoralo ("Company", "we", "our", "us")! These Terms of Service ("Terms") govern your use of our website located at botoralo.app (the "Service") and form a binding contractual agreement between you, the user of the Service, and us.
                 </p>
               </section>
               <section>
@@ -50,7 +50,7 @@ export default function TermsOfServicePage() {
               <section>
                 <h2 className="text-2xl font-semibold">5. Limitation of Liability</h2>
                 <p>
-                  In no event shall BotPilot, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
+                  In no event shall Botoralo, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
                 </p>
               </section>
               <section>
@@ -62,7 +62,7 @@ export default function TermsOfServicePage() {
               <section>
                 <h2 className="text-2xl font-semibold">7. Contact Us</h2>
                 <p>
-                  If you have any questions about these Terms, please contact us at support@botpilot.app.
+                  If you have any questions about these Terms, please contact us at support@botoralo.app.
                 </p>
               </section>
             </CardContent>
@@ -71,7 +71,7 @@ export default function TermsOfServicePage() {
       </main>
        <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-border/50 z-10">
         <p className="text-xs text-muted-foreground">
-          © 2024 BotPilot. All rights reserved.
+          © 2024 Botoralo. All rights reserved.
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link className="text-xs hover:underline underline-offset-4" href="/terms">

@@ -31,7 +31,7 @@ const SignInPage = () => {
           <Link className="flex items-center justify-center" href="/">
             <Bot className="h-8 w-8 text-primary" />
             <span className="ml-2 text-2xl font-semibold tracking-wider font-headline">
-              BotPilot
+              Botoralo
             </span>
           </Link>
         </div>

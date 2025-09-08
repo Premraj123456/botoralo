@@ -49,7 +49,7 @@ export default function DashboardLayout({
         <div className="flex h-16 items-center border-b border-border/50 px-4 shrink-0">
           <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold">
             <Bot className="w-8 h-8 text-primary" />
-            <span className="text-2xl font-headline">BotPilot</span>
+            <span className="text-2xl font-headline">Botoralo</span>
           </Link>
         </div>
         <SidebarNav />
