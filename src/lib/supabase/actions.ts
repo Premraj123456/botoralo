@@ -4,6 +4,8 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { getUserSubscription } from '@/lib/stripe/actions';
+import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
+import { revalidatePath } from 'next/cache';
 
 const planLimits = {
   Free: 1,
@@ -11,14 +13,26 @@ const planLimits = {
   Power: 20,
 };
 
+export type Bot = {
+  id: string;
+  created_at: string;
+  name: string;
+  code: string;
+  owner_id: string;
+  status: 'running' | 'stopped' | 'error';
+};
+
+
 export async function upsertUserProfile({
   userId,
   email,
   customerId,
+  plan,
 }: {
   userId: string;
   email: string;
   customerId?: string;
+  plan?: string;
 }) {
   const supabase = createSupabaseServerClient();
 
@@ -26,14 +40,15 @@ export async function upsertUserProfile({
     id: string;
     email: string;
     stripe_customer_id?: string;
+    plan?: string;
   } = {
     id: userId,
     email: email,
   };
 
-  if (customerId) {
-    profileData.stripe_customer_id = customerId;
-  }
+  if (customerId) profileData.stripe_customer_id = customerId;
+  if (plan) profileData.plan = plan;
+
 
   const { data, error } = await supabase
     .from('profiles')
@@ -109,7 +124,6 @@ export async function createBot(data: { name: string, code: string }) {
 
   const supabase = createSupabaseServerClient();
 
-  // Enforce plan limits on the server
   const [subscription, { count }] = await Promise.all([
     getUserSubscription(user.id),
     supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
@@ -138,6 +152,19 @@ export async function createBot(data: { name: string, code: string }) {
     console.error('Error creating bot:', error);
     throw new Error('Failed to create bot in database.');
   }
+  
+  // After saving to Supabase, deploy to the backend
+  try {
+    await deployBotToBackend(newBot as Bot);
+    // Update bot status in Supabase after successful deployment
+    await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
+  } catch (backendError) {
+    // If backend fails, we should ideally roll back or mark the bot as failed
+    console.error("Backend deployment failed:", backendError);
+    // For now, we'll just throw the error to the client
+    throw new Error(`Bot created, but failed to deploy: ${(backendError as Error).message}`);
+  }
+
 
   return newBot;
 }
@@ -154,8 +181,6 @@ export async function getUserBots() {
 
   if (error) {
     console.error("Error fetching user bots from Supabase:", error);
-    // If the table doesn't exist, Supabase might throw an error.
-    // It's better to return an empty array than crash the app.
     return [];
   }
 
@@ -183,4 +208,25 @@ export async function getBotById(botId: string) {
   }
   
   return bot;
+}
+
+export async function startBot(botId: string) {
+    await startBotInBackend(botId);
+    const supabase = createSupabaseServerClient();
+    await supabase.from('bots').update({ status: 'running' }).eq('id', botId);
+    revalidatePath(`/dashboard/bots/${botId}`);
+}
+
+export async function stopBot(botId: string) {
+    await stopBotInBackend(botId);
+    const supabase = createSupabaseServerClient();
+    await supabase.from('bots').update({ status: 'stopped' }).eq('id', botId);
+    revalidatePath(`/dashboard/bots/${botId}`);
+}
+
+export async function deleteBot(botId: string) {
+    await deleteBotFromBackend(botId);
+    const supabase = createSupabaseServerClient();
+    await supabase.from('bots').delete().eq('id', botId);
+    revalidatePath('/dashboard');
 }

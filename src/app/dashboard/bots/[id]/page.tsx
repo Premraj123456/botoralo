@@ -1,5 +1,6 @@
+
 import { notFound } from "next/navigation";
-import { getBotById } from "@/lib/supabase/actions";
+import { getBotById, startBot, stopBot, deleteBot } from "@/lib/supabase/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Square, Trash2, Bot as BotIcon } from "lucide-react";
@@ -9,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { SummarizeLogs } from "@/components/bots/summarize-logs";
 import { AnalyzeAnomalies } from "@/components/bots/analyze-anomalies";
 import { SuggestFixes } from "@/components/bots/suggest-fixes";
+import { getBotInfoFromBackend } from "@/lib/bot-backend/client";
+import { redirect } from "next/navigation";
 
 const statusConfig = {
   running: { text: "Running", variant: "default", className: "bg-green-500 hover:bg-green-500/90 text-white" },
@@ -22,12 +25,34 @@ export default async function BotDetailPage({ params }: { params: { id: string }
   if (!bot) {
     notFound();
   }
+
+  const backendInfo = await getBotInfoFromBackend(bot.id);
+  // Sync status if backend has a different idea
+  if (backendInfo && backendInfo.bot.status !== bot.status) {
+    bot.status = backendInfo.bot.status;
+  }
   
   // Supabase doesn't store logs directly in the bot table in this example.
   // A real implementation would fetch logs from a 'logs' table.
   const botLogs = []; 
 
   const status = statusConfig[bot.status as keyof typeof statusConfig] || statusConfig.stopped;
+
+  const startBotAction = async () => {
+    "use server";
+    await startBot(bot.id);
+  }
+  
+  const stopBotAction = async () => {
+    "use server";
+    await stopBot(bot.id);
+  }
+
+  const deleteBotAction = async () => {
+    "use server";
+    await deleteBot(bot.id);
+    redirect('/dashboard');
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -44,9 +69,21 @@ export default async function BotDetailPage({ params }: { params: { id: string }
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm"><Play className="h-4 w-4 mr-2" /> Start</Button>
-              <Button variant="outline" size="sm"><Square className="h-4 w-4 mr-2" /> Stop</Button>
-              <Button variant="destructive" size="sm"><Trash2 className="h-4 w-4 mr-2" /> Delete</Button>
+              <form action={startBotAction}>
+                <Button variant="outline" size="sm" type="submit" disabled={bot.status === 'running'}>
+                  <Play className="h-4 w-4 mr-2" /> Start
+                </Button>
+              </form>
+               <form action={stopBotAction}>
+                <Button variant="outline" size="sm" type="submit" disabled={bot.status !== 'running'}>
+                  <Square className="h-4 w-4 mr-2" /> Stop
+                </Button>
+              </form>
+              <form action={deleteBotAction}>
+                <Button variant="destructive" size="sm" type="submit">
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                </Button>
+              </form>
             </div>
           </div>
         </CardHeader>
@@ -60,7 +97,7 @@ export default async function BotDetailPage({ params }: { params: { id: string }
           <TabsTrigger value="fixes">Code Fix Suggestions</TabsTrigger>
         </TabsList>
         <TabsContent value="logs">
-          <LogViewer logs={botLogs} />
+          <LogViewer logs={botLogs} botId={bot.id} />
         </TabsContent>
         <TabsContent value="summary">
           <SummarizeLogs logs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />
