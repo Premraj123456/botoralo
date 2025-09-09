@@ -23,6 +23,11 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!supabase) {
+        // If Supabase isn't configured, redirect to sign-in which will show a message
+        router.push('/signin');
+        return;
+    }
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -33,7 +38,7 @@ export default function DashboardLayout({
       }
     };
     checkUser();
-  }, [router, supabase.auth]);
+  }, [router, supabase]);
 
   if (loading) {
     return (

@@ -12,12 +12,21 @@ export async function middleware(req: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  // If Supabase credentials aren't provided, bypass the middleware logic
+  // If Supabase credentials aren't provided or are invalid, bypass the middleware logic
   // to prevent the app from crashing.
   if (!supabaseUrl || !supabaseAnonKey) {
     console.warn("Supabase environment variables not found. Skipping middleware authentication.");
     return response;
   }
+
+  // Validate the URL to prevent crashes from placeholder values
+  try {
+    new URL(supabaseUrl);
+  } catch (error) {
+    console.warn(`Invalid Supabase URL: ${supabaseUrl}. Skipping middleware authentication.`);
+    return response;
+  }
+
 
   const supabase = createServerClient(
     supabaseUrl,

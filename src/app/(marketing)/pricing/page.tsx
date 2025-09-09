@@ -68,6 +68,7 @@ export default function PricingPage() {
   ];
 
   useEffect(() => {
+    if (!supabase) return;
     const getSessionData = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user ?? null);

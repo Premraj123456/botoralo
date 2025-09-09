@@ -47,6 +47,7 @@ export function SignInForm() {
   });
 
   const handleEmailSubmit = async (values: EmailFormValues) => {
+    if (!supabase) return;
     setIsSubmitting(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -77,6 +78,7 @@ export function SignInForm() {
   };
 
   const handleOtpSubmit = async (values: OtpFormValues) => {
+    if (!supabase) return;
     setIsSubmitting(true);
     try {
       const { data, error } = await supabase.auth.verifyOtp({
@@ -112,6 +114,7 @@ export function SignInForm() {
   };
 
   const handleDemoLogin = async () => {
+    if (!supabase) return;
     setIsDemoSubmitting(true);
     setDemoError(false);
     try {

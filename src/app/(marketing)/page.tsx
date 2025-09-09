@@ -57,6 +57,7 @@ export default function LandingPage() {
   const supabase = createSupabaseClient();
 
   useEffect(() => {
+    if (!supabase) return;
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);

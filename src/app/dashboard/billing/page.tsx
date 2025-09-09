@@ -34,6 +34,10 @@ export default function BillingPage() {
   }, [toast]);
 
   useEffect(() => {
+    if (!supabase) {
+      setIsLoading(false);
+      return;
+    };
     const getSessionAndSubscription = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
