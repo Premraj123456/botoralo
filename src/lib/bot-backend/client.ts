@@ -12,7 +12,7 @@ if (!BACKEND_URL || !MASTER_KEY) {
   console.warn("Bot backend URL or master key is not configured. Bot operations will be simulated.");
 }
 
-async function makeBackendRequest(endpoint: string, method: string, body: object) {
+async function makeBackendRequest(endpoint: string, method: string, body: object | FormData, isFormData: boolean = false) {
   if (!BACKEND_URL || !MASTER_KEY) {
     console.log(`Simulating backend request to ${endpoint} with method ${method}`, body);
     // Simulate a successful response in development if not configured
@@ -20,17 +20,29 @@ async function makeBackendRequest(endpoint: string, method: string, body: object
   }
 
   try {
+    const headers: HeadersInit = {
+      'Authorization': `Bearer ${MASTER_KEY}`,
+    };
+
+    if (!isFormData) {
+        headers['Content-Type'] = 'application/json';
+    }
+
     const response = await fetch(`${BACKEND_URL}${endpoint}`, {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${MASTER_KEY}`,
-      },
-      body: JSON.stringify(body),
+      headers,
+      body: isFormData ? body as FormData : JSON.stringify(body),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: "Unknown error" }));
+      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { error: "Unknown error", details: errorText };
+      }
+      
       console.error(`Backend request failed: ${response.status}`, errorData);
       throw new Error(errorData.error || `Request failed with status ${response.status}`);
     }
@@ -47,14 +59,22 @@ export async function deployBotToBackend(bot: Bot) {
   const { user } = await getCurrentUser();
   if (!user) throw new Error("Not authenticated");
 
-  const payload = {
+  const formData = new FormData();
+  
+  const meta = {
     userId: user.id,
     botoraloBotId: bot.id,
     name: bot.name,
-    code: bot.code,
     auto_start: true, // Deploy and start immediately
   };
-  return makeBackendRequest('/deploy', 'POST', payload);
+  
+  formData.append('meta', JSON.stringify(meta));
+  
+  // Create a Blob from the bot code to simulate a file upload
+  const codeBlob = new Blob([bot.code], { type: 'text/plain' });
+  formData.append('code', codeBlob, 'code.py');
+
+  return makeBackendRequest('/deploy', 'POST', formData, true);
 }
 
 export async function startBotInBackend(botId: string) {
