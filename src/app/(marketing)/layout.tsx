@@ -40,7 +40,9 @@ export default function MarketingLayout({
           <span className="ml-2 text-xl font-semibold tracking-wider font-headline">Botoralo</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
+            <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</Link>
             <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</Link>
+            <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
             {!loading && (
               user ? (
                 <Button asChild variant="secondary" size="sm">
