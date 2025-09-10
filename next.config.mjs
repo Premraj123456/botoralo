@@ -1,15 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-      },
-      {
-        protocol: 'https',
-        hostname: 'i.pravatar.cc',
-      },
+  experimental: {
+    allowedDevOrigins: [
+      "https://3000-firebase-studio-1756971242442.cluster-fdkw7vjj7bgguspe3fbbc25tra.cloudworkstations.dev",
     ],
   },
 };
