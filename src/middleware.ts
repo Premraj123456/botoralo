@@ -78,5 +78,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  // Only run the middleware on the dashboard and auth routes
+  matcher: ['/dashboard/:path*', '/signin'],
 };
