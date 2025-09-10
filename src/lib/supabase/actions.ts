@@ -133,7 +133,7 @@ export async function createBot(data: { name: string, code: string }) {
   const currentBotCount = count ?? 0;
 
   if (currentBotCount >= botLimit) {
-    throw new Error('You have reached your bot limit. Please upgrade your plan to create more bots.');
+    throw new Error(`You have reached your bot limit for the ${subscription.plan} plan. Please upgrade your plan to create more bots.`);
   }
 
 
