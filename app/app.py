@@ -176,7 +176,7 @@ def start_container_for_bot(bot):
         volumes=volumes,
         read_only=True,
         tty=False,
-        auto_remove=False,
+        auto_remove=True,
         stderr=True,
         stdout=True,
     )
@@ -442,4 +442,6 @@ if __name__ == '__main__':
     app.run(host=FLASK_HOST, port=FLASK_PORT, debug=False)
 
     
+    
+
     
