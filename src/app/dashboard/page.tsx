@@ -9,34 +9,13 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { revalidatePath } from 'next/cache';
+import { getBotInfoFromBackend } from '@/lib/bot-backend/client';
 
 const planLimits = {
   Free: 1,
   Pro: 5,
   Power: 20,
 };
-
-// A new component to handle the server-side update
-async function SubscriptionSuccess({ sessionId, userId }: { sessionId: string, userId: string }) {
-  try {
-    await updatePlanFromStripeSession(sessionId, userId);
-    // Revalidate the path to ensure the UI updates with the new plan info
-    revalidatePath('/dashboard'); 
-  } catch (error) {
-    console.error("Failed to update plan from Stripe session:", error);
-    // Optionally, you could display an error message here
-  }
-  return (
-    <Alert>
-        <Terminal className="h-4 w-4" />
-        <AlertTitle>Subscription Updated!</AlertTitle>
-        <AlertDescription>
-            Your checkout was successful and your plan has been updated.
-        </AlertDescription>
-    </Alert>
-  );
-}
-
 
 export default async function Dashboard({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined }}) {
   const supabase = createSupabaseServerClient();
@@ -67,10 +46,24 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
     await updatePlanFromStripeSession(sessionId, user.id);
   }
 
-  const [subscription, userBots] = await Promise.all([
+  const [subscription, userBotsFromDb] = await Promise.all([
     getUserSubscription(user.id),
     getUserBots(),
   ]);
+
+  // Fetch live backend info for each bot
+  const userBots = await Promise.all(
+    userBotsFromDb.map(async (bot) => {
+      const backendInfo = await getBotInfoFromBackend(bot.id);
+      return {
+        ...bot,
+        // Use backend status if available, otherwise fallback to DB status
+        status: backendInfo?.bot.status || bot.status,
+        backendInfo: backendInfo?.bot || null,
+      };
+    })
+  );
+
 
   const botLimit = planLimits[subscription.plan as keyof typeof planLimits] || 1;
   const canCreateBot = userBots.length < botLimit;

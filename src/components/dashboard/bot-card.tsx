@@ -1,15 +1,23 @@
+
+'use client';
+
 import { Link } from '@/components/layout/page-loader';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Bot as BotIcon, Cpu, Power, ArrowRight } from "lucide-react";
+import { useEffect, useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 
 type Bot = {
   id: string;
   name: string;
-  status: string;
-  // Add other bot properties as needed
+  status: 'running' | 'stopped' | 'error';
+  backendInfo: {
+    memory_mb: number;
+    uptime_started_at: string | null;
+  } | null;
 };
 
 type BotCardProps = {
@@ -23,11 +31,33 @@ const statusConfig = {
 };
 
 export function BotCard({ bot }: BotCardProps) {
-  const statusInfo = statusConfig[bot.status as keyof typeof statusConfig] || statusConfig.stopped;
-  // Mock data for display purposes
-  const ramUsage = 0;
-  const ramMax = 128;
-  const uptime = 'N/A';
+  const statusInfo = statusConfig[bot.status] || statusConfig.stopped;
+  const [uptime, setUptime] = useState('N/A');
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+
+    if (bot.status === 'running' && bot.backendInfo?.uptime_started_at) {
+      const updateUptime = () => {
+        const startTime = new Date(bot.backendInfo!.uptime_started_at!);
+        setUptime(formatDistanceToNow(startTime, { addSuffix: true }));
+      };
+      
+      updateUptime(); // Initial update
+      interval = setInterval(updateUptime, 10000); // Update every 10 seconds
+    } else {
+      setUptime('N/A');
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [bot.status, bot.backendInfo?.uptime_started_at]);
+
+  const ramUsage = 0; // The backend doesn't provide this yet, so we'll keep it at 0.
+  const ramMax = bot.backendInfo?.memory_mb || 128;
   const ramPercentage = ramMax > 0 ? (ramUsage / ramMax) * 100 : 0;
 
   return (
