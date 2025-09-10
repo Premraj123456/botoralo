@@ -1,229 +1,87 @@
-
-'use client';
-
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { CheckCircle2, Bot, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from '@/components/layout/page-loader';
-import { createStripeCheckout, getUserSubscription } from '@/lib/stripe/actions';
-import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { createSupabaseClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
-import { cn } from '@/lib/utils';
+import { Bot } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-export default function PricingPage() {
-  const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [subscription, setSubscription] = useState<{ plan: string } | null>(null);
-  const router = useRouter();
-  const supabase = createSupabaseClient();
-  const { toast } = useToast();
-  
-  // Define plans inside the component to access environment variables
-  const plans = [
-    {
-      name: 'Free',
-      price: '$0',
-      priceId: null,
-      description: 'For hobbyists and testing things out.',
-      ram: '128MB RAM',
-      features: ['1 Bot Slot', '24/7 Uptime', 'Basic Logging', 'Community Support'],
-      cta: 'Start for Free',
-      isPrimary: false,
-    },
-    {
-      name: 'Pro',
-      price: '$9',
-      priceId: process.env.NEXT_PUBLIC_STRIPE_PRO_PLAN_PRICE_ID,
-      description: 'For serious traders who need more power.',
-      ram: '512MB RAM',
-      features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
-      cta: 'Upgrade to Pro',
-      isPrimary: true,
-    },
-    {
-      name: 'Power',
-      price: '$29',
-      priceId: process.env.NEXT_PUBLIC_STRIPE_POWER_PLAN_PRICE_ID,
-      description: 'For professionals running multiple complex bots.',
-      ram: '1GB RAM',
-      features: [
-        '20 Bot Slots',
-        '24/7 Uptime',
-        'Advanced Logging',
-        'AI Log Analysis',
-        'Priority Support',
-      ],
-      cta: 'Go Power',
-      isPrimary: false,
-    },
-  ];
-
-  useEffect(() => {
-    if (!supabase) return;
-    const getSessionData = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-        if (session) {
-          const sub = await getUserSubscription(session.user.id);
-          setSubscription(sub);
-        }
-    };
-    getSessionData();
-  }, [supabase]);
-
-  const handleCheckout = async (priceId: string | undefined | null) => {
-    if (!user) {
-        router.push('/signin');
-        return;
-    }
-    
-    if (!priceId) {
-      toast({
-        title: 'Error',
-        description: 'The Price ID for this plan is not configured. Please contact support.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLoadingPriceId(priceId);
-    try {
-      const result = await createStripeCheckout(priceId);
-
-      if (result?.checkoutError || !result?.url) {
-        throw new Error(result?.checkoutError || 'Could not create checkout session.');
-      }
-      
-      window.location.href = result.url;
-
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: (error as Error).message || 'Something went wrong. Please try again.',
-        variant: 'destructive',
-      });
-      setLoadingPriceId(null);
-    }
-  };
-
-  const renderCtaButton = (plan: typeof plans[0]) => {
-    const isCurrentPlan = subscription?.plan === plan.name;
-
-    if (isCurrentPlan) {
-      return (
-        <Button className="w-full mt-4" disabled>
-          Current Plan
-        </Button>
-      );
-    }
-
-    if (!user) {
-       return (
-        <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
-          <Link href="/signin">{plan.cta}</Link>
-        </Button>
-      );
-    }
-
-    if (!plan.priceId) {
-       return (
-        <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
-          <Link href="/dashboard">{plan.cta}</Link>
-        </Button>
-      );
-    }
-    
-    const ctaText = (!subscription || subscription.plan === 'Free') ? plan.cta : 'Change Plan';
-
-    return (
-      <Button
-        className="w-full mt-4"
-        variant={plan.isPrimary ? 'default' : 'outline'}
-        onClick={() => handleCheckout(plan.priceId)}
-        disabled={loadingPriceId === plan.priceId}
-      >
-        {loadingPriceId === plan.priceId && (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        )}
-        {ctaText}
-      </Button>
-    );
-  };
-
+export default function TermsOfServicePage() {
   return (
     <div className="bg-background text-foreground min-h-screen">
-      <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.05] z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background/80 to-transparent pointer-events-none"></div>
-      </div>
       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
         <Link className="flex items-center justify-center" href="/">
           <Bot className="h-6 w-6 text-primary" />
           <span className="ml-2 text-xl font-semibold tracking-wider font-headline">Botoralo</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link
-            href="/dashboard"
-            className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Dashboard
-          </Link>
+            <Link href="/dashboard" className="text-sm font-medium text-primary">Dashboard</Link>
         </nav>
       </header>
-      <main className="py-12 md:py-20 lg:py-24 z-10 relative">
-        <div className="container mx-auto px-4 md:px-6 flex flex-col gap-12 items-center">
-          <div className="text-center max-w-2xl">
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl font-headline bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              Choose the perfect plan for your bots
-            </h1>
-            <p className="mt-4 text-lg text-muted-foreground">
-              Simple, transparent pricing. No hidden fees. Cancel anytime.
-            </p>
-          </div>
-          <div className="grid gap-8 md:grid-cols-3 max-w-5xl w-full">
-            {plans.map((plan) => (
-              <Card
-                key={plan.name}
-                className={cn(`bg-card/50 border-border/50 backdrop-blur-sm flex flex-col`,
-                  plan.isPrimary && 'border-primary ring-2 ring-primary shadow-2xl shadow-primary/20',
-                  subscription?.plan === plan.name && 'border-primary ring-2 ring-primary'
-                )}
-              >
-                <CardHeader className="text-center">
-                  <CardTitle className="text-2xl font-headline">{plan.name}</CardTitle>
-                  <p className="text-4xl font-bold">
-                    {plan.price}
-                    <span className="text-lg font-normal text-muted-foreground">/mo</span>
-                  </p>
-                  <CardDescription>{plan.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-6 flex-grow">
-                  <div className="text-center font-semibold bg-muted py-2 rounded-md">
-                    {plan.ram}
-                  </div>
-                  <ul className="space-y-3 flex-grow">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-green-500" />
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {renderCtaButton(plan)}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+      <main className="py-12 md:py-20 lg:py-24">
+        <div className="container mx-auto px-4 md:px-6">
+          <Card className="max-w-4xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-3xl md:text-4xl">Terms of Service</CardTitle>
+              <CardDescription>Last updated: July 22, 2024</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 text-muted-foreground prose prose-invert prose-p:text-muted-foreground prose-headings:text-foreground">
+              <section>
+                <h2 className="text-2xl font-semibold">1. Introduction</h2>
+                <p>
+                  Welcome to Botoralo ("Company", "we", "our", "us")! These Terms of Service ("Terms") govern your use of our website located at botoralo.app (the "Service") and form a binding contractual agreement between you, the user of the Service, and us.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">2. Your Account</h2>
+                <p>
+                  When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service. You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.
+                </p>
+              </section>
+               <section>
+                <h2 className="text-2xl font-semibold">3. User Responsibilities</h2>
+                <p>
+                  You are solely responsible for the code, scripts, and trading strategies ("User Content") that you deploy on the Service. You agree that you will not use the Service for any unlawful purpose or to violate any laws in your jurisdiction. You are responsible for all risks associated with your trading activities.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">4. Termination</h2>
+                <p>
+                  We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the Service will immediately cease.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">5. Limitation of Liability</h2>
+                <p>
+                  In no event shall Botoralo, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">6. Changes to Terms</h2>
+                <p>
+                  We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">7. Contact Us</h2>
+                <p>
+                  If you have any questions about these Terms, please contact us at support@botoralo.app.
+                </p>
+              </section>
+            </CardContent>
+          </Card>
         </div>
       </main>
+       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-border/50 z-10">
+        <p className="text-xs text-muted-foreground">
+          © 2024 Botoralo. All rights reserved.
+        </p>
+        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+          <Link className="text-xs hover:underline underline-offset-4" href="/terms">
+            Terms of Service
+          </Link>
+          <Link className="text-xs hover:underline underline-offset-4" href="/privacy">
+            Privacy
+          </Link>
+        </nav>
+      </footer>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { Link } from '@/components/layout/page-loader';
 import { Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export default function PrivacyPolicyPage() {
+export default function TermsOfServicePage() {
   return (
     <div className="bg-background text-foreground min-h-screen">
       <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
@@ -19,51 +19,57 @@ export default function PrivacyPolicyPage() {
         <div className="container mx-auto px-4 md:px-6">
           <Card className="max-w-4xl mx-auto">
             <CardHeader>
-              <CardTitle className="text-3xl md:text-4xl">Privacy Policy</CardTitle>
+              <CardTitle className="text-3xl md:text-4xl">Terms of Service</CardTitle>
               <CardDescription>Last updated: July 22, 2024</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 text-muted-foreground prose prose-invert prose-p:text-muted-foreground prose-headings:text-foreground">
               <section>
-                <h2 className="text-2xl font-semibold">1. Information We Collect</h2>
+                <h2 className="text-2xl font-semibold">1. Introduction</h2>
                 <p>
-                  We collect information that you provide directly to us, such as when you create an account, update your profile, or use the interactive features of our services. This may include your name, email address, password, and any other information you choose to provide. We also collect log information when you use our services, including the type of browser you use, access times, pages viewed, your IP address, and the page you visited before navigating to our services.
+                  Welcome to Botoralo ("Company", "we", "our", "us")! These Terms of Service ("Terms") govern your use of our website located at botoralo.app (the "Service") and form a binding contractual agreement between you, the user of the Service, and us.
                 </p>
               </section>
               <section>
-                <h2 className="text-2xl font-semibold">2. Use of Information</h2>
+                <h2 className="text-2xl font-semibold">2. Your Account</h2>
                 <p>
-                  We may use the information we collect to provide, maintain, and improve our services, such as to administer your use of the services, to monitor and analyze trends, usage, and activities in connection with our services, and for any other purpose for which the information was collected. We also use it to communicate with you about products, services, offers, promotions, and provide news and information we think will be of interest to you.
-                </p>
-              </section>
-              <section>
-                <h2 className="text-2xl font-semibold">3. Sharing of Information</h2>
-                <p>
-                  We do not share your personal information with third parties except in the following circumstances or as otherwise described in this Privacy Policy: with your consent; with third-party vendors and other service providers who need access to your information to carry out work on our behalf; if we believe disclosure is reasonably necessary to comply with any applicable law, regulation, legal process or governmental request.
-                </p>
-              </section>
-              <section>
-                <h2 className="text-2xl font-semibold">4. Data Security</h2>
-                <p>
-                  We take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration, and destruction. Your bot's code and scripts are stored in encrypted environments and are treated as confidential data.
+                  When you create an account with us, you must provide us information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service. You are responsible for safeguarding the password that you use to access the Service and for any activities or actions under your password.
                 </p>
               </section>
                <section>
-                <h2 className="text-2xl font-semibold">5. Your Choices</h2>
+                <h2 className="text-2xl font-semibold">3. User Responsibilities</h2>
                 <p>
-                  You may update, correct or delete information about you at any time by logging into your online account. If you wish to delete or deactivate your account, please email us at support@botoralo.app, but note that we may retain certain information as required by law or for legitimate business purposes.
+                  You are solely responsible for the code, scripts, and trading strategies ("User Content") that you deploy on the Service. You agree that you will not use the Service for any unlawful purpose or to violate any laws in your jurisdiction. You are responsible for all risks associated with your trading activities.
                 </p>
               </section>
               <section>
-                <h2 className="text-2xl font-semibold">6. Changes to This Policy</h2>
+                <h2 className="text-2xl font-semibold">4. Termination</h2>
                 <p>
-                  We may change this Privacy Policy from time to time. If we make changes, we will notify you by revising the date at the top of the policy and, in some cases, we may provide you with additional notice (such as adding a statement to our homepage or sending you a notification).
+                  We may terminate or suspend your account immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms. Upon termination, your right to use the Service will immediately cease.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">5. Limitation of Liability</h2>
+                <p>
+                  In no event shall Botoralo, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Service.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">6. Changes to Terms</h2>
+                <p>
+                  We reserve the right, at our sole discretion, to modify or replace these Terms at any time. We will provide at least 30 days' notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.
+                </p>
+              </section>
+              <section>
+                <h2 className="text-2xl font-semibold">7. Contact Us</h2>
+                <p>
+                  If you have any questions about these Terms, please contact us at support@botoralo.app.
                 </p>
               </section>
             </CardContent>
           </Card>
         </div>
       </main>
-      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-border/50 z-10">
+       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-border/50 z-10">
         <p className="text-xs text-muted-foreground">
           © 2024 Botoralo. All rights reserved.
         </p>
