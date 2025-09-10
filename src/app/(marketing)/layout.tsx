@@ -45,7 +45,7 @@ export default function MarketingLayout({
             <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
             {!loading && (
               user ? (
-                <Button asChild variant="secondary" size="sm">
+                <Button asChild size="sm">
                   <Link href="/dashboard">Dashboard</Link>
                 </Button>
               ) : (
