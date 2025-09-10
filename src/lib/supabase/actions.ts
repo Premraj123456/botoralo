@@ -247,4 +247,5 @@ export async function deleteBot(botId: string) {
 
     // Finally, revalidate the dashboard path to update the UI.
     revalidatePath('/dashboard');
+    revalidatePath(`/dashboard/bots/${botId}`);
 }
