@@ -162,9 +162,11 @@ def container_name_for_bot(bot_id):
 
 def start_container_for_bot(bot):
     bdir = os.path.dirname(bot.code_path)
+    # Docker requires an absolute path for volume mounts.
+    absolute_bdir = os.path.abspath(bdir)
     name = container_name_for_bot(bot.id)
     mem_limit = f"{bot.memory_mb}m" if bot.memory_mb else None
-    volumes = {bdir: {'bind': '/bot', 'mode': 'ro'}}
+    volumes = {absolute_bdir: {'bind': '/bot', 'mode': 'ro'}}
     cont = docker_client.containers.run(
         BOT_IMAGE,
         name=name,
@@ -439,4 +441,5 @@ def health():
 if __name__ == '__main__':
     app.run(host=FLASK_HOST, port=FLASK_PORT, debug=False)
 
+    
     
