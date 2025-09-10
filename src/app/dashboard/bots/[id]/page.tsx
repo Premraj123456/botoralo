@@ -32,9 +32,8 @@ export default async function BotDetailPage({ params }: { params: { id: string }
     bot.status = backendInfo.bot.status;
   }
   
-  // Supabase doesn't store logs directly in the bot table in this example.
-  // A real implementation would fetch logs from a 'logs' table.
-  const botLogs = []; 
+  // No longer need to pass logs, as the LogViewer will stream them.
+  const botLogs = "";
 
   const status = statusConfig[bot.status as keyof typeof statusConfig] || statusConfig.stopped;
 
@@ -97,16 +96,16 @@ export default async function BotDetailPage({ params }: { params: { id: string }
           <TabsTrigger value="fixes">Code Fix Suggestions</TabsTrigger>
         </TabsList>
         <TabsContent value="logs">
-          <LogViewer logs={botLogs} botId={bot.id} />
+          <LogViewer botId={bot.id} />
         </TabsContent>
         <TabsContent value="summary">
-          <SummarizeLogs logs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />
+          <SummarizeLogs logs={botLogs} />
         </TabsContent>
         <TabsContent value="anomalies">
-          <AnalyzeAnomalies botId={bot.id} logs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />
+          <AnalyzeAnomalies botId={bot.id} logs={botLogs} />
         </TabsContent>
         <TabsContent value="fixes">
-           <SuggestFixes botCode={bot.code} botLogs={botLogs.map(l => `[${l.timestamp}] [${l.level.toUpperCase()}] ${l.message}`).join('\n')} />
+           <SuggestFixes botCode={bot.code} botLogs={botLogs} />
         </TabsContent>
       </Tabs>
     </div>
