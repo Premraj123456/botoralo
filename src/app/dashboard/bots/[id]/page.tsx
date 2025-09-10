@@ -1,9 +1,8 @@
 
 import { notFound } from "next/navigation";
-import { getBotById, startBot, stopBot, deleteBot } from "@/lib/supabase/actions";
+import { getBotById } from "@/lib/supabase/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Play, Square, Trash2, Bot as BotIcon } from "lucide-react";
+import { Bot as BotIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogViewer } from "@/components/bots/log-viewer";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +10,7 @@ import { SummarizeLogs } from "@/components/bots/summarize-logs";
 import { AnalyzeAnomalies } from "@/components/bots/analyze-anomalies";
 import { SuggestFixes } from "@/components/bots/suggest-fixes";
 import { getBotInfoFromBackend } from "@/lib/bot-backend/client";
-import { redirect } from "next/navigation";
+import { BotActions } from "@/components/bots/bot-actions";
 
 const statusConfig = {
   running: { text: "Running", variant: "default", className: "bg-green-500 hover:bg-green-500/90 text-white" },
@@ -37,22 +36,6 @@ export default async function BotDetailPage({ params }: { params: { id: string }
 
   const status = statusConfig[bot.status as keyof typeof statusConfig] || statusConfig.stopped;
 
-  const startBotAction = async () => {
-    "use server";
-    await startBot(bot.id);
-  }
-  
-  const stopBotAction = async () => {
-    "use server";
-    await stopBot(bot.id);
-  }
-
-  const deleteBotAction = async () => {
-    "use server";
-    await deleteBot(bot.id);
-    redirect('/dashboard');
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -67,23 +50,7 @@ export default async function BotDetailPage({ params }: { params: { id: string }
                 </CardDescription>
               </div>
             </div>
-            <div className="flex gap-2">
-              <form action={startBotAction}>
-                <Button variant="outline" size="sm" type="submit" disabled={bot.status === 'running'}>
-                  <Play className="h-4 w-4 mr-2" /> Start
-                </Button>
-              </form>
-               <form action={stopBotAction}>
-                <Button variant="outline" size="sm" type="submit" disabled={bot.status !== 'running'}>
-                  <Square className="h-4 w-4 mr-2" /> Stop
-                </Button>
-              </form>
-              <form action={deleteBotAction}>
-                <Button variant="destructive" size="sm" type="submit">
-                  <Trash2 className="h-4 w-4 mr-2" /> Delete
-                </Button>
-              </form>
-            </div>
+            <BotActions botId={bot.id} initialStatus={bot.status} />
           </div>
         </CardHeader>
       </Card>
