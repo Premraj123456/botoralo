@@ -33,9 +33,10 @@ const statusConfig = {
 export function BotCard({ bot }: BotCardProps) {
   const statusInfo = statusConfig[bot.status] || statusConfig.stopped;
   const [uptime, setUptime] = useState('N/A');
+  const [ramUsage, setRamUsage] = useState(0);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
+    let uptimeInterval: NodeJS.Timeout | undefined;
 
     if (bot.status === 'running' && bot.backendInfo?.uptime_started_at) {
       const updateUptime = () => {
@@ -44,19 +45,52 @@ export function BotCard({ bot }: BotCardProps) {
       };
       
       updateUptime(); // Initial update
-      interval = setInterval(updateUptime, 10000); // Update every 10 seconds
+      uptimeInterval = setInterval(updateUptime, 10000); // Update every 10 seconds
     } else {
       setUptime('N/A');
     }
 
     return () => {
-      if (interval) {
-        clearInterval(interval);
+      if (uptimeInterval) {
+        clearInterval(uptimeInterval);
       }
     };
   }, [bot.status, bot.backendInfo?.uptime_started_at]);
 
-  const ramUsage = 0; // The backend doesn't provide this yet, so we'll keep it at 0.
+  useEffect(() => {
+    let statsInterval: NodeJS.Timeout | undefined;
+    
+    const fetchStats = async () => {
+        if (bot.status !== 'running') {
+            setRamUsage(0);
+            return;
+        }
+        try {
+            const response = await fetch(`/api/bots/${bot.id}/stats`, { method: 'POST' });
+            if (response.ok) {
+                const data = await response.json();
+                setRamUsage(data.memory_usage_mb || 0);
+            }
+        } catch (error) {
+            console.error("Failed to fetch bot stats:", error);
+            setRamUsage(0);
+        }
+    };
+
+    if (bot.status === 'running') {
+        fetchStats(); // Initial fetch
+        statsInterval = setInterval(fetchStats, 5000); // Fetch stats every 5 seconds
+    } else {
+      setRamUsage(0);
+    }
+
+    return () => {
+        if (statsInterval) {
+            clearInterval(statsInterval);
+        }
+    };
+  }, [bot.id, bot.status]);
+
   const ramMax = bot.backendInfo?.memory_mb || 128;
   const ramPercentage = ramMax > 0 ? (ramUsage / ramMax) * 100 : 0;
 
@@ -83,7 +117,7 @@ export function BotCard({ bot }: BotCardProps) {
           </div>
           <div className="flex items-center gap-1">
             <Cpu className="h-4 w-4" />
-            <span>{ramUsage}MB / {ramMax}MB</span>
+            <span>{ramUsage.toFixed(2)}MB / {ramMax}MB</span>
           </div>
         </div>
         <Progress value={ramPercentage} className="h-2" />
@@ -99,3 +133,5 @@ export function BotCard({ bot }: BotCardProps) {
     </Card>
   );
 }
+
+    

@@ -417,6 +417,43 @@ def logs():
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
 
+@app.route('/stats', methods=['POST'])
+@require_master_key
+@parse_json_body(required_fields=['userId', 'botoraloBotId'])
+def stats_bot():
+    data = request.data_json
+    user_id = data['userId']
+    botoralo_bot_id = data['botoraloBotId']
+    s = Session()
+    bot = s.query(Bot).filter_by(user_id=user_id, botoralo_bot_id=botoralo_bot_id).first()
+    if not bot:
+        s.close(); return jsonify({'error': 'bot not found'}), 404
+    if not bot.container_id:
+        s.close(); return jsonify({'cpu_usage': 0, 'memory_usage_mb': 0})
+
+    try:
+        cont = docker_client.containers.get(bot.container_id)
+        stats = cont.stats(stream=False)
+        
+        # Memory usage calculation
+        mem_usage = stats.get('memory_stats', {}).get('usage', 0)
+        mem_limit = stats.get('memory_stats', {}).get('limit', 0)
+        mem_usage_mb = round(mem_usage / (1024 * 1024), 2) if mem_usage else 0
+
+        # CPU usage calculation
+        cpu_delta = stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage']
+        system_cpu_delta = stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage']
+        number_cpus = stats['cpu_stats']['online_cpus']
+        cpu_usage_percent = (cpu_delta / system_cpu_delta) * number_cpus * 100.0 if system_cpu_delta > 0 else 0
+        
+        s.close()
+        return jsonify({'cpu_usage': round(cpu_usage_percent, 2), 'memory_usage_mb': mem_usage_mb})
+    except docker.errors.NotFound:
+        s.close(); return jsonify({'error': 'container not found, may have stopped'}), 404
+    except Exception as e:
+        s.close(); return jsonify({'error': 'failed to get stats', 'details': str(e)}), 500
+
+
 @app.route('/download_code', methods=['POST'])
 @require_master_key
 @parse_json_body(required_fields=['userId', 'botoraloBotId'])
@@ -442,6 +479,8 @@ if __name__ == '__main__':
     app.run(host=FLASK_HOST, port=FLASK_PORT, debug=False)
 
     
+    
+
     
 
     
