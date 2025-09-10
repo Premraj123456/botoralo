@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -20,6 +21,29 @@ const botFormSchema = z.object({
 
 type BotFormValues = z.infer<typeof botFormSchema>;
 
+const exampleCode = `import time
+import sys
+import random
+
+print("[info] Test bot starting up...")
+sys.stdout.flush()
+time.sleep(2)
+
+counter = 0
+while True:
+    print(f"[info] Heartbeat count: {counter}")
+    
+    if counter % 5 == 0 and counter > 0:
+        print("[warn] This is a periodic warning message.")
+    
+    if random.random() < 0.05:
+        print("[error] A simulated random error occurred!")
+        
+    sys.stdout.flush()
+    counter += 1
+    time.sleep(3)
+`;
+
 export default function NewBotPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -27,7 +51,7 @@ export default function NewBotPage() {
     resolver: zodResolver(botFormSchema),
     defaultValues: {
       name: "",
-      code: "",
+      code: exampleCode,
     },
   });
 
@@ -60,7 +84,7 @@ export default function NewBotPage() {
             Create a New Bot
           </CardTitle>
           <CardDescription>
-            Paste your bot's code below, give it a name, and deploy it.
+            Use the example logging script below or paste your own code to deploy a new bot.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -73,7 +97,7 @@ export default function NewBotPage() {
                   <FormItem>
                     <FormLabel>Bot Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., My Arbitrage Bot" {...field} />
+                      <Input placeholder="e.g., My Log Test Bot" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
