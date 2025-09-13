@@ -18,7 +18,10 @@ export default function MarketingLayout({
   const supabase = createSupabaseClient();
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      setLoading(false);
+      return;
+    };
     const getUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
@@ -43,16 +46,16 @@ export default function MarketingLayout({
             <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</Link>
             <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
-            {!loading && (
-              user ? (
-                <Button asChild size="sm">
-                  <Link href="/dashboard">Dashboard</Link>
-                </Button>
-              ) : (
-                <Button asChild size="sm">
-                  <Link href="/signin">Get Started</Link>
-                </Button>
-              )
+            {loading ? (
+              <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
+            ) : user ? (
+              <Button asChild size="sm">
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+            ) : (
+              <Button asChild size="sm">
+                <Link href="/signin">Get Started</Link>
+              </Button>
             )}
         </nav>
       </header>
