@@ -19,14 +19,10 @@ const secondaryNav = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-const setupNav = [
-    { name: "Seed Products", href: "/dashboard/seed-products", icon: Rocket },
-]
-
 export function SidebarNav() {
   const pathname = usePathname();
 
-  const renderNav = (items: typeof primaryNav) => (
+  const renderNav = (items: {name: string, href: string, icon: any}[]) => (
     items.map((item) => (
       <li key={item.name}>
         <Button
@@ -53,13 +49,6 @@ export function SidebarNav() {
         <ul className="flex flex-col gap-1">
           {renderNav(secondaryNav)}
         </ul>
-         <Separator className="my-4" />
-         <div>
-            <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">Setup</p>
-            <ul className="flex flex-col gap-1 mt-1">
-                {renderNav(setupNav)}
-            </ul>
-        </div>
       </nav>
     </div>
   );

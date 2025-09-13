@@ -3,13 +3,12 @@ import { Link } from '@/components/layout/page-loader';
 import { PlusCircle, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
-import { getUserBots } from '@/lib/supabase/actions';
-import { getUserSubscription, updatePlanFromStripeSession } from '@/lib/stripe/actions';
+import { getUserBots, getUserSubscription } from '@/lib/supabase/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { revalidatePath } from 'next/cache';
 import { getBotInfoFromBackend } from '@/lib/bot-backend/client';
+import { revalidatePath } from 'next/cache';
 
 const planLimits = {
   Free: 1,
@@ -21,10 +20,15 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   
-  const sessionId = searchParams?.session_id as string | undefined;
+  const subscriptionSuccess = searchParams?.subscription_success === 'true';
+
+  if (subscriptionSuccess) {
+    // If returning from a successful PayPal checkout, revalidate the path
+    // to ensure the subscription data is fresh.
+    revalidatePath('/dashboard');
+  }
 
   if (!user) {
-    // This should not happen due to middleware, but as a fallback
     return (
         <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm py-20">
             <div className="flex flex-col items-center gap-2 text-center">
@@ -40,12 +44,6 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
     );
   }
 
-  // If a session_id is present, the update action will be triggered here.
-  // We await it to ensure the subscription data below is fresh.
-  if (sessionId) {
-    await updatePlanFromStripeSession(sessionId, user.id);
-  }
-
   const [subscription, userBotsFromDb] = await Promise.all([
     getUserSubscription(user.id),
     getUserBots(),
@@ -57,7 +55,6 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
       const backendInfo = await getBotInfoFromBackend(bot.id);
       return {
         ...bot,
-        // Use backend status if available, otherwise fallback to DB status
         status: backendInfo?.bot.status || bot.status,
         backendInfo: backendInfo?.bot || null,
       };
@@ -78,12 +75,12 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
 
   return (
     <div className="flex flex-col gap-6">
-      {sessionId && (
+      {subscriptionSuccess && (
           <Alert>
               <Terminal className="h-4 w-4" />
-              <AlertTitle>Subscription Updated!</AlertTitle>
+              <AlertTitle>Subscription Activated!</AlertTitle>
               <AlertDescription>
-                  Your checkout was successful and your plan has been updated.
+                  Your checkout was successful and your new plan is now active.
               </AlertDescription>
           </Alert>
       )}
