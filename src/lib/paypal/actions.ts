@@ -10,10 +10,6 @@ const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET!;
 const PAYPAL_API_URL = "https://api-m.sandbox.paypal.com"; // Use sandbox for testing
 
-const proPlanIdEnv = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
-const powerPlanIdEnv = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
-
-
 async function getPayPalAccessToken() {
   if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
       throw new Error("PayPal client ID or secret is not configured in .env file.");
@@ -65,9 +61,9 @@ export async function createPayPalSubscription(planId: string, userId: string) {
 export async function capturePayPalSubscription(subscriptionId: string, planId: string, userId: string) {
     try {
         let plan = 'Free';
-        if (planId === proPlanIdEnv) {
+        if (planId === process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID) {
             plan = 'Pro';
-        } else if (planId === powerPlanIdEnv) {
+        } else if (planId === process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID) {
             plan = 'Power';
         }
         
