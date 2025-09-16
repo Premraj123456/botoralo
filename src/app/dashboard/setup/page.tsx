@@ -20,7 +20,9 @@ export default function SetupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   
-  const isPaypalConfigured = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID && process.env.PAYPAL_CLIENT_SECRET;
+  // Corrected: Only check for the public client ID on the client.
+  // The server action will validate the secret key.
+  const isPaypalConfigured = !!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
   const handleCreatePlans = async () => {
     setIsLoading(true);
@@ -39,7 +41,7 @@ export default function SetupPage() {
       console.error(error);
       toast({
         title: 'Error Creating Plans',
-        description: (error as Error).message || 'An unknown error occurred.',
+        description: (error as Error).message || 'An unknown error occurred. Check your server logs and ensure both PayPal Client ID and Secret are correct in your .env file.',
         variant: 'destructive',
       });
     } finally {
@@ -59,9 +61,9 @@ export default function SetupPage() {
         {!isPaypalConfigured ? (
              <Alert variant="destructive">
                 <Terminal className="h-4 w-4" />
-                <AlertTitle>PayPal Credentials Missing</AlertTitle>
+                <AlertTitle>PayPal Client ID Missing</AlertTitle>
                 <AlertDescription>
-                   Please add your `NEXT_PUBLIC_PAYPAL_CLIENT_ID` and `PAYPAL_CLIENT_SECRET` to your `.env` file to use this feature.
+                   Please add your `NEXT_PUBLIC_PAYPAL_CLIENT_ID` to your `.env` file to use this feature. The `PAYPAL_CLIENT_SECRET` must also be set for the operation to succeed.
                 </AlertDescription>
             </Alert>
         ) : (
