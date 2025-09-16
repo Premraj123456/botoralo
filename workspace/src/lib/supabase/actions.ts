@@ -247,7 +247,6 @@ export async function stopBot(botId: string) {
 export async function deleteBot(botId: string) {
     const supabase = createSupabaseServerClient();
     
-    // First, delete the bot from the database.
     const { error: dbError } = await supabase.from('bots').delete().eq('id', botId);
 
     if (dbError) {
@@ -255,13 +254,9 @@ export async function deleteBot(botId: string) {
         throw new Error("Could not delete bot from the database.");
     }
 
-    // Then, try to delete it from the backend.
-    // We wrap this in a try-catch so that if the backend fails, the operation doesn't fail entirely,
-    // as the bot is already gone from the user's perspective.
     try {
         await deleteBotFromBackend(botId);
     } catch (backendError) {
-        // Log this error for debugging, but don't re-throw it.
         console.warn(`Could not delete bot ${botId} from backend service. It was already deleted from the database.`, backendError);
     }
 
