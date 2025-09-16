@@ -20,13 +20,13 @@ const secondaryNav = [
 ];
 
 const setupNav = [
-    { name: "Seed Products", href: "/dashboard/seed-products", icon: Rocket },
+    { name: "Setup", href: "/dashboard/setup", icon: Rocket },
 ]
 
 export function SidebarNav() {
   const pathname = usePathname();
 
-  const renderNav = (items: typeof primaryNav) => (
+  const renderNav = (items: {name: string, href: string, icon: any}[]) => (
     items.map((item) => (
       <li key={item.name}>
         <Button

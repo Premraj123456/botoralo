@@ -3,16 +3,21 @@
 
 import { createSupabaseServerClient } from "../supabase/server";
 import { updateUserPlan } from "../supabase/actions";
+import { v4 as uuidv4 } from 'uuid';
 
-const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID!;
+
+const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET!;
 const PAYPAL_API_URL = "https://api-m.sandbox.paypal.com"; // Use sandbox for testing
 
-const proPlanId = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
-const powerPlanId = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
+const proPlanIdEnv = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
+const powerPlanIdEnv = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
 
 
 async function getPayPalAccessToken() {
+  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+      throw new Error("PayPal client ID or secret is not configured in .env file.");
+  }
   const auth = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64");
   const response = await fetch(`${PAYPAL_API_URL}/v1/oauth2/token`, {
     method: "POST",
@@ -26,7 +31,7 @@ async function getPayPalAccessToken() {
   const data = await response.json();
   if (!response.ok) {
     console.error("Failed to get PayPal access token", data);
-    throw new Error("Could not authenticate with PayPal.");
+    throw new Error(`Could not authenticate with PayPal. Status: ${response.status}`);
   }
   return data.access_token;
 }
@@ -60,9 +65,9 @@ export async function createPayPalSubscription(planId: string, userId: string) {
 export async function capturePayPalSubscription(subscriptionId: string, planId: string, userId: string) {
     try {
         let plan = 'Free';
-        if (planId === proPlanId) {
+        if (planId === proPlanIdEnv) {
             plan = 'Pro';
-        } else if (planId === powerPlanId) {
+        } else if (planId === powerPlanIdEnv) {
             plan = 'Power';
         }
         
@@ -98,4 +103,102 @@ export async function verifyPayPalWebhookSignature(headers: Headers, body: strin
 
     const data = await response.json();
     return data.verification_status === 'SUCCESS';
+}
+
+
+// --- One-Click Setup Action ---
+
+async function apiRequest(accessToken: string, url: string, method: 'POST' | 'GET', body?: object) {
+    const headers: HeadersInit = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+        "PayPal-Request-Id": uuidv4(),
+    };
+    
+    const response = await fetch(url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+    });
+    
+    const data = await response.json();
+    if (!response.ok) {
+        console.error(`PayPal API Error (${url}):`, data);
+        const errorMessage = data.details?.[0]?.description || data.message || `Request failed with status ${response.status}`;
+        throw new Error(errorMessage);
+    }
+    return data;
+}
+
+export async function createProductsAndPlans() {
+    const accessToken = await getPayPalAccessToken();
+    const productUrl = `${PAYPAL_API_URL}/v1/catalogs/products`;
+    const plansUrl = `${PAYPAL_API_URL}/v1/billing/plans`;
+
+    // 1. Create Product
+    const productPayload = {
+        name: "Botoralo",
+        description: "Trading Bot Hosting Service",
+        type: "SERVICE",
+        category: "SOFTWARE",
+    };
+    const product = await apiRequest(accessToken, productUrl, 'POST', productPayload);
+    const productId = product.id;
+    console.log("Created PayPal Product with ID:", productId);
+
+    // 2. Create Pro Plan
+    const proPlanPayload = {
+        product_id: productId,
+        name: "Pro Plan",
+        description: "Pro tier for Botoralo service",
+        status: "ACTIVE",
+        billing_cycles: [
+            {
+                frequency: { interval_unit: "MONTH", interval_count: 1 },
+                tenure_type: "REGULAR",
+                sequence: 1,
+                total_cycles: 0,
+                pricing_scheme: {
+                    fixed_price: { value: "9.00", currency_code: "USD" },
+                },
+            },
+        ],
+        payment_preferences: {
+            auto_bill_outstanding: true,
+            setup_fee_failure_action: "CONTINUE",
+            payment_failure_threshold: 3,
+        },
+    };
+    const proPlan = await apiRequest(accessToken, plansUrl, 'POST', proPlanPayload);
+    const proPlanId = proPlan.id;
+    console.log("Created Pro Plan with ID:", proPlanId);
+    
+    // 3. Create Power Plan
+    const powerPlanPayload = {
+        product_id: productId,
+        name: "Power Plan",
+        description: "Power tier for Botoralo service",
+        status: "ACTIVE",
+        billing_cycles: [
+            {
+                frequency: { interval_unit: "MONTH", interval_count: 1 },
+                tenure_type: "REGULAR",
+                sequence: 1,
+                total_cycles: 0,
+                pricing_scheme: {
+                    fixed_price: { value: "29.00", currency_code: "USD" },
+                },
+            },
+        ],
+        payment_preferences: {
+            auto_bill_outstanding: true,
+            setup_fee_failure_action: "CONTINUE",
+            payment_failure_threshold: 3,
+        },
+    };
+    const powerPlan = await apiRequest(accessToken, plansUrl, 'POST', powerPlanPayload);
+    const powerPlanId = powerPlan.id;
+    console.log("Created Power Plan with ID:", powerPlanId);
+
+    return { proPlanId, powerPlanId };
 }
