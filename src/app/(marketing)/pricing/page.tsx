@@ -65,7 +65,13 @@ export default function PricingPage() {
   const router = useRouter();
   const supabase = createSupabaseClient();
   
-  const isPaypalConfigured = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID && process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID;
+  const isPaypalConfigured = 
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID &&
+    process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID &&
+    process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID !== 'PASTE_PRO_PLAN_ID_HERE' &&
+    process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID &&
+    process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID !== 'PASTE_POWER_PLAN_ID_HERE';
+
 
   useEffect(() => {
     setIsClient(true);
@@ -138,7 +144,7 @@ export default function PricingPage() {
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>PayPal Not Configured</AlertTitle>
                 <AlertDescription>
-                   The PayPal environment variables are not set. Please create subscription plans in your PayPal developer dashboard and add the Plan IDs to your `.env` file to enable checkout.
+                   The PayPal environment variables are not set or are using placeholder values. Please create subscription plans in your PayPal developer dashboard and add the Plan IDs to your `.env` file to enable checkout.
                 </AlertDescription>
             </Alert>
         )}
