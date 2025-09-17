@@ -55,6 +55,7 @@ export const Link = React.forwardRef<
   return (
     <NextLink
       ref={ref}
+      prefetch={true} // Explicitly enable prefetching
       onClick={(e) => {
         startLoading();
         if (onClick) onClick(e);
