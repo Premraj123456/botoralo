@@ -105,7 +105,7 @@ export default function PricingPage() {
     }
     
     // Free plan CTA
-    if (!plan.planId) {
+    if (plan.name === 'Free') {
        return (
         <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
           <Link href={user ? '/dashboard' : '/signin'}>{user ? 'Go to Dashboard' : 'Start for Free'}</Link>
@@ -118,7 +118,7 @@ export default function PricingPage() {
 
     return (
         <PayPalButtonsWrapper 
-            planId={plan.planId} 
+            planName={plan.name} 
             userId={user?.id} 
             onLoginRequired={handleLoginRedirect}
         />

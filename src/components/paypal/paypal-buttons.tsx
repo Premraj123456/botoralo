@@ -9,16 +9,26 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface PayPalButtonsWrapperProps {
-  planId: string;
+  planName: 'Pro' | 'Power' | 'Free';
   userId?: string;
   onLoginRequired: () => void;
 }
 
-export function PayPalButtonsWrapper({ planId, userId, onLoginRequired }: PayPalButtonsWrapperProps) {
+export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayPalButtonsWrapperProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
   const payPalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
+
+  const getPlanId = () => {
+    if (planName === 'Pro') {
+      return process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
+    }
+    if (planName === 'Power') {
+      return process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
+    }
+    throw new Error('Invalid plan name provided to PayPal button.');
+  }
 
   const handleCreateSubscription = async (data: any, actions: any) => {
     if (!userId) {
@@ -28,6 +38,7 @@ export function PayPalButtonsWrapper({ planId, userId, onLoginRequired }: PayPal
     }
     
     try {
+      const planId = getPlanId();
       const subscription = await createPayPalSubscription(planId, userId);
       if (subscription.id) {
         return subscription.id;
@@ -36,7 +47,7 @@ export function PayPalButtonsWrapper({ planId, userId, onLoginRequired }: PayPal
     } catch (error) {
       toast({
         title: "Error",
-        description: "Could not initiate PayPal checkout. Please try again.",
+        description: (error as Error).message || "Could not initiate PayPal checkout. Please try again.",
         variant: "destructive",
       });
       throw error;
@@ -46,6 +57,7 @@ export function PayPalButtonsWrapper({ planId, userId, onLoginRequired }: PayPal
   const handleOnApprove = async (data: any, actions: any) => {
     setIsProcessing(true);
     try {
+      const planId = getPlanId();
       const result = await capturePayPalSubscription(data.subscriptionID, planId, userId!);
       if (result.success) {
         toast({
