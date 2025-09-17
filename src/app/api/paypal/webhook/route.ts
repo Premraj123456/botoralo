@@ -5,8 +5,10 @@ import { updateUserPlan } from '@/lib/supabase/actions';
 import { verifyPayPalWebhookSignature } from '@/lib/paypal/actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
-const proPlanId = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
-const powerPlanId = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
+// Hardcoded Plan IDs to bypass environment variable caching issues
+const proPlanId = "P-6VF91347KX5323712NDFFACQ";
+const powerPlanId = "P-2FY06213L89231025NDFFACQ";
+
 
 export async function POST(req: NextRequest) {
   const reqBody = await req.text();

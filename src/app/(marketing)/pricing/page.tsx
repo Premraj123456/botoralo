@@ -25,7 +25,6 @@ const plans = [
   {
     name: 'Free',
     price: '$0',
-    planId: null,
     description: 'For hobbyists and testing things out.',
     ram: '128MB RAM',
     features: ['1 Bot Slot', '24/7 Uptime', 'Basic Logging', 'Community Support'],
@@ -34,7 +33,6 @@ const plans = [
   {
     name: 'Pro',
     price: '$9',
-    planId: process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID,
     description: 'For serious traders who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
@@ -43,7 +41,6 @@ const plans = [
   {
     name: 'Power',
     price: '$29',
-    planId: process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID,
     description: 'For professionals running multiple complex bots.',
     ram: '1GB RAM',
     features: [
@@ -65,11 +62,7 @@ export default function PricingPage() {
   const router = useRouter();
   const supabase = createSupabaseClient();
   
-  const isPaypalConfigured = 
-    !!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID &&
-    !!process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID &&
-    !!process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID;
-
+  const isPaypalConfigured = !!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
 
   useEffect(() => {
     setIsClient(true);
@@ -118,7 +111,7 @@ export default function PricingPage() {
 
     return (
         <PayPalButtonsWrapper 
-            planName={plan.name} 
+            planName={plan.name as 'Pro' | 'Power'}
             userId={user?.id} 
             onLoginRequired={handleLoginRedirect}
         />

@@ -1,7 +1,6 @@
 
 'use server';
 
-import { createSupabaseServerClient } from "../supabase/server";
 import { updateUserPlan } from "../supabase/actions";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,6 +8,10 @@ import { v4 as uuidv4 } from 'uuid';
 const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET!;
 const PAYPAL_API_URL = "https://api-m.sandbox.paypal.com"; // Use sandbox for testing
+
+// Hardcoded Plan IDs to bypass environment variable caching issues
+const proPlanId = "P-6VF91347KX5323712NDFFACQ";
+const powerPlanId = "P-2FY06213L89231025NDFFACQ";
 
 async function getPayPalAccessToken() {
   if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
@@ -34,17 +37,9 @@ async function getPayPalAccessToken() {
 
 function getPlanIdByName(planName: 'Pro' | 'Power') {
     if (planName === 'Pro') {
-        const proPlanId = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID;
-        if (!proPlanId || proPlanId.startsWith('PASTE_')) {
-            throw new Error('PayPal Pro Plan ID is not configured correctly on the server.');
-        }
         return proPlanId;
     }
     if (planName === 'Power') {
-        const powerPlanId = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID;
-         if (!powerPlanId || powerPlanId.startsWith('PASTE_')) {
-            throw new Error('PayPal Power Plan ID is not configured correctly on the server.');
-        }
         return powerPlanId;
     }
     throw new Error('Invalid plan name provided.');
@@ -94,9 +89,6 @@ export async function capturePayPalSubscription(subscriptionId: string, userId: 
 
         const subscriptionDetails = await response.json();
         const planId = subscriptionDetails.plan_id;
-
-        const proPlanId = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
-        const powerPlanId = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
         
         let plan = 'Free';
         if (planId === proPlanId) {
@@ -205,9 +197,9 @@ export async function createProductsAndPlans() {
             payment_failure_threshold: 3,
         },
     };
-    const proPlan = await apiRequest(accessToken, plansUrl, 'POST', proPlanPayload);
-    const proPlanId = proPlan.id;
-    console.log("Created Pro Plan with ID:", proPlanId);
+    const proPlanResponse = await apiRequest(accessToken, plansUrl, 'POST', proPlanPayload);
+    const createdProPlanId = proPlanResponse.id;
+    console.log("Created Pro Plan with ID:", createdProPlanId);
     
     // 3. Create Power Plan
     const powerPlanPayload = {
@@ -232,9 +224,9 @@ export async function createProductsAndPlans() {
             payment_failure_threshold: 3,
         },
     };
-    const powerPlan = await apiRequest(accessToken, plansUrl, 'POST', powerPlanPayload);
-    const powerPlanId = powerPlan.id;
-    console.log("Created Power Plan with ID:", powerPlanId);
+    const powerPlanResponse = await apiRequest(accessToken, plansUrl, 'POST', powerPlanPayload);
+    const createdPowerPlanId = powerPlanResponse.id;
+    console.log("Created Power Plan with ID:", createdPowerPlanId);
 
-    return { proPlanId, powerPlanId };
+    return { proPlanId: createdProPlanId, powerPlanId: createdPowerPlanId };
 }
