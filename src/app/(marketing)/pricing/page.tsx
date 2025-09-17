@@ -66,11 +66,9 @@ export default function PricingPage() {
   const supabase = createSupabaseClient();
   
   const isPaypalConfigured = 
-    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID &&
-    process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID &&
-    process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID !== 'PASTE_PRO_PLAN_ID_HERE' &&
-    process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID &&
-    process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID !== 'PASTE_POWER_PLAN_ID_HERE';
+    !!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID &&
+    !!process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID &&
+    !!process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID;
 
 
   useEffect(() => {
