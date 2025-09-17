@@ -56,7 +56,6 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
         });
         // Redirect to dashboard with a success flag
         router.push('/dashboard?subscription_success=true');
-        router.refresh();
       } else {
         throw new Error(result.error || "Failed to activate subscription.");
       }
