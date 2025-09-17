@@ -20,16 +20,6 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
   const [isProcessing, setIsProcessing] = useState(false);
   const payPalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
 
-  const getPlanId = () => {
-    if (planName === 'Pro') {
-      return process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
-    }
-    if (planName === 'Power') {
-      return process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
-    }
-    throw new Error('Invalid plan name provided to PayPal button.');
-  }
-
   const handleCreateSubscription = async (data: any, actions: any) => {
     if (!userId) {
       onLoginRequired();
@@ -38,8 +28,8 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
     }
     
     try {
-      const planId = getPlanId();
-      const subscription = await createPayPalSubscription(planId, userId);
+      // Pass the plan NAME to the server action
+      const subscription = await createPayPalSubscription(planName, userId);
       if (subscription.id) {
         return subscription.id;
       }
@@ -57,8 +47,8 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
   const handleOnApprove = async (data: any, actions: any) => {
     setIsProcessing(true);
     try {
-      const planId = getPlanId();
-      const result = await capturePayPalSubscription(data.subscriptionID, planId, userId!);
+      // Pass the plan NAME to the capture action as well
+      const result = await capturePayPalSubscription(data.subscriptionID, planName, userId!);
       if (result.success) {
         toast({
           title: "Success!",

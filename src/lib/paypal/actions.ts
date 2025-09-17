@@ -32,10 +32,31 @@ async function getPayPalAccessToken() {
   return data.access_token;
 }
 
-export async function createPayPalSubscription(planId: string, userId: string) {
+function getPlanIdByName(planName: 'Pro' | 'Power') {
+    if (planName === 'Pro') {
+        const proPlanId = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID;
+        if (!proPlanId || proPlanId.startsWith('PASTE_')) {
+            throw new Error('PayPal Pro Plan ID is not configured correctly on the server.');
+        }
+        return proPlanId;
+    }
+    if (planName === 'Power') {
+        const powerPlanId = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID;
+         if (!powerPlanId || powerPlanId.startsWith('PASTE_')) {
+            throw new Error('PayPal Power Plan ID is not configured correctly on the server.');
+        }
+        return powerPlanId;
+    }
+    throw new Error('Invalid plan name provided.');
+}
+
+export async function createPayPalSubscription(planName: 'Pro' | 'Power', userId: string) {
     if (!userId) {
         throw new Error("User ID is required to create a subscription.");
     }
+    
+    const planId = getPlanIdByName(planName);
+    
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(`${PAYPAL_API_URL}/v1/billing/subscriptions`, {
         method: "POST",
@@ -58,17 +79,9 @@ export async function createPayPalSubscription(planId: string, userId: string) {
     return data;
 }
 
-export async function capturePayPalSubscription(subscriptionId: string, planId: string, userId: string) {
+export async function capturePayPalSubscription(subscriptionId: string, planName: 'Pro' | 'Power', userId: string) {
     try {
-        let plan = 'Free';
-        if (planId === process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID) {
-            plan = 'Pro';
-        } else if (planId === process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID) {
-            plan = 'Power';
-        }
-        
-        await updateUserPlan({ userId, plan, subscriptionId });
-
+        await updateUserPlan({ userId, plan: planName, subscriptionId });
         return { success: true };
     } catch (error) {
         console.error("Error capturing PayPal subscription and updating user plan:", error);
