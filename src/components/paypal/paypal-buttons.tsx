@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface PayPalButtonsWrapperProps {
-  planName: 'Pro' | 'Power' | 'Free';
+  planName: 'Pro' | 'Power';
   userId?: string;
   onLoginRequired: () => void;
 }
@@ -96,7 +96,8 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
     <PayPalScriptProvider options={{
       "clientId": payPalClientId,
       "intent": "subscription",
-      "vault": true
+      "vault": true,
+      "enable-funding": "card"
     }}>
       <PayPalButtons
         style={{ layout: "vertical", label: "subscribe" }}
