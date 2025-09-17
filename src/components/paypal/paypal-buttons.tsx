@@ -47,8 +47,8 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
   const handleOnApprove = async (data: any, actions: any) => {
     setIsProcessing(true);
     try {
-      // Pass the plan NAME to the capture action as well
-      const result = await capturePayPalSubscription(data.subscriptionID, planName, userId!);
+      // Pass only the subscription ID and user ID to the capture action
+      const result = await capturePayPalSubscription(data.subscriptionID, userId!);
       if (result.success) {
         toast({
           title: "Success!",
