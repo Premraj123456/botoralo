@@ -1,5 +1,4 @@
 'use server';
-import 'server-only';
 
 /**
  * @fileOverview Summarizes bot logs to provide a quick understanding of bot activity.
@@ -9,7 +8,7 @@ import 'server-only';
  * - SummarizeBotLogsOutput - The return type for the summarizeBotLogs function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai} from '@/lib/genkit/genkit';
 import {z} from 'genkit';
 
 const SummarizeBotLogsInputSchema = z.object({

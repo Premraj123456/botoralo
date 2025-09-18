@@ -1,5 +1,4 @@
 'use server';
-import 'server-only';
 /**
  * @fileOverview This file defines a Genkit flow to analyze bot logs and alert users to anomalous behavior.
  *
@@ -8,7 +7,7 @@ import 'server-only';
  * - AnalyzeLogsOutput - The return type for the analyzeLogsAndAlert function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai} from '@/lib/genkit/genkit';
 import {z} from 'genkit';
 
 const AnalyzeLogsInputSchema = z.object({

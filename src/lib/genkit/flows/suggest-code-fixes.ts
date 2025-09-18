@@ -1,5 +1,4 @@
 'use server';
-import 'server-only';
 
 /**
  * @fileOverview Analyzes bot logs and suggests code fixes for common errors.
@@ -9,7 +8,7 @@ import 'server-only';
  * - SuggestCodeFixesOutput - The return type for the suggestCodeFixes function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai} from '@/lib/genkit/genkit';
 import {z} from 'genkit';
 
 const SuggestCodeFixesInputSchema = z.object({
