@@ -1,16 +1,11 @@
 
-'use client';
-
-import { Button } from '@/components/ui/button'
-import { Bot, Code, Rocket, ArrowRight, LayoutDashboard } from 'lucide-react'
-import { Link } from '@/components/layout/page-loader'
+import { ArrowRight, Bot, Code, Rocket } from 'lucide-react'
 import Image from 'next/image'
+import { Link } from '@/components/layout/page-loader'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
-import { useState, useEffect } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { createSupabaseClient } from '@/lib/supabase/client';
+import { GetStartedButton } from '@/components/marketing/get-started-button'
 
 const testimonials = [
   {
@@ -53,19 +48,6 @@ const faqs = [
 ]
 
 export default function LandingPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const supabase = createSupabaseClient();
-
-  useEffect(() => {
-    if (!supabase) return;
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-    };
-    getUser();
-  }, [supabase]);
-
-
   return (
     <>
         <section className="w-full py-24 md:py-32 lg:py-40 xl:py-56">
@@ -83,12 +65,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
-                   <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href={user ? "/dashboard" : "/signin"}>
-                      {user ? 'Go to Dashboard' : 'Get Started Free'}
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                  </Button>
+                   <GetStartedButton />
                 </div>
               </div>
               <div className="relative animate-fade-in group">
@@ -240,12 +217,7 @@ export default function LandingPage() {
                     Deploy your first bot for free and experience the future of automated trading.
                 </p>
                 <div className="mt-8">
-                   <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
-                    <Link href={user ? "/dashboard" : "/signin"}>
-                      Start Deploying Now
-                      <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                  </Button>
+                   <GetStartedButton ctaText="Start Deploying Now" />
                 </div>
              </div>
           </div>

@@ -1,34 +1,13 @@
 
-'use client';
-
 import { Bot } from "lucide-react";
 import { Link } from '@/components/layout/page-loader';
-import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import type { User } from "@supabase/supabase-js";
-import { createSupabaseClient } from "@/lib/supabase/client";
+import { AuthButton } from "@/components/auth/auth-button";
 
 export default function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createSupabaseClient();
-
-  useEffect(() => {
-    if (!supabase) {
-      setLoading(false);
-      return;
-    };
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      setLoading(false);
-    };
-    getUser();
-  }, [supabase]);
 
   return (
     <div className="bg-background text-foreground min-h-screen flex flex-col">
@@ -46,17 +25,7 @@ export default function MarketingLayout({
             <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</Link>
             <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
-            {loading ? (
-              <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
-            ) : user ? (
-              <Button asChild size="sm">
-                <Link href="/dashboard">Dashboard</Link>
-              </Button>
-            ) : (
-              <Button asChild size="sm">
-                <Link href="/signin">Get Started</Link>
-              </Button>
-            )}
+            <AuthButton />
         </nav>
       </header>
       <main className="flex-1 z-10">{children}</main>
