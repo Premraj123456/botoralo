@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import NextLink from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { ClientLink } from './client-link';
 
 function useNProgress() {
   const [isLoading, setIsLoading] = React.useState(false);
@@ -10,12 +10,14 @@ function useNProgress() {
   const searchParams = useSearchParams();
 
   React.useEffect(() => {
+    // On new route, stop loading
     setIsLoading(false);
   }, [pathname, searchParams]);
 
-  const startLoading = () => setIsLoading(true);
+  const startLoading = React.useCallback(() => setIsLoading(true), []);
+  const stopLoading = React.useCallback(() => setIsLoading(false), []);
 
-  return { isLoading, startLoading };
+  return { isLoading, startLoading, stopLoading };
 }
 
 export function PageLoader() {
@@ -47,21 +49,30 @@ export function PageLoader() {
   );
 }
 
-export const Link = React.forwardRef<
-  HTMLAnchorElement,
-  React.ComponentProps<typeof NextLink>
->(function Link({ onClick, ...props }, ref) {
-  const { startLoading } = useNProgress();
+// Create a context to share the loading state
+const NProgressContext = React.createContext<{
+  startLoading: () => void;
+  stopLoading: () => void;
+} | null>(null);
+
+// Create a provider component that will wrap the app
+export function NProgressProvider({ children }: { children: React.ReactNode }) {
+  const { startLoading, stopLoading } = useNProgress();
   return (
-    <NextLink
-      ref={ref}
-      prefetch={true} // Explicitly enable prefetching
-      onClick={(e) => {
-        startLoading();
-        if (onClick) onClick(e);
-      }}
-      {...props}
-    />
+    <NProgressContext.Provider value={{ startLoading, stopLoading }}>
+      {children}
+    </NProgressContext.Provider>
   );
-});
-Link.displayName = "Link";
+}
+
+// Custom hook to use the context
+export function useNProgressContext() {
+  const context = React.useContext(NProgressContext);
+  if (context === null) {
+    throw new Error("useNProgressContext must be used within a NProgressProvider");
+  }
+  return context;
+}
+
+// Export the server-safe Link component
+export const Link = ClientLink;

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter, Source_Code_Pro } from 'next/font/google';
-import { PageLoader } from '@/components/layout/page-loader';
+import { PageLoader, NProgressProvider } from '@/components/layout/page-loader';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const sourceCodePro = Source_Code_Pro({ subsets: ['latin'], variable: '--font-source-code-pro' });
@@ -21,8 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} ${sourceCodePro.variable}`} suppressHydrationWarning>
-        <PageLoader />
-        {children}
+        <NProgressProvider>
+          <PageLoader />
+          {children}
+        </NProgressProvider>
         <Toaster />
       </body>
     </html>
