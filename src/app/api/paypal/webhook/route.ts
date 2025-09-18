@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
         }
 
         const supabase = createSupabaseServerClient();
-        const { data: profile } = await supabase
+        const { data: profile }: { data: { id: string } | null } = await supabase
             .from('profiles')
             .select('id')
             .eq('paypal_subscription_id', subscriptionId)
