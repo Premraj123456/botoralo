@@ -9,6 +9,8 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getBotInfoFromBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
+import { Suspense } from 'react';
+import { SubscriptionRefresher } from '@/components/dashboard/subscription-refresher';
 
 const planLimits = {
   Free: 1,
@@ -75,6 +77,9 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
 
   return (
     <div className="flex flex-col gap-6">
+      <Suspense fallback={null}>
+        <SubscriptionRefresher />
+      </Suspense>
       {subscriptionSuccess && (
           <Alert>
               <Terminal className="h-4 w-4" />
