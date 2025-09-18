@@ -4,13 +4,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bun --bun next dev -p 9002",
-    "genkit:dev": "bun --bun genkit start -- tsx src/ai/dev.ts",
-    "genkit:watch": "bun --bun genkit start -- tsx --watch src/ai/dev.ts",
-    "build": "bun --bun next build",
-    "start": "bun --bun next start",
-    "lint": "bun --bun next lint",
-    "typecheck": "bun --bun tsc --noEmit"
+    "dev": "next dev -p 9002",
+    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@genkit-ai/googleai": "1.13.0",
