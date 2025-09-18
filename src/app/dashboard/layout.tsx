@@ -1,46 +1,24 @@
 
-'use client';
-
-import type { Metadata } from 'next';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Header } from '@/components/layout/header';
-import { createSupabaseClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import type { User } from '@supabase/supabase-js';
-import { Loader2 } from 'lucide-react';
 
-function AuthGuard({ children }: { children: React.ReactNode }) {
-  const supabase = createSupabaseClient();
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+// Force dynamic rendering for all dashboard pages
+export const dynamic = "force-dynamic";
 
-  useEffect(() => {
-    if (!supabase) {
-      router.push('/signin');
-      return;
-    }
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/signin');
-      } else {
-        setUser(session.user);
-        setLoading(false);
-      }
-    };
-    checkUser();
-  }, [router, supabase]);
+export default async function DashboardLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
+  if (!user) {
+    redirect('/signin');
   }
 
   return (
@@ -62,13 +40,4 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
       </div>
     </div>
   );
-}
-
-
-export default function DashboardLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  return <AuthGuard>{children}</AuthGuard>;
 }

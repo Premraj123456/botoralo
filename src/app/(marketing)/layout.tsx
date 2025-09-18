@@ -1,7 +1,7 @@
 
 import { Bot } from "lucide-react";
 import { Link } from '@/components/layout/page-loader';
-import { AuthButton } from "@/components/auth/auth-button";
+import { Button } from "@/components/ui/button";
 
 export default function MarketingLayout({
   children,
@@ -25,7 +25,9 @@ export default function MarketingLayout({
             <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</Link>
             <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
-            <AuthButton />
+            <Button asChild size="sm">
+                <Link href="/signin">Get Started</Link>
+            </Button>
         </nav>
       </header>
       <main className="flex-1 z-10">{children}</main>
