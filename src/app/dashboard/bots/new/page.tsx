@@ -57,7 +57,7 @@ export default function NewBotPage() {
 
   const onSubmit = async (values: BotFormValues) => {
     try {
-      const newBot = await createBot(values);
+      const newBot: { id: string } | null = await createBot(values);
       if (newBot) {
         toast({ title: "Success", description: "Your bot has been deployed." });
         router.push(`/dashboard/bots/${newBot.id}`);
