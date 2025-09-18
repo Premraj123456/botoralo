@@ -5,14 +5,23 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Bot as BotIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogViewer } from "@/components/bots/log-viewer";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { SummarizeLogs } from "@/components/bots/summarize-logs";
 import { AnalyzeAnomalies } from "@/components/bots/analyze-anomalies";
 import { SuggestFixes } from "@/components/bots/suggest-fixes";
 import { getBotInfoFromBackend } from "@/lib/bot-backend/client";
 import { BotActions } from "@/components/bots/bot-actions";
 
-const statusConfig = {
+type StatusConfig = {
+  [key: string]: {
+    text: string;
+    variant: BadgeProps["variant"];
+    className?: string;
+  };
+};
+
+
+const statusConfig: StatusConfig = {
   running: { text: "Running", variant: "default", className: "bg-green-500 hover:bg-green-500/90 text-white" },
   stopped: { text: "Stopped", variant: "secondary" },
   error: { text: "Error", variant: "destructive" },
