@@ -1,29 +1,16 @@
 'use client';
 
-import { useState, useEffect } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createSupabaseClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Link } from '@/components/layout/page-loader';
 import { ArrowRight } from "lucide-react";
 
 interface GetStartedButtonProps {
+    user: User | null;
     ctaText?: string;
 }
 
-export function GetStartedButton({ ctaText }: GetStartedButtonProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const supabase = createSupabaseClient();
-
-  useEffect(() => {
-    if (!supabase) return;
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-    };
-    getUser();
-  }, [supabase]);
-
+export function GetStartedButton({ user, ctaText }: GetStartedButtonProps) {
   return (
     <Button asChild size="lg" className="group glow-shadow transition-all duration-300 ease-in-out hover:glow-shadow-lg">
       <Link href={user ? "/dashboard" : "/signin"}>

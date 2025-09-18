@@ -5,40 +5,33 @@ import { Bot, Terminal } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { createSupabaseClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-function SignInRedirector() {
-    const supabase = createSupabaseClient();
-    const router = useRouter();
-    useEffect(() => {
-        if (!supabase) return;
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                router.push('/dashboard');
-            }
-        };
-        checkSession();
-    }, [router, supabase]);
-    
-    return null;
-}
+import { useRouter } from 'next/navigation';
+import type { User } from '@supabase/supabase-js';
 
 const SignInPage = () => {
   const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(true);
-  
+  const supabase = createSupabaseClient();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
   useEffect(() => {
-      const supabase = createSupabaseClient();
-      if (!supabase) {
-          setIsSupabaseConfigured(false);
-      }
-  }, []);
+    if (!supabase) {
+      setIsSupabaseConfigured(false);
+      return;
+    }
+    const getSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            router.push('/dashboard');
+        }
+    };
+    getSession();
+  }, [supabase, router]);
 
   return (
     <>
-      <SignInRedirector />
       <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
           <div className="flex justify-center mb-6">

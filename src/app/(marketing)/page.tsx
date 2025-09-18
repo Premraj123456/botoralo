@@ -6,6 +6,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { GetStartedButton } from '@/components/marketing/get-started-button'
+import { createSupabaseServerClient } from '@/lib/supabase/server'
 
 const testimonials = [
   {
@@ -47,7 +48,10 @@ const faqs = [
   }
 ]
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <>
         <section className="w-full py-24 md:py-32 lg:py-40 xl:py-56">
@@ -65,7 +69,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
-                   <GetStartedButton />
+                   <GetStartedButton user={user} />
                 </div>
               </div>
               <div className="relative animate-fade-in group">
@@ -217,7 +221,7 @@ export default function LandingPage() {
                     Deploy your first bot for free and experience the future of automated trading.
                 </p>
                 <div className="mt-8">
-                   <GetStartedButton ctaText="Start Deploying Now" />
+                   <GetStartedButton user={user} ctaText="Start Deploying Now" />
                 </div>
              </div>
           </div>
