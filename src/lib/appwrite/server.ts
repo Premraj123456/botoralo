@@ -1,4 +1,3 @@
-
 'use server';
 
 import { Client, Account, Databases, Users } from 'appwrite';
