@@ -2,7 +2,7 @@
 
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { getCurrentUser } from '@/lib/supabase/auth';
-import { ID, Query } from 'node-appwrite';
+import { ID, Query } from 'appwrite';
 
 const BOTS_DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
 const BOTS_COLLECTION_ID = process.env.APPWRITE_BOTS_COLLECTION_ID!;
