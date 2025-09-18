@@ -1,6 +1,6 @@
 'use server';
 
-import { Client, Account, Databases, Users } from 'appwrite';
+import { Client, Account, Databases } from 'appwrite';
 import { cookies } from 'next/headers';
 
 const appwriteEndpoint = process.env.APPWRITE_ENDPOINT!;
@@ -16,6 +16,7 @@ const createClient = () => {
 
 export async function createAdminClient() {
   const client = createClient().setKey(appwriteApiKey);
+  const users = new Users(client);
 
   return {
     get account() {
@@ -25,7 +26,7 @@ export async function createAdminClient() {
       return new Databases(client);
     },
     get users() {
-      return new Users(client);
+      return users;
     },
   };
 }
