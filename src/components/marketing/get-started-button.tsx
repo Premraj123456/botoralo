@@ -1,8 +1,7 @@
-'use client';
 
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { ArrowRight } from "lucide-react";
 
 interface GetStartedButtonProps {

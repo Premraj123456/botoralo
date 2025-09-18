@@ -18,7 +18,7 @@ import { getUserSubscription } from '@/lib/supabase/actions';
 import { PayPalButtonsWrapper } from '@/components/paypal/paypal-buttons';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 const plans = [

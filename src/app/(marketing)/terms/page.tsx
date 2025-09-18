@@ -1,20 +1,11 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { Bot } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export default function TermsOfServicePage() {
   return (
     <div className="bg-background text-foreground min-h-screen">
-      <header className="px-4 lg:px-6 h-16 flex items-center bg-transparent backdrop-blur-sm sticky top-0 z-50 border-b border-border/50">
-        <Link className="flex items-center justify-center" href="/">
-          <Bot className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-semibold tracking-wider font-headline">Botoralo</span>
-        </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-            <Link href="/dashboard" className="text-sm font-medium text-primary">Dashboard</Link>
-        </nav>
-      </header>
       <main className="py-12 md:py-20 lg:py-24">
         <div className="container mx-auto px-4 md:px-6">
           <Card className="max-w-4xl mx-auto">
@@ -69,19 +60,6 @@ export default function TermsOfServicePage() {
           </Card>
         </div>
       </main>
-       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-border/50 z-10">
-        <p className="text-xs text-muted-foreground">
-          © 2024 Botoralo. All rights reserved.
-        </p>
-        <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          <Link className="text-xs hover:underline underline-offset-4" href="/terms">
-            Terms of Service
-          </Link>
-          <Link className="text-xs hover:underline underline-offset-4" href="/privacy">
-            Privacy
-          </Link>
-        </nav>
-      </footer>
     </div>
   );
 }

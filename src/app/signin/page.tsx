@@ -2,13 +2,15 @@
 'use client';
 
 import { Bot, Terminal } from 'lucide-react';
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+
+export const dynamic = "force-dynamic";
 
 const SignInPage = () => {
   const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(true);

@@ -1,6 +1,6 @@
 
 import { Bot } from "lucide-react";
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 
 export default function MarketingLayout({

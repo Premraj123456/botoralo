@@ -1,7 +1,7 @@
 
 import { ArrowRight, Bot, Code, Rocket } from 'lucide-react'
 import Image from 'next/image'
-import { Link } from '@/components/layout/page-loader'
+import Link from 'next/link'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
