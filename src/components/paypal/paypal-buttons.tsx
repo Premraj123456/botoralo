@@ -9,12 +9,12 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface PayPalButtonsWrapperProps {
-  planName: 'Pro' | 'Power';
+  planId: string;
   userId?: string;
   onLoginRequired: () => void;
 }
 
-export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayPalButtonsWrapperProps) {
+export function PayPalButtonsWrapper({ planId, userId, onLoginRequired }: PayPalButtonsWrapperProps) {
   const { toast } = useToast();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -28,8 +28,7 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
     }
     
     try {
-      // Pass the plan NAME to the server action
-      const subscription = await createPayPalSubscription(planName, userId);
+      const subscription = await createPayPalSubscription(planId, userId);
       if (subscription.id) {
         return subscription.id;
       }
@@ -37,7 +36,7 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
     } catch (error) {
       toast({
         title: "Error",
-        description: (error as Error).message || "Could not initiate PayPal checkout. Please try again.",
+        description: "Could not initiate PayPal checkout. Please try again.",
         variant: "destructive",
       });
       throw error;
@@ -47,8 +46,7 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
   const handleOnApprove = async (data: any, actions: any) => {
     setIsProcessing(true);
     try {
-      // Pass only the subscription ID and user ID to the capture action
-      const result = await capturePayPalSubscription(data.subscriptionID, userId!);
+      const result = await capturePayPalSubscription(data.subscriptionID, planId, userId!);
       if (result.success) {
         toast({
           title: "Success!",
@@ -56,6 +54,7 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
         });
         // Redirect to dashboard with a success flag
         router.push('/dashboard?subscription_success=true');
+        router.refresh();
       } else {
         throw new Error(result.error || "Failed to activate subscription.");
       }
@@ -95,8 +94,7 @@ export function PayPalButtonsWrapper({ planName, userId, onLoginRequired }: PayP
     <PayPalScriptProvider options={{
       "clientId": payPalClientId,
       "intent": "subscription",
-      "vault": true,
-      "enable-funding": "card"
+      "vault": true
     }}>
       <PayPalButtons
         style={{ layout: "vertical", label: "subscribe" }}

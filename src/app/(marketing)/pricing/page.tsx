@@ -25,6 +25,7 @@ const plans = [
   {
     name: 'Free',
     price: '$0',
+    planId: null,
     description: 'For hobbyists and testing things out.',
     ram: '128MB RAM',
     features: ['1 Bot Slot', '24/7 Uptime', 'Basic Logging', 'Community Support'],
@@ -33,6 +34,7 @@ const plans = [
   {
     name: 'Pro',
     price: '$9',
+    planId: process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID,
     description: 'For serious traders who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
@@ -41,6 +43,7 @@ const plans = [
   {
     name: 'Power',
     price: '$29',
+    planId: process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID,
     description: 'For professionals running multiple complex bots.',
     ram: '1GB RAM',
     features: [
@@ -62,7 +65,7 @@ export default function PricingPage() {
   const router = useRouter();
   const supabase = createSupabaseClient();
   
-  const isPaypalConfigured = !!process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID;
+  const isPaypalConfigured = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID && process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID;
 
   useEffect(() => {
     setIsClient(true);
@@ -98,7 +101,7 @@ export default function PricingPage() {
     }
     
     // Free plan CTA
-    if (plan.name === 'Free') {
+    if (!plan.planId) {
        return (
         <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
           <Link href={user ? '/dashboard' : '/signin'}>{user ? 'Go to Dashboard' : 'Start for Free'}</Link>
@@ -111,7 +114,7 @@ export default function PricingPage() {
 
     return (
         <PayPalButtonsWrapper 
-            planName={plan.name as 'Pro' | 'Power'}
+            planId={plan.planId} 
             userId={user?.id} 
             onLoginRequired={handleLoginRedirect}
         />
@@ -135,7 +138,7 @@ export default function PricingPage() {
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>PayPal Not Configured</AlertTitle>
                 <AlertDescription>
-                   The PayPal environment variables are not set or are using placeholder values. Please create subscription plans in your PayPal developer dashboard and add the Plan IDs to your `.env` file to enable checkout.
+                   The PayPal environment variables are not set. Please create subscription plans in your PayPal developer dashboard and add the Plan IDs to your `.env` file to enable checkout.
                 </AlertDescription>
             </Alert>
         )}

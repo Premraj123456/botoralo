@@ -9,9 +9,8 @@ const PAYPAL_CLIENT_ID = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!;
 const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET!;
 const PAYPAL_API_URL = "https://api-m.sandbox.paypal.com"; // Use sandbox for testing
 
-// Hardcoded Plan IDs to bypass environment variable caching issues
-const proPlanId = "P-6VF91347KX5323712NDFFACQ";
-const powerPlanId = "P-2FY06213L89231025NDFFACQ";
+const proPlanId = process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID!;
+const powerPlanId = process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID!;
 
 async function getPayPalAccessToken() {
   if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
@@ -35,23 +34,10 @@ async function getPayPalAccessToken() {
   return data.access_token;
 }
 
-function getPlanIdByName(planName: 'Pro' | 'Power') {
-    if (planName === 'Pro') {
-        return proPlanId;
-    }
-    if (planName === 'Power') {
-        return powerPlanId;
-    }
-    throw new Error('Invalid plan name provided.');
-}
-
-export async function createPayPalSubscription(planName: 'Pro' | 'Power', userId: string) {
+export async function createPayPalSubscription(planId: string, userId: string) {
     if (!userId) {
         throw new Error("User ID is required to create a subscription.");
     }
-    
-    const planId = getPlanIdByName(planName);
-    
     const accessToken = await getPayPalAccessToken();
     const response = await fetch(`${PAYPAL_API_URL}/v1/billing/subscriptions`, {
         method: "POST",
@@ -74,29 +60,13 @@ export async function createPayPalSubscription(planName: 'Pro' | 'Power', userId
     return data;
 }
 
-export async function capturePayPalSubscription(subscriptionId: string, userId: string) {
+export async function capturePayPalSubscription(subscriptionId: string, planId: string, userId: string) {
     try {
-        const accessToken = await getPayPalAccessToken();
-        const response = await fetch(`${PAYPAL_API_URL}/v1/billing/subscriptions/${subscriptionId}`, {
-            headers: {
-                "Authorization": `Bearer ${accessToken}`,
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Failed to fetch subscription details from PayPal. Status: ${response.status}`);
-        }
-
-        const subscriptionDetails = await response.json();
-        const planId = subscriptionDetails.plan_id;
-        
         let plan = 'Free';
         if (planId === proPlanId) {
             plan = 'Pro';
         } else if (planId === powerPlanId) {
             plan = 'Power';
-        } else {
-            throw new Error(`Unknown Plan ID received from PayPal: ${planId}`);
         }
         
         await updateUserPlan({ userId, plan, subscriptionId });

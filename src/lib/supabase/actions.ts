@@ -179,10 +179,13 @@ export async function createBot(data: { name: string, code: string }) {
     await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
   } catch (backendError) {
     console.error("Backend deployment failed:", backendError);
-    throw new Error(`Bot created, but failed to deploy: ${(backendError as Error).message}`);
+    // If deployment fails, we should delete the bot record to avoid orphaned entries
+    await supabase.from('bots').delete().eq('id', newBot.id);
+    throw new Error(`Bot deployment failed: ${(backendError as Error).message}`);
   }
 
 
+  revalidatePath('/dashboard');
   return newBot;
 }
 
@@ -258,5 +261,4 @@ export async function deleteBot(botId: string) {
     }
 
     revalidatePath('/dashboard');
-    revalidatePath(`/dashboard/bots/${botId}`);
 }
