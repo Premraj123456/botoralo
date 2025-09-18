@@ -12,11 +12,7 @@ import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { Loader2 } from 'lucide-react';
 
-export default function DashboardLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+function AuthGuard({ children }: { children: React.ReactNode }) {
   const supabase = createSupabaseClient();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -24,9 +20,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (!supabase) {
-        // If Supabase isn't configured, redirect to sign-in which will show a message
-        router.push('/signin');
-        return;
+      router.push('/signin');
+      return;
     }
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -67,4 +62,13 @@ export default function DashboardLayout({
       </div>
     </div>
   );
+}
+
+
+export default function DashboardLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return <AuthGuard>{children}</AuthGuard>;
 }

@@ -9,51 +9,60 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+function SignInRedirector() {
+    const supabase = createSupabaseClient();
+    const router = useRouter();
+    useEffect(() => {
+        if (!supabase) return;
+        const checkSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                router.push('/dashboard');
+            }
+        };
+        checkSession();
+    }, [router, supabase]);
+    
+    return null;
+}
 
 const SignInPage = () => {
   const [isSupabaseConfigured, setIsSupabaseConfigured] = useState(true);
-  const supabase = createSupabaseClient();
-  const router = useRouter();
-
+  
   useEffect(() => {
-    if (!supabase) {
-      setIsSupabaseConfigured(false);
-      return;
-    }
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        router.push('/dashboard');
+      const supabase = createSupabaseClient();
+      if (!supabase) {
+          setIsSupabaseConfigured(false);
       }
-    };
-    checkSession();
-  }, [router, supabase]);
-
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
-      <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
-        <div className="flex justify-center mb-6">
-          <Link className="flex items-center justify-center" href="/">
-            <Bot className="h-8 w-8 text-primary" />
-            <span className="ml-2 text-2xl font-semibold tracking-wider font-headline">
-              Botoralo
-            </span>
-          </Link>
+    <>
+      <SignInRedirector />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="w-full max-w-md p-8 rounded-lg shadow-md border bg-card">
+          <div className="flex justify-center mb-6">
+            <Link className="flex items-center justify-center" href="/">
+              <Bot className="h-8 w-8 text-primary" />
+              <span className="ml-2 text-2xl font-semibold tracking-wider font-headline">
+                Botoralo
+              </span>
+            </Link>
+          </div>
+          {!isSupabaseConfigured ? (
+             <Alert variant="destructive">
+                <Terminal className="h-4 w-4" />
+                <AlertTitle>Supabase Not Configured</AlertTitle>
+                <AlertDescription>
+                  Please update your <strong>.env</strong> file with your Supabase credentials to enable authentication.
+                </AlertDescription>
+              </Alert>
+          ) : (
+            <SignInForm />
+          )}
         </div>
-        {!isSupabaseConfigured ? (
-           <Alert variant="destructive">
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Supabase Not Configured</AlertTitle>
-              <AlertDescription>
-                Please update your <strong>.env</strong> file with your Supabase credentials to enable authentication.
-              </AlertDescription>
-            </Alert>
-        ) : (
-          <SignInForm />
-        )}
       </div>
-    </div>
+    </>
   );
 };
 
