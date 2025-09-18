@@ -204,7 +204,7 @@ export async function getUserBots() {
   return bots || [];
 }
 
-export async function getBotById(botId: string) {
+export async function getBotById(botId: string): Promise<Bot | null> {
   const { user } = await getCurrentUser();
   if (!user) throw new Error('Not authenticated');
   
