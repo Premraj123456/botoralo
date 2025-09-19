@@ -6,7 +6,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent } from '@/components/ui/card'
 import { GetStartedButton } from '@/components/marketing/get-started-button'
-import type { User } from '@supabase/supabase-js'
 
 const testimonials = [
   {
@@ -49,8 +48,6 @@ const faqs = [
 ]
 
 export default function LandingPage() {
-  const user: User | null = null;
-
   return (
     <>
         <section className="w-full py-24 md:py-32 lg:py-40 xl:py-56">
