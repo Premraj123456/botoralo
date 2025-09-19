@@ -68,7 +68,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
-                   <GetStartedButton user={user} />
+                   <GetStartedButton />
                 </div>
               </div>
               <div className="relative animate-fade-in group">
@@ -220,7 +220,7 @@ export default function LandingPage() {
                     Deploy your first bot for free and experience the future of automated trading.
                 </p>
                 <div className="mt-8">
-                   <GetStartedButton user={user} ctaText="Start Deploying Now" />
+                   <GetStartedButton ctaText="Start Deploying Now" />
                 </div>
              </div>
           </div>
@@ -228,5 +228,3 @@ export default function LandingPage() {
     </>
   )
 }
-
-    
