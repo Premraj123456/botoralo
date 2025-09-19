@@ -230,35 +230,53 @@ export async function getBotById(botId: string): Promise<Bot | null> {
   return bot;
 }
 
-export async function startBot(botId: string) {
-    await startBotInBackend(botId);
-    const supabase = createSupabaseServerClient();
-    await supabase.from('bots').update({ status: 'running' }).eq('id', botId);
-    revalidatePath(`/dashboard/bots/${botId}`);
+export async function startBot(prevState: any, formData: FormData) {
+    const botId = formData.get('botId') as string;
+    try {
+        await startBotInBackend(botId);
+        const supabase = createSupabaseServerClient();
+        await supabase.from('bots').update({ status: 'running' }).eq('id', botId);
+        revalidatePath(`/dashboard/bots/${botId}`);
+        revalidatePath('/dashboard');
+        return { message: "Bot is starting...", success: true };
+    } catch (e) {
+        return { message: (e as Error).message, success: false };
+    }
 }
 
-export async function stopBot(botId: string) {
-    await stopBotInBackend(botId);
-    const supabase = createSupabaseServerClient();
-    await supabase.from('bots').update({ status: 'stopped' }).eq('id', botId);
-    revalidatePath(`/dashboard/bots/${botId}`);
+export async function stopBot(prevState: any, formData: FormData) {
+    const botId = formData.get('botId') as string;
+    try {
+        await stopBotInBackend(botId);
+        const supabase = createSupabaseServerClient();
+        await supabase.from('bots').update({ status: 'stopped' }).eq('id', botId);
+        revalidatePath(`/dashboard/bots/${botId}`);
+        revalidatePath('/dashboard');
+        return { message: "Bot is stopping...", success: true };
+    } catch(e) {
+        return { message: (e as Error).message, success: false };
+    }
 }
 
-export async function deleteBot(botId: string) {
+export async function deleteBot(prevState: any, formData: FormData) {
+    const botId = formData.get('botId') as string;
     const supabase = createSupabaseServerClient();
     
-    const { error: dbError } = await supabase.from('bots').delete().eq('id', botId);
-
-    if (dbError) {
-        console.error("Failed to delete bot from Supabase:", dbError);
-        throw new Error("Could not delete bot from the database.");
-    }
-
     try {
-        await deleteBotFromBackend(botId);
-    } catch (backendError) {
-        console.warn(`Could not delete bot ${botId} from backend service. It was already deleted from the database.`, backendError);
-    }
+        const { error: dbError } = await supabase.from('bots').delete().eq('id', botId);
 
-    revalidatePath('/dashboard');
+        if (dbError) {
+            console.error("Failed to delete bot from Supabase:", dbError);
+            throw new Error("Could not delete bot from the database.");
+        }
+
+        await deleteBotFromBackend(botId);
+        revalidatePath('/dashboard');
+        return { message: "Bot has been deleted.", success: true };
+    } catch (e) {
+        console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted from the database.`, e);
+        // Still return success if DB deletion worked, as it's the source of truth.
+        revalidatePath('/dashboard');
+        return { message: (e as Error).message, success: false };
+    }
 }

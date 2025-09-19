@@ -133,5 +133,3 @@ export function BotCard({ bot }: BotCardProps) {
     </Card>
   );
 }
-
-    

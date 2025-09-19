@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Square, Trash2, Loader2 } from "lucide-react";
 import { startBot, stopBot, deleteBot } from "@/lib/supabase/actions";
@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useEffect } from "react";
 
 type BotStatus = "running" | "stopped" | "error";
 
@@ -26,120 +27,135 @@ interface BotActionsProps {
   initialStatus: BotStatus;
 }
 
+const initialState = {
+  message: "",
+  success: false,
+};
+
+function StartButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      type="submit"
+      disabled={disabled || pending}
+    >
+      {pending ? (
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      ) : (
+        <Play className="h-4 w-4 mr-2" />
+      )}
+      Start
+    </Button>
+  );
+}
+
+function StopButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      type="submit"
+      disabled={disabled || pending}
+    >
+      {pending ? (
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      ) : (
+        <Square className="h-4 w-4 mr-2" />
+      )}
+      Stop
+    </Button>
+  );
+}
+
+function DeleteButton() {
+    const { pending } = useFormStatus();
+    return (
+        <AlertDialogAction type="submit" disabled={pending}>
+            {pending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Continue
+        </AlertDialogAction>
+    )
+}
+
+
 export function BotActions({ botId, initialStatus }: BotActionsProps) {
-  const [status, setStatus] = useState<BotStatus>(initialStatus);
-  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleStart = () => {
-    startTransition(async () => {
-      try {
-        await startBot(botId);
-        toast({ title: "Success", description: "Bot is starting..." });
-        setStatus("running");
-        router.refresh();
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: (error as Error).message,
-          variant: "destructive",
-        });
-      }
-    });
-  };
+  const [startState, startAction] = useFormState(startBot, initialState);
+  const [stopState, stopAction] = useFormState(stopBot, initialState);
+  const [deleteState, deleteAction] = useFormState(deleteBot, initialState);
 
-  const handleStop = () => {
-    startTransition(async () => {
-      try {
-        await stopBot(botId);
-        toast({ title: "Success", description: "Bot is stopping..." });
-        setStatus("stopped");
+  useEffect(() => {
+    if (startState.message) {
+      if (startState.success) {
+        toast({ title: "Success", description: startState.message });
         router.refresh();
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: (error as Error).message,
-          variant: "destructive",
-        });
+      } else {
+        toast({ title: "Error", description: startState.message, variant: "destructive" });
       }
-    });
-  };
+    }
+  }, [startState, toast, router]);
+  
+  useEffect(() => {
+    if (stopState.message) {
+      if (stopState.success) {
+        toast({ title: "Success", description: stopState.message });
+        router.refresh();
+      } else {
+        toast({ title: "Error", description: stopState.message, variant: "destructive" });
+      }
+    }
+  }, [stopState, toast, router]);
 
-  const handleDelete = () => {
-    startTransition(async () => {
-      try {
-        await deleteBot(botId);
-        toast({ title: "Success", description: "Bot has been deleted." });
+  useEffect(() => {
+    if (deleteState.message) {
+      if (deleteState.success) {
+        toast({ title: "Success", description: deleteState.message });
         router.push("/dashboard");
         router.refresh();
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: (error as Error).message,
-          variant: "destructive",
-        });
+      } else {
+        toast({ title: "Error", description: deleteState.message, variant: "destructive" });
       }
-    });
-  };
+    }
+  }, [deleteState, toast, router]);
 
-  const renderButtonContent = (
-    text: string,
-    Icon: React.ElementType,
-    action: "start" | "stop" | "delete"
-  ) => {
-    const isActionPending = isPending;
-    return (
-      <>
-        {isActionPending ? (
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-        ) : (
-          <Icon className="h-4 w-4 mr-2" />
-        )}
-        {text}
-      </>
-    );
-  };
 
   return (
     <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleStart}
-        disabled={status === "running" || isPending}
-      >
-        {renderButtonContent("Start", Play, "start")}
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleStop}
-        disabled={status !== "running" || isPending}
-      >
-        {renderButtonContent("Stop", Square, "stop")}
-      </Button>
+      <form action={startAction}>
+        <input type="hidden" name="botId" value={botId} />
+        <StartButton disabled={initialStatus === "running"} />
+      </form>
+      <form action={stopAction}>
+        <input type="hidden" name="botId" value={botId} />
+        <StopButton disabled={initialStatus !== "running"} />
+      </form>
+
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="destructive" size="sm" disabled={isPending}>
+          <Button variant="destructive" size="sm">
             <Trash2 className="h-4 w-4 mr-2" /> Delete
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              bot and remove its data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
-              {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Continue
-            </AlertDialogAction>
-          </AlertDialogFooter>
+          <form action={deleteAction}>
+            <input type="hidden" name="botId" value={botId} />
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your
+                bot and remove its data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <DeleteButton />
+            </AlertDialogFooter>
+          </form>
         </AlertDialogContent>
       </AlertDialog>
     </div>
