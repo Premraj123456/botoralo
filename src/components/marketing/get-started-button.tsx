@@ -1,7 +1,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
-import Link from 'next/link';
+import { Link } from '@/components/layout/page-loader';
 import { ArrowRight } from "lucide-react";
 
 interface GetStartedButtonProps {

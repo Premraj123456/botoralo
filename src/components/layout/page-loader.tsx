@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
+import NextLink, { type LinkProps } from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { ClientLink } from './client-link';
 
 function useNProgress() {
   const [isLoading, setIsLoading] = React.useState(false);
@@ -21,7 +21,7 @@ function useNProgress() {
 }
 
 export function PageLoader() {
-  const { isLoading } = useNProgress();
+  const { isLoading } = useNProgressContext();
 
   return (
     <div
@@ -51,15 +51,16 @@ export function PageLoader() {
 
 // Create a context to share the loading state
 const NProgressContext = React.createContext<{
+  isLoading: boolean;
   startLoading: () => void;
   stopLoading: () => void;
 } | null>(null);
 
 // Create a provider component that will wrap the app
 export function NProgressProvider({ children }: { children: React.ReactNode }) {
-  const { startLoading, stopLoading } = useNProgress();
+  const progress = useNProgress();
   return (
-    <NProgressContext.Provider value={{ startLoading, stopLoading }}>
+    <NProgressContext.Provider value={progress}>
       {children}
     </NProgressContext.Provider>
   );
@@ -73,6 +74,30 @@ export function useNProgressContext() {
   }
   return context;
 }
+
+const ClientLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.PropsWithChildren<LinkProps> & React.HTMLAttributes<HTMLAnchorElement>
+>(function ClientLink({ href, onClick, children, ...props }, ref) {
+  const { startLoading } = useNProgressContext();
+
+  return (
+    <NextLink
+      href={href}
+      ref={ref}
+      onClick={(e) => {
+        startLoading();
+        if (onClick) {
+          onClick(e);
+        }
+      }}
+      {...props}
+    >
+      {children}
+    </NextLink>
+  );
+});
+ClientLink.displayName = "ClientLink";
 
 // Export the server-safe Link component
 export const Link = ClientLink;
