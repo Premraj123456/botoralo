@@ -11,19 +11,19 @@ const testimonials = [
   {
     quote: "Botoralo revolutionized my workflow. I went from spending hours managing servers to deploying bots in minutes. The AI-powered insights are a game-changer.",
     name: "Alex T.",
-    title: "Algorithmic Trader",
+    title: "Automation Specialist",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704a"
   },
   {
-    quote: "As a developer, I love that I can just bring my own code. The platform is robust, secure, and incredibly easy to use. I can't recommend it enough.",
+    quote: "As a developer, I love that I can just bring my own code. The platform is robust, secure, and incredibly easy to use. I can't recommend it enough for my automation projects.",
     name: "Samantha K.",
     title: "Freelance Developer",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704b"
   },
   {
-    quote: "The uptime and reliability are top-notch. I sleep better at night knowing my trading strategies are running on Botoralo's solid infrastructure.",
+    quote: "The uptime and reliability are top-notch. I sleep better at night knowing my automated tasks are running on Botoralo's solid infrastructure.",
     name: "David L.",
-    title: "Crypto Fund Manager",
+    title: "Operations Manager",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704c"
   },
 ];
@@ -56,12 +56,12 @@ export default function LandingPage() {
               <div className="flex flex-col justify-center space-y-6 animate-fade-in-up">
                 <div className="space-y-4">
                   <h1 className="text-4xl font-bold tracking-tighter sm:text-6xl xl:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 font-headline">
-                    Deploy Your Trading Bots, Effortlessly.
+                    Host Your Bots, 24/7.
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl font-body">
-                    Focus on your strategy. We handle the infrastructure.
+                    Focus on your automation. We handle the infrastructure.
                     Botoralo provides a secure, reliable, and easy-to-use
-                    platform for hosting your crypto trading bots.
+                    platform for hosting any bot, 24/7, without interruption.
                   </p>
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
@@ -75,7 +75,7 @@ export default function LandingPage() {
                   className="mx-auto aspect-video overflow-hidden rounded-xl object-cover"
                   height="400"
                   src="https://picsum.photos/600/338"
-                  data-ai-hint="futuristic technology"
+                  data-ai-hint="automation robotics"
                   width="700"
                 />
               </div>
@@ -94,7 +94,7 @@ export default function LandingPage() {
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed font-body">
                   Our platform is packed with features to help you deploy,
-                  monitor, and manage your trading bots with ease.
+                  monitor, and manage your bots with ease.
                 </p>
               </div>
             </div>
@@ -147,10 +147,10 @@ export default function LandingPage() {
                   What Our Users Say
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                  Trusted by Traders and Developers
+                  Trusted by Developers and Bot Workers
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed font-body">
-                  Hear from our community about how Botoralo has transformed their trading and development process.
+                  Hear from our community about how Botoralo has transformed their automation and development process.
                 </p>
               </div>
             </div>
@@ -210,11 +210,11 @@ export default function LandingPage() {
           <div className="container text-center">
              <div className="max-w-3xl mx-auto p-8 rounded-xl bg-gradient-to-r from-primary/30 to-purple-600/30 border border-primary/50 shadow-2xl">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline text-white">
-                    Ready to Automate Your Strategy?
+                    Ready to Automate Your Tasks?
                 </h2>
                 <p className="mt-4 max-w-xl mx-auto text-muted-foreground md:text-xl">
-                    Join hundreds of developers and traders who trust Botoralo.
-                    Deploy your first bot for free and experience the future of automated trading.
+                    Join hundreds of developers and bot workers who trust Botoralo.
+                    Deploy your first bot for free and experience the future of automation.
                 </p>
                 <div className="mt-8">
                    <GetStartedButton ctaText="Start Deploying Now" />

@@ -17,13 +17,13 @@ export default function PrivacyPolicyPage() {
               <section>
                 <h2 className="text-2xl font-semibold">1. Information We Collect</h2>
                 <p>
-                  We collect information that you provide to us directly, such as when you create an account, and information that is automatically collected when you use our services, such as your IP address and usage data. The primary information we collect is your email address for authentication and the code you provide for your trading bots.
+                  We collect information that you provide to us directly, such as when you create an account, and information that is automatically collected when you use our services, such as your IP address and usage data. The primary information we collect is your email address for authentication and the code you provide for your bots.
                 </p>
               </section>
               <section>
                 <h2 className="text-2xl font-semibold">2. How We Use Your Information</h2>
                 <p>
-                  We use your information to provide, maintain, and improve our services, including to host and run your trading bots, to process payments, to communicate with you, and to secure your account. Your bot code is treated as confidential and is only accessed by our automated systems for the purpose of execution.
+                  We use your information to provide, maintain, and improve our services, including to host and run your bots, to process payments, to communicate with you, and to secure your account. Your bot code is treated as confidential and is only accessed by our automated systems for the purpose of execution.
                 </p>
               </section>
                <section>

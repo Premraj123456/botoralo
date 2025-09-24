@@ -35,7 +35,7 @@ const plans = [
     name: 'Pro',
     price: '$9',
     planId: process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID,
-    description: 'For serious traders who need more power.',
+    description: 'For serious bot workers who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
     isPrimary: true,

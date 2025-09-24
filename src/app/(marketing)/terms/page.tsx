@@ -29,7 +29,7 @@ export default function TermsOfServicePage() {
                <section>
                 <h2 className="text-2xl font-semibold">3. User Responsibilities</h2>
                 <p>
-                  You are solely responsible for the code, scripts, and trading strategies ("User Content") that you deploy on the Service. You agree that you will not use the Service for any unlawful purpose or to violate any laws in your jurisdiction. You are responsible for all risks associated with your trading activities.
+                  You are solely responsible for the code, scripts, and automation strategies ("User Content") that you deploy on the Service. You agree that you will not use the Service for any unlawful purpose or to violate any laws in your jurisdiction. You are responsible for all risks associated with your automated activities.
                 </p>
               </section>
               <section>
