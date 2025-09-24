@@ -42,6 +42,9 @@ export default function MarketingLayout({
           <Link className="text-xs hover:underline underline-offset-4" href="/privacy">
             Privacy
           </Link>
+          <Link className="text-xs hover:underline underline-offset-4" href="/refund">
+            Refund Policy
+          </Link>
         </nav>
       </footer>
     </div>
