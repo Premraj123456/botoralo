@@ -1,10 +1,10 @@
 'use client';
 
-import Script from 'next/script';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePaddle } from '@/hooks/use-paddle';
 
 declare global {
     interface Window {
@@ -20,34 +20,10 @@ interface PaddleCheckoutProps {
 }
 
 export function PaddleCheckout({ priceId, userId, email, onLoginRequired }: PaddleCheckoutProps) {
-  const [isPaddleReady, setIsPaddleReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const isPaddleReady = usePaddle();
 
-  const handleScriptLoad = () => {
-    if (!process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
-      console.error('Paddle Client Token is not configured.');
-      toast({ title: 'Error', description: 'Paddle checkout is not configured.', variant: 'destructive' });
-      return;
-    }
-
-    window.Paddle.Initialize({
-      token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
-      environment: 'sandbox',
-      eventCallback: function (data: any) {
-        if (data.name === 'checkout.completed') {
-            setIsProcessing(false);
-            // The webhook will handle the subscription update.
-            // Redirecting user to a success page or dashboard.
-            window.location.href = '/dashboard?subscription_success=true';
-        } else if (data.name === 'checkout.closed') {
-            setIsProcessing(false);
-        }
-      },
-    });
-    setIsPaddleReady(true);
-  };
-  
   const handleCheckout = () => {
     if (!userId || !email) {
       onLoginRequired();
@@ -64,15 +40,14 @@ export function PaddleCheckout({ priceId, userId, email, onLoginRequired }: Padd
       items: [{ priceId: priceId, quantity: 1 }],
       customer: { email: email },
       customData: { user_id: userId },
+      settings: {
+        successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription_success=true`
+      }
     });
+    // The eventCallback in usePaddle will handle isProcessing state and redirects
   };
 
   return (
-    <>
-      <Script
-        src="https://cdn.paddle.com/v2/paddle.js"
-        onLoad={handleScriptLoad}
-      />
       <Button
         onClick={handleCheckout}
         disabled={!isPaddleReady || isProcessing}
@@ -81,6 +56,5 @@ export function PaddleCheckout({ priceId, userId, email, onLoginRequired }: Padd
         {(isProcessing || !isPaddleReady) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         {isProcessing ? 'Processing...' : (isPaddleReady ? 'Upgrade Now' : 'Loading Billing...')}
       </Button>
-    </>
   );
 }
