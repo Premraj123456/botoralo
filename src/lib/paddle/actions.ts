@@ -1,7 +1,7 @@
 
 'use server';
 
-import { Paddle, Environment } from '@paddle/sdk-node';
+import { Paddle, Environment } from 'paddle';
 import { updateUserPlan } from "../supabase/actions";
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
@@ -70,5 +70,3 @@ export async function manageSubscription(subscriptionId: string) {
         throw new Error("Could not generate subscription management link.");
     }
 }
-
-    
