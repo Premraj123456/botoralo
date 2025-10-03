@@ -25,7 +25,7 @@ const plans = [
   {
     name: 'Free',
     price: '$0',
-    priceId: null,
+    productId: null,
     description: 'For hobbyists and testing things out.',
     ram: '128MB RAM',
     features: ['1 Bot Slot', '24/7 Uptime', 'Basic Logging', 'Community Support'],
@@ -34,7 +34,7 @@ const plans = [
   {
     name: 'Pro',
     price: '$9',
-    priceId: process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID,
+    productId: process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID,
     description: 'For serious bot developers who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
@@ -43,7 +43,7 @@ const plans = [
   {
     name: 'Power',
     price: '$29',
-    priceId: process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID,
+    productId: process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID,
     description: 'For professionals running multiple complex bots.',
     ram: '1GB RAM',
     features: [
@@ -65,7 +65,7 @@ export default function PricingPage() {
   const router = useRouter();
   const supabase = createSupabaseClient();
   
-  const isPaddleConfigured = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID;
+  const isPaddleConfigured = process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID && process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID;
 
   useEffect(() => {
     setIsClient(true);
@@ -84,6 +84,10 @@ export default function PricingPage() {
   const handleLoginRedirect = () => {
     router.push('/signin');
   }
+  
+  const onCheckoutSuccess = () => {
+    router.push(`/dashboard?subscription_success=true`);
+  }
 
   const renderCta = (plan: typeof plans[0]) => {
     if (!isClient) {
@@ -101,7 +105,7 @@ export default function PricingPage() {
     }
     
     // Free plan CTA
-    if (!plan.priceId) {
+    if (!plan.productId) {
        return (
         <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
           <Link href={user ? '/dashboard' : '/signin'}>{user ? 'Go to Dashboard' : 'Start for Free'}</Link>
@@ -110,21 +114,21 @@ export default function PricingPage() {
     }
     
     // Paid plan CTA
-    if (!isPaddleConfigured) return null; // Don't render if not configured
+    if (!isPaddleConfigured) return null;
 
     if (user) {
         return (
             <PaddleCheckout
-                priceId={plan.priceId}
-                userId={user.id}
+                productId={plan.productId}
                 email={user.email}
-                onLoginRequired={handleLoginRedirect}
+                passthrough={{ user_id: user.id }}
+                onSuccess={onCheckoutSuccess}
             />
         );
     }
 
     return (
-        <Button onClick={handleLoginRedirect} className="w-full mt-4">
+        <Button onClick={handleLoginRedirect} className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
             Sign in to Upgrade
         </Button>
     )
@@ -147,7 +151,7 @@ export default function PricingPage() {
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>Paddle Not Configured</AlertTitle>
                 <AlertDescription>
-                   The Paddle environment variables are not set. Please add your Client-side Token and Plan IDs to your `.env` file to enable checkout.
+                   The Paddle environment variables are not set. Please add your Vendor ID and Product IDs to your `.env` file to enable checkout.
                 </AlertDescription>
             </Alert>
         )}

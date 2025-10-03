@@ -5,17 +5,26 @@ const PADDLE_SCRIPT_URL = "https://cdn.paddle.com/paddle/paddle.js";
 let scriptLoading = false;
 let scriptLoaded = false;
 
+declare global {
+    interface Window {
+        Paddle: any;
+    }
+}
+
 export function usePaddle() {
   const [isPaddleReady, setIsPaddleReady] = useState(false);
 
   useEffect(() => {
-    // If Paddle is already initialized, we're ready
+    if (!process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID) {
+      console.error("Paddle Vendor ID is not set.");
+      return;
+    }
+
     if (scriptLoaded && window.Paddle) {
       setIsPaddleReady(true);
       return;
     }
 
-    // If script is currently loading, wait for it to finish
     if (scriptLoading) {
       const interval = setInterval(() => {
         if (scriptLoaded && window.Paddle) {
@@ -26,7 +35,6 @@ export function usePaddle() {
       return () => clearInterval(interval);
     }
     
-    // Otherwise, load the script
     scriptLoading = true;
     const script = document.createElement('script');
     script.src = PADDLE_SCRIPT_URL;
@@ -39,14 +47,7 @@ export function usePaddle() {
       }
       
       window.Paddle.Setup({ 
-        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
-        environment: 'sandbox',
-        eventCallback: function (data: any) {
-            if (data.name === 'checkout.completed') {
-                 // The webhook will handle the subscription update, but we redirect the user.
-                window.location.href = `/dashboard?subscription_success=true`;
-            }
-        }
+        vendor: parseInt(process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID!, 10),
       });
       
       scriptLoaded = true;
@@ -61,8 +62,7 @@ export function usePaddle() {
     document.body.appendChild(script);
 
     return () => {
-      // Clean up the script if the component unmounts, though this is unlikely for a shared hook
-      // and might be undesirable if other components are using it.
+      // Clean up the script if the component unmounts
     };
   }, []);
 
