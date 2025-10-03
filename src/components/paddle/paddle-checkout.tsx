@@ -2,7 +2,7 @@
 'use client';
 
 import Script from 'next/script';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -41,6 +41,8 @@ export function PaddleCheckout({ priceId, userId, email, onLoginRequired }: Padd
             // The webhook will handle the subscription update.
             // Redirecting user to a success page or dashboard.
             window.location.href = '/dashboard?subscription_success=true';
+        } else if (data.name === 'checkout.closed') {
+            setIsProcessing(false);
         }
       },
     });
@@ -83,5 +85,3 @@ export function PaddleCheckout({ priceId, userId, email, onLoginRequired }: Padd
     </>
   );
 }
-
-    
