@@ -385,7 +385,7 @@ def logs():
 
     if not container:
         def empty_stream():
-            yield 'data: [info] Bot is not running or does not exist. No logs to display.\n\n'
+            yield 'data: [info] Bot is not running or does not exist. No logs to display.\\n\\n'
         return Response(stream_with_context(empty_stream()), mimetype='text/event-stream')
 
     def generate():
@@ -393,16 +393,16 @@ def logs():
             # Yield last 100 lines first
             past_logs = container.logs(stream=False, tail=100).decode(errors='replace')
             for line in past_logs.splitlines():
-                yield f"data: {line.strip()}\n\n"
+                yield f"data: {line.strip()}\\n\\n"
             
             # Then follow new logs
             for chunk in container.logs(stream=True, follow=True, since=datetime.datetime.utcnow()):
-                yield f"data: {chunk.decode(errors='replace').strip()}\n\n"
+                yield f"data: {chunk.decode(errors='replace').strip()}\\n\\n"
         except docker.errors.NotFound:
-            yield "data: [error] Container not found. It may have been stopped or deleted.\n\n"
+            yield "data: [error] Container not found. It may have been stopped or deleted.\\n\\n"
         except Exception as e:
             app.logger.error(f"Log streaming error for {botoralo_bot_id}: {str(e)}")
-            yield f"data: [error] An error occurred while streaming logs: {str(e)}\n\n"
+            yield f"data: [error] An error occurred while streaming logs: {str(e)}\\n\\n"
 
     return Response(stream_with_context(generate()), mimetype='text/event-stream')
 
