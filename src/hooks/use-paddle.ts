@@ -10,22 +10,7 @@ export function usePaddle() {
 
   useEffect(() => {
     // If Paddle is already initialized, we're ready
-    if (window.Paddle) {
-      setIsPaddleReady(true);
-      return;
-    }
-
-    // If script is already loaded, just initialize
-    if (scriptLoaded) {
-      window.Paddle.Initialize({
-        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
-        environment: 'sandbox',
-         eventCallback: function (data: any) {
-            if (data.name === 'checkout.completed') {
-                window.location.href = '/dashboard?subscription_success=true';
-            }
-         }
-      });
+    if (scriptLoaded && window.Paddle) {
       setIsPaddleReady(true);
       return;
     }
@@ -33,7 +18,7 @@ export function usePaddle() {
     // If script is currently loading, wait for it to finish
     if (scriptLoading) {
       const interval = setInterval(() => {
-        if (window.Paddle) {
+        if (scriptLoaded && window.Paddle) {
           clearInterval(interval);
           setIsPaddleReady(true);
         }
@@ -47,22 +32,25 @@ export function usePaddle() {
     script.src = PADDLE_SCRIPT_URL;
     script.async = true;
     script.onload = () => {
-      scriptLoaded = true;
-      scriptLoading = false;
       if (!window.Paddle) {
         console.error("Paddle script loaded but window.Paddle is not available.");
+        scriptLoading = false;
         return;
       }
-      window.Paddle.Initialize({
+      
+      window.Paddle.Setup({ 
         token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
         environment: 'sandbox',
         eventCallback: function (data: any) {
             if (data.name === 'checkout.completed') {
                  // The webhook will handle the subscription update, but we redirect the user.
-                window.location.href = '/dashboard?subscription_success=true';
+                window.location.href = `/dashboard?subscription_success=true`;
             }
-         }
+        }
       });
+      
+      scriptLoaded = true;
+      scriptLoading = false;
       setIsPaddleReady(true);
     };
     script.onerror = () => {
@@ -75,7 +63,6 @@ export function usePaddle() {
     return () => {
       // Clean up the script if the component unmounts, though this is unlikely for a shared hook
       // and might be undesirable if other components are using it.
-      // For simplicity in a SPA-like app, we leave it.
     };
   }, []);
 

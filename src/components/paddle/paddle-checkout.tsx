@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -30,7 +31,7 @@ export function PaddleCheckout({ priceId, userId, email, onLoginRequired }: Padd
       return;
     }
     
-    if (!isPaddleReady) {
+    if (!isPaddleReady || !window.Paddle) {
         toast({ title: 'Checkout Not Ready', description: 'Please wait a moment for the checkout to load.'});
         return;
     }
@@ -40,11 +41,10 @@ export function PaddleCheckout({ priceId, userId, email, onLoginRequired }: Padd
       items: [{ priceId: priceId, quantity: 1 }],
       customer: { email: email },
       customData: { user_id: userId },
-      settings: {
-        successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?subscription_success=true`
-      }
     });
-    // The eventCallback in usePaddle will handle isProcessing state and redirects
+    // The eventCallback in usePaddle will handle isProcessing state and redirects,
+    // but we'll set processing to false after a delay in case the user closes the modal.
+    setTimeout(() => setIsProcessing(false), 2000);
   };
 
   return (
