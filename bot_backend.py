@@ -432,6 +432,6 @@ if __name__ == '__main__':
     print(f"Starting Flask worker on {FLASK_HOST}:{FLASK_PORT}")
     print(f"Storing bot code under: {BOTS_DIR}")
     print("WARNING: This is a development server. Do not use in a production environment.")
-    app.run(host=FLASK_HOST, port=FLASK_PORT, debug=False)
+    app.run(host=FLASK_HOST, port=FLASK_PORT, debug=True)
 
     
