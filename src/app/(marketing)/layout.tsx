@@ -2,12 +2,16 @@
 import { Bot } from "lucide-react";
 import { Link } from '@/components/layout/page-loader';
 import { Button } from "@/components/ui/button";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default function MarketingLayout({
+export default async function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+
+  const supabase = createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="bg-background text-foreground min-h-screen flex flex-col">
@@ -26,7 +30,7 @@ export default function MarketingLayout({
             <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
             <Button asChild size="sm">
-                <Link href="/signin">Get Started</Link>
+                <Link href={user ? "/dashboard" : "/signin"}>{user ? "Dashboard" : "Get Started"}</Link>
             </Button>
         </nav>
       </header>
