@@ -15,17 +15,17 @@ import { createSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
 import { getUserSubscription } from '@/lib/supabase/actions';
-import { PayPalButtonsWrapper } from '@/components/paypal/paypal-buttons';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { PaddleCheckout } from '@/components/paddle/paddle-checkout';
 
 const plans = [
   {
     name: 'Free',
     price: '$0',
-    planId: null,
+    priceId: null,
     description: 'For hobbyists and testing things out.',
     ram: '128MB RAM',
     features: ['1 Bot Slot', '24/7 Uptime', 'Basic Logging', 'Community Support'],
@@ -34,8 +34,8 @@ const plans = [
   {
     name: 'Pro',
     price: '$9',
-    planId: process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID,
-    description: 'For serious bot workers who need more power.',
+    priceId: process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID,
+    description: 'For serious bot developers who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
     isPrimary: true,
@@ -43,7 +43,7 @@ const plans = [
   {
     name: 'Power',
     price: '$29',
-    planId: process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID,
+    priceId: process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID,
     description: 'For professionals running multiple complex bots.',
     ram: '1GB RAM',
     features: [
@@ -65,7 +65,7 @@ export default function PricingPage() {
   const router = useRouter();
   const supabase = createSupabaseClient();
   
-  const isPaypalConfigured = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID && process.env.NEXT_PUBLIC_PAYPAL_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PAYPAL_POWER_PLAN_ID;
+  const isPaddleConfigured = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID;
 
   useEffect(() => {
     setIsClient(true);
@@ -101,7 +101,7 @@ export default function PricingPage() {
     }
     
     // Free plan CTA
-    if (!plan.planId) {
+    if (!plan.priceId) {
        return (
         <Button asChild className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'}>
           <Link href={user ? '/dashboard' : '/signin'}>{user ? 'Go to Dashboard' : 'Start for Free'}</Link>
@@ -110,12 +110,13 @@ export default function PricingPage() {
     }
     
     // Paid plan CTA
-    if (!isPaypalConfigured) return null; // Don't render if not configured
+    if (!isPaddleConfigured) return null; // Don't render if not configured
 
     return (
-        <PayPalButtonsWrapper 
-            planId={plan.planId} 
-            userId={user?.id} 
+        <PaddleCheckout
+            priceId={plan.priceId}
+            userId={user?.id}
+            email={user?.email}
             onLoginRequired={handleLoginRedirect}
         />
     );
@@ -133,12 +134,12 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {!isPaypalConfigured && (
+        {!isPaddleConfigured && (
             <Alert variant="destructive" className="max-w-2xl">
                 <Terminal className="h-4 w-4" />
-                <AlertTitle>PayPal Not Configured</AlertTitle>
+                <AlertTitle>Paddle Not Configured</AlertTitle>
                 <AlertDescription>
-                   The PayPal environment variables are not set. Please create subscription plans in your PayPal developer dashboard and add the Plan IDs to your `.env` file to enable checkout.
+                   The Paddle environment variables are not set. Please add your Client-side Token and Plan IDs to your `.env` file to enable checkout.
                 </AlertDescription>
             </Alert>
         )}
@@ -181,3 +182,5 @@ export default function PricingPage() {
     </div>
   );
 }
+
+    

@@ -27,19 +27,19 @@ export async function getUserSubscription(userId: string) {
     
     const { data: profile } = await supabase
       .from('profiles')
-      .select('plan, paypal_subscription_id')
+      .select('plan, paddle_subscription_id')
       .eq('id', userId)
       .single();
       
     if (!profile) {
       console.log(`No profile found for user ${userId}. Defaulting to Free plan.`);
-      return { plan: 'Free', subscriptionId: null };
+      return { plan: 'Free', paddle_subscription_id: null };
     }
     
-    return { plan: profile.plan || 'Free', subscriptionId: profile.paypal_subscription_id };
+    return { plan: profile.plan || 'Free', paddle_subscription_id: profile.paddle_subscription_id };
   } catch (error) {
     console.error("Error getting user subscription:", (error as Error).message);
-    return { plan: 'Free', subscriptionId: null };
+    return { plan: 'Free', paddle_subscription_id: null };
   }
 }
 
@@ -47,29 +47,19 @@ export async function getUserSubscription(userId: string) {
 export async function upsertUserProfile({
   userId,
   email,
-  subscriptionId,
-  plan,
 }: {
   userId: string;
   email: string;
-  subscriptionId?: string;
-  plan?: string;
 }) {
   const supabase = createSupabaseServerClient();
 
   const profileData: {
     id: string;
     email: string;
-    paypal_subscription_id?: string;
-    plan?: string;
   } = {
     id: userId,
     email: email,
   };
-
-  if (subscriptionId) profileData.paypal_subscription_id = subscriptionId;
-  if (plan) profileData.plan = plan;
-
 
   const { data, error } = await supabase
     .from('profiles')
@@ -84,11 +74,21 @@ export async function upsertUserProfile({
   return data;
 }
 
-export async function updateUserPlan({ userId, plan, subscriptionId }: { userId: string, plan: string, subscriptionId: string | null }) {
+export async function updateUserPlan({ 
+    userId, 
+    plan, 
+    paddle_subscription_id, 
+    paddle_customer_id 
+}: { 
+    userId: string, 
+    plan: string, 
+    paddle_subscription_id: string | null,
+    paddle_customer_id: string | null
+}) {
     const supabase = createSupabaseServerClient();
     const { error } = await supabase
         .from('profiles')
-        .update({ plan, paypal_subscription_id: subscriptionId })
+        .update({ plan, paddle_subscription_id, paddle_customer_id })
         .eq('id', userId);
     
     if (error) {
@@ -280,3 +280,5 @@ export async function deleteBot(prevState: any, formData: FormData) {
         return { message: (e as Error).message, success: false };
     }
 }
+
+    

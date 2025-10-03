@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
               <section>
                 <h2 className="text-2xl font-semibold">5. Third-Party Services</h2>
                 <p>
-                  We use third-party services like Supabase for authentication and database management, and PayPal for payment processing. These services have their own privacy policies, and we encourage you to review them. We do not sell or trade your personal information to outside parties.
+                  We use third-party services like Supabase for authentication and database management, and Paddle for payment processing. These services have their own privacy policies, and we encourage you to review them. We do not sell or trade your personal information to outside parties.
                 </p>
               </section>
               <section>
@@ -63,3 +63,5 @@ export default function PrivacyPolicyPage() {
     </div>
   );
 }
+
+    

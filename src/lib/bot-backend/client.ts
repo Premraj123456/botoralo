@@ -72,7 +72,8 @@ export async function deployBotToBackend(bot: Bot) {
   
   // Create a Blob from the bot code to simulate a file upload
   const codeBlob = new Blob([bot.code], { type: 'text/plain' });
-  formData.append('code', codeBlob, 'code.py');
+  // You might want to adjust the filename based on bot language if available
+  formData.append('code', codeBlob, 'bot.py');
 
   return makeBackendRequest('/deploy', 'POST', formData, true);
 }
@@ -114,3 +115,5 @@ export async function getBotInfoFromBackend(botId: string) {
         return null;
     }
 }
+
+    

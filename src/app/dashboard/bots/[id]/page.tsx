@@ -87,3 +87,5 @@ export default async function BotDetailPage({ params }: { params: { id: string }
     </div>
   );
 }
+
+    

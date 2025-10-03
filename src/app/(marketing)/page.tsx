@@ -9,41 +9,41 @@ import { GetStartedButton } from '@/components/marketing/get-started-button'
 
 const testimonials = [
   {
-    quote: "Botoralo revolutionized my workflow. I went from spending hours managing servers to deploying bots in minutes. The AI-powered insights are a game-changer.",
+    quote: "Botoralo is a lifesaver. My Discord bot used to go offline constantly. Now it runs 24/7 without a hitch, and the AI log analysis helped me fix a recurring bug I couldn't find.",
     name: "Alex T.",
-    title: "Automation Specialist",
+    title: "Discord Bot Developer",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704a"
   },
   {
-    quote: "As a developer, I love that I can just bring my own code. The platform is robust, secure, and incredibly easy to use. I can't recommend it enough for my automation projects.",
+    quote: "As a Python dev, I love how easy it is to deploy my Telegram bots. I just push my code and Botoralo handles the rest. No more fighting with VPS configurations.",
     name: "Samantha K.",
-    title: "Freelance Developer",
+    title: "Python Developer",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704b"
   },
   {
-    quote: "The uptime and reliability are top-notch. I sleep better at night knowing my automated tasks are running on Botoralo's solid infrastructure.",
+    quote: "The uptime is incredible, and the pricing is super fair for the peace of mind it gives me. My community can count on my bots being online. 10/10 service.",
     name: "David L.",
-    title: "Operations Manager",
+    title: "Community Manager",
     avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704c"
   },
 ];
 
 const faqs = [
   {
-    question: "What languages can I use for my bots?",
-    answer: "Botoralo is language-agnostic. As long as your script can run in a standard Linux container, you can host it with us. We have pre-configured environments for Python, JavaScript/TypeScript (Node.js), and Rust, but you can customize your environment."
+    question: "What languages and libraries do you support?",
+    answer: "Our pre-configured environments are optimized for Node.js (for discord.js) and Python (for discord.py, py-cord, and python-telegram-bot). However, our platform is language-agnostic. As long as your script can run in a standard Linux container, you can host it with us."
   },
   {
-    question: "How is my code kept secure?",
-    answer: "Your code is stored in encrypted repositories and runs in isolated, sandboxed environments. We prioritize security with regular audits, vulnerability scanning, and secure networking practices. Your bot's environment is private to you."
+    question: "How do I deploy my bot?",
+    answer: "You can simply upload your code file (like a `bot.py` or `index.js`) or a whole project folder. We are actively working on 1-click deployment from GitHub repositories to make the process even faster."
   },
   {
     question: "Can I try the platform for free?",
-    answer: "Absolutely! We offer a free tier that allows you to deploy one bot with sufficient resources for testing and hobby projects. It's a great way to experience the power of Botoralo without any commitment."
+    answer: "Absolutely! We offer a generous free tier that allows you to deploy one bot with sufficient resources for most community bots. It's the perfect way to see how Botoralo works without any commitment."
   },
   {
     question: "What makes the AI insights special?",
-    answer: "Our AI doesn't just summarize logs. It actively looks for patterns, detects anomalies that could indicate bugs or security threats, and even suggests concrete code fixes based on the errors it finds, helping you iterate and improve your bots faster."
+    answer: "Our AI doesn't just summarize logs. It actively looks for patterns, detects anomalies that could indicate bugs or rate-limiting issues, and even suggests concrete code fixes based on the errors it finds, helping you iterate and improve your bots faster."
   }
 ]
 
@@ -56,12 +56,10 @@ export default function LandingPage() {
               <div className="flex flex-col justify-center space-y-6 animate-fade-in-up">
                 <div className="space-y-4">
                   <h1 className="text-4xl font-bold tracking-tighter sm:text-6xl xl:text-7xl/none bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 font-headline">
-                    Host Your Bots, 24/7.
+                    Keep your Discord & Telegram bots alive 24/7.
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl font-body">
-                    Focus on your automation. We handle the infrastructure.
-                    Botoralo provides a secure, reliable, and easy-to-use
-                    platform for hosting any bot, 24/7, without interruption.
+                    No VPS, no DevOps, just code. Focus on building great community bots. We handle the infrastructure, ensuring your bots run 24/7 without interruption.
                   </p>
                 </div>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
@@ -74,8 +72,8 @@ export default function LandingPage() {
                   alt="Hero"
                   className="mx-auto aspect-video overflow-hidden rounded-xl object-cover"
                   height="400"
-                  src="https://picsum.photos/600/338"
-                  data-ai-hint="automation robotics"
+                  src="https://picsum.photos/seed/1/600/400"
+                  data-ai-hint="discord telegram bots"
                   width="700"
                 />
               </div>
@@ -90,11 +88,10 @@ export default function LandingPage() {
                     Key Features
                   </div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                  Everything You Need to Succeed
+                  Everything Your Bot Needs to Thrive
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed font-body">
-                  Our platform is packed with features to help you deploy,
-                  monitor, and manage your bots with ease.
+                  Our platform is packed with features designed to help you deploy, monitor, and manage your Discord and Telegram bots with ease.
                 </p>
               </div>
             </div>
@@ -104,11 +101,10 @@ export default function LandingPage() {
                   <div className="p-3 rounded-full bg-primary/10 text-primary glow-shadow">
                     <Rocket className="h-6 w-6" />
                   </div>
-                  <h3 className="text-xl font-bold font-headline">Instant Deployment</h3>
+                  <h3 className="text-xl font-bold font-headline">1-Click Deployment</h3>
                 </div>
                 <p className="text-muted-foreground font-body">
-                  Go from code to live bot in minutes. Just paste your script,
-                  and we'll handle the rest.
+                  Go from code to live bot in minutes. Upload your script or project folder, and we'll handle the rest.
                 </p>
               </div>
                <div className="grid gap-4 p-6 rounded-lg bg-card/50 border border-border/50 transition-all hover:border-primary/50 hover:bg-card animate-fade-in-up delay-200 backdrop-blur-sm">
@@ -116,11 +112,10 @@ export default function LandingPage() {
                    <div className="p-3 rounded-full bg-primary/10 text-primary glow-shadow">
                     <Code className="h-6 w-6" />
                   </div>
-                  <h3 className="text-xl font-bold font-headline">Bring Your Own Code</h3>
+                  <h3 className="text-xl font-bold font-headline">Optimized Environments</h3>
                 </div>
                 <p className="text-muted-foreground font-body">
-                  We support popular languages and libraries. No need to learn a
-                  new framework.
+                  We support popular libraries like discord.js, discord.py, and python-telegram-bot out-of-the-box. No need to fight with dependencies.
                 </p>
               </div>
                <div className="grid gap-4 p-6 rounded-lg bg-card/50 border border-border/50 transition-all hover:border-primary/50 hover:bg-card animate-fade-in-up delay-300 backdrop-blur-sm">
@@ -128,11 +123,10 @@ export default function LandingPage() {
                      <div className="p-3 rounded-full bg-primary/10 text-primary glow-shadow">
                         <Bot className="h-6 w-6" />
                     </div>
-                    <h3 className="text-xl font-bold font-headline">AI-Powered Insights</h3>
+                    <h3 className="text-xl font-bold font-headline">AI-Powered Debugging</h3>
                  </div>
                 <p className="text-muted-foreground font-body">
-                  Leverage AI to summarize logs, detect anomalies, and even
-                  suggest code fixes.
+                  Leverage AI to summarize logs, detect anomalies like rate-limiting, and even get code fix suggestions.
                 </p>
               </div>
             </div>
@@ -147,10 +141,10 @@ export default function LandingPage() {
                   What Our Users Say
                 </div>
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
-                  Trusted by Developers and Bot Workers
+                  Trusted by Bot Developers & Communities
                 </h2>
                 <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed font-body">
-                  Hear from our community about how Botoralo has transformed their automation and development process.
+                  Hear from our community about how Botoralo has transformed their bot development and management process.
                 </p>
               </div>
             </div>
@@ -210,11 +204,10 @@ export default function LandingPage() {
           <div className="container text-center">
              <div className="max-w-3xl mx-auto p-8 rounded-xl bg-gradient-to-r from-primary/30 to-purple-600/30 border border-primary/50 shadow-2xl">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline text-white">
-                    Ready to Automate Your Tasks?
+                    Ready to Bring Your Bot to Life?
                 </h2>
                 <p className="mt-4 max-w-xl mx-auto text-muted-foreground md:text-xl">
-                    Join hundreds of developers and bot workers who trust Botoralo.
-                    Deploy your first bot for free and experience the future of automation.
+                    Join hundreds of developers who trust Botoralo. Deploy your first Discord or Telegram bot for free and say goodbye to downtime.
                 </p>
                 <div className="mt-8">
                    <GetStartedButton ctaText="Start Deploying Now" />
@@ -225,3 +218,5 @@ export default function LandingPage() {
     </>
   )
 }
+
+    

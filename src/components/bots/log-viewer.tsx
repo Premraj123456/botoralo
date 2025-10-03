@@ -136,3 +136,5 @@ export function LogViewer({ botId }: LogViewerProps) {
     </Card>
   );
 }
+
+    
