@@ -112,14 +112,22 @@ export default function PricingPage() {
     // Paid plan CTA
     if (!isPaddleConfigured) return null; // Don't render if not configured
 
+    if (user) {
+        return (
+            <PaddleCheckout
+                priceId={plan.priceId}
+                userId={user.id}
+                email={user.email}
+                onLoginRequired={handleLoginRedirect}
+            />
+        );
+    }
+
     return (
-        <PaddleCheckout
-            priceId={plan.priceId}
-            userId={user?.id}
-            email={user?.email}
-            onLoginRequired={handleLoginRedirect}
-        />
-    );
+        <Button onClick={handleLoginRedirect} className="w-full mt-4">
+            Sign in to Upgrade
+        </Button>
+    )
   }
 
   return (
@@ -182,5 +190,3 @@ export default function PricingPage() {
     </div>
   );
 }
-
-    
