@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -17,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { getUserSubscription } from '@/lib/supabase/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Terminal } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/components/layout/page-loader';
 import { Button } from '@/components/ui/button';
 import { PaddleCheckout } from '@/components/paddle/paddle-checkout';
 
@@ -65,7 +66,7 @@ export default function PricingPage() {
   const router = useRouter();
   const supabase = createSupabaseClient();
   
-  const isPaddleConfigured = process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID && process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID;
+  const isPaddleConfigured = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID;
 
   useEffect(() => {
     setIsClient(true);
@@ -119,7 +120,7 @@ export default function PricingPage() {
     if (user) {
         return (
             <PaddleCheckout
-                productId={plan.productId}
+                productId={plan.productId!}
                 email={user.email}
                 passthrough={{ user_id: user.id }}
                 onSuccess={onCheckoutSuccess}
@@ -151,7 +152,7 @@ export default function PricingPage() {
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>Paddle Not Configured</AlertTitle>
                 <AlertDescription>
-                   The Paddle environment variables are not set. Please add your Vendor ID and Product IDs to your `.env` file to enable checkout.
+                   The Paddle environment variables are not set. Please add your Client Token and Product IDs to your `.env` file to enable checkout.
                 </AlertDescription>
             </Alert>
         )}

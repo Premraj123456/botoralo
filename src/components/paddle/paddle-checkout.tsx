@@ -28,15 +28,25 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
     setIsProcessing(true);
     
     window.Paddle.Checkout.open({
-      product: productId,
-      email: email,
-      passthrough: passthrough,
-      successCallback: (data: any) => {
-        console.log("Paddle checkout successful:", data);
-        onSuccess();
+      items: [{
+        priceId: productId,
+        quantity: 1
+      }],
+      customer: {
+        email: email,
+      },
+      customData: passthrough,
+      callbacks: {
+        onCheckout: (data: any) => {
+            if (data.status === 'complete') {
+                console.log("Paddle checkout successful:", data);
+                onSuccess();
+            }
+        }
       }
     });
 
+    // Reset processing state in case user closes modal
     setTimeout(() => setIsProcessing(false), 3000);
   };
 

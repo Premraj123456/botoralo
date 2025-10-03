@@ -1,4 +1,6 @@
 
+'use client';
+
 import { useState, useEffect } from 'react';
 
 const PADDLE_SCRIPT_URL = "https://cdn.paddle.com/paddle/paddle.js";
@@ -15,8 +17,8 @@ export function usePaddle() {
   const [isPaddleReady, setIsPaddleReady] = useState(false);
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID) {
-      console.error("Paddle Vendor ID is not set.");
+    if (!process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
+      console.error("Paddle Client Token is not set.");
       return;
     }
 
@@ -46,9 +48,10 @@ export function usePaddle() {
         return;
       }
       
-      window.Paddle.Setup({ 
-        vendor: parseInt(process.env.NEXT_PUBLIC_PADDLE_VENDOR_ID!, 10),
-      });
+      window.Paddle.Initialize({
+        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN!,
+        environment: 'sandbox',
+       });
       
       scriptLoaded = true;
       scriptLoading = false;
