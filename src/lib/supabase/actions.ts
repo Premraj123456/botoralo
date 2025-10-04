@@ -2,6 +2,7 @@
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
@@ -87,7 +88,12 @@ export async function updateUserPlan({
     paddle_subscription_id: string | null,
     paddle_customer_id: string | null
 }) {
-    const supabase = createSupabaseServerClient();
+    // Use the admin client to bypass RLS for server-side operations.
+    const supabase = createSupabaseAdminClient();
+    if (!supabase) {
+        throw new Error('Supabase admin client not initialized. Check service role key.');
+    }
+    
     const { error } = await supabase
         .from('profiles')
         .upsert({ 
@@ -100,7 +106,7 @@ export async function updateUserPlan({
         }, { onConflict: 'id' });
     
     if (error) {
-        console.error('Error upserting user plan:', error);
+        console.error('Error upserting user plan with admin client:', error);
         throw new Error('Could not update user plan.');
     }
     console.log(`Successfully upserted plan for ${userId} to ${plan}`);
