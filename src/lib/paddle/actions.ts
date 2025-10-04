@@ -76,12 +76,11 @@ export async function manageSubscription(customerId: string) {
     }
     try {
         const customer = await paddle.customers.get(customerId);
-        if (!customer || !(customer as any).management_urls) {
-             const portal = await paddle.customerPortal.create(customerId);
-             return { url: portal.url };
+        if (!customer || !customer.managementUrl) {
+             throw new Error("Could not retrieve customer portal URL.");
         }
 
-        return { url: (customer as any).management_urls.customer_portal };
+        return { url: customer.managementUrl };
     } catch (error) {
         console.error("Error generating Paddle management link", error);
         throw new Error("Could not generate subscription management link.");
