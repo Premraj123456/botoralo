@@ -15,10 +15,8 @@ load_dotenv()
 # --- Script Setup ---
 # Get configuration from environment variables
 # Make sure these are set in your .env file
-# NEXT_PUBLIC_PADDLE_PRO_PLAN_ID is used as an example price_id
-# PADDLE_WEBHOOK_SECRET is used to sign the request
+# APP_URL should be your public Cloud Workstation URL (e.g., https://9000-xxxx.cluster.dev)
 APP_URL = os.getenv('APP_URL', 'http://127.0.0.1:9002')
-WEBHOOK_SECRET = os.getenv('PADDLE_WEBHOOK_SECRET')
 PRO_PLAN_PRICE_ID = os.getenv('NEXT_PUBLIC_PADDLE_PRO_PLAN_ID')
 
 # --- Helper Functions ---
@@ -41,35 +39,10 @@ def print_response(response):
         print(response.text)
     print("-----------------------")
 
-def generate_paddle_signature(webhook_secret: str, timestamp: str, request_body: str) -> str:
-    """
-    Generates the signature required by Paddle for webhook validation.
-    See: https://developer.paddle.com/webhooks/signature-verification
-    """
-    if not webhook_secret:
-        raise ValueError("Webhook secret is not set. Cannot generate signature.")
-    
-    # The h-mac key is the webhook secret
-    key = webhook_secret.encode('utf-8')
-    
-    # The message is composed of the timestamp, a colon, and the request body
-    message = f"{timestamp}:{request_body}".encode('utf-8')
-    
-    # The signature is a hex-encoded hmac-sha256 hash
-    signature = hmac.new(key, message, hashlib.sha256).hexdigest()
-    
-    return f"ts={timestamp};h1={signature}"
-
-
 # --- Main Test Execution ---
 
 def run_test():
     """Executes a test to simulate a Paddle subscription activation webhook."""
-
-    if not WEBHOOK_SECRET:
-        print("\nCRITICAL ERROR: PADDLE_WEBHOOK_SECRET is not set in your .env file.")
-        print("This secret is required to sign the webhook request.")
-        return
 
     if not PRO_PLAN_PRICE_ID:
         print("\nWARNING: NEXT_PUBLIC_PADDLE_PRO_PLAN_ID is not set in your .env file.")
@@ -114,23 +87,15 @@ def run_test():
     print("Payload to be sent:")
     print(json.dumps(payload, indent=2))
 
-    # 3. Generate the signature header
-    print_step("Generating Paddle Signature")
-    timestamp = str(int(time.time()))
-    try:
-        signature = generate_paddle_signature(WEBHOOK_SECRET, timestamp, payload_str)
-        headers = {
-            'Content-Type': 'application/json',
-            'Paddle-Signature': signature
-        }
-        print("Signature generated successfully.")
-    except ValueError as e:
-        print(f"\nERROR: {e}")
-        return
+    # 3. Set headers (no signature needed for the test endpoint)
+    headers = {
+        'Content-Type': 'application/json',
+    }
 
-    # 4. Send the request to the application's webhook endpoint
-    print_step("Sending POST Request to Webhook Endpoint")
-    webhook_url = f"{APP_URL}/api/paddle/webhook"
+    # 4. Send the request to the application's TEST webhook endpoint
+    print_step("Sending POST Request to TEST Webhook Endpoint")
+    # IMPORTANT: We are using a dedicated test endpoint
+    webhook_url = f"{APP_URL}/api/paddle/test-webhook"
     print(f"Target URL: {webhook_url}")
     
     try:
