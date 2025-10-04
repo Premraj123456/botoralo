@@ -2,37 +2,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { initializePaddle, Paddle } from '@paddle/paddle-js';
 
-let paddlePromise: Promise<Paddle | undefined> | null = null;
+declare global {
+  interface Window {
+    Paddle: any;
+  }
+}
 
+/**
+ * A hook to access the initialized Paddle instance.
+ * The PaddleProvider component is responsible for loading and initializing the script.
+ */
 export function usePaddle() {
-  const [paddle, setPaddle] = useState<Paddle | undefined>();
+  const [paddle, setPaddle] = useState<any>();
 
   useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN) {
-      console.error("Paddle Client Token is not set in environment variables.");
-      return;
+    // The Paddle script is loaded asynchronously by PaddleProvider.
+    // We check for its existence on the window object.
+    if (window.Paddle) {
+      setPaddle(window.Paddle);
     }
-
-    if (!paddlePromise) {
-      paddlePromise = initializePaddle({
-        environment: 'sandbox',
-        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
-      });
-    }
-
-    paddlePromise
-      .then((paddleInstance) => {
-        if (paddleInstance) {
-          setPaddle(paddleInstance);
+    
+    // It's possible the component using this hook mounts before the script is loaded.
+    // A more robust solution could involve a global state/context updated by PaddleProvider.
+    // For now, we assume the script loads quickly.
+    const interval = setInterval(() => {
+        if (window.Paddle && !paddle) {
+            setPaddle(window.Paddle);
+            clearInterval(interval);
         }
-      })
-      .catch((error) => {
-        console.error("Failed to initialize Paddle:", error);
-        paddlePromise = null; // Reset promise on failure
-      });
-  }, []);
+    }, 100);
+
+    return () => clearInterval(interval);
+
+  }, [paddle]);
 
   return paddle;
 }

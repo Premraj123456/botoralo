@@ -1,5 +1,4 @@
-
-'use client';
+"use client";
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
 
   const handleCheckout = () => {
     if (!paddle) {
-        toast({ title: 'Checkout Not Ready', description: 'Please wait a moment for the billing system to load.'});
+        toast({ title: 'Checkout Not Ready', description: 'Please wait a moment for the billing system to load or refresh the page.'});
         return;
     }
 
@@ -40,11 +39,18 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
         onClose: () => {
             setIsProcessing(false);
         },
-        onCheckout: (data) => {
+        onCheckout: (data: any) => {
+            // This event is deprecated, but we keep it for broader compatibility.
+            // The primary success handling should be done via webhooks.
             if (data.status === 'complete') {
-                console.log("Paddle checkout successful:", data);
+                console.log("Paddle checkout successful (onCheckout event):", data);
                 onSuccess();
             }
+        },
+        onComplete: (data: any) => {
+            // This is the recommended event for v2.
+            console.log("Paddle checkout successful (onComplete event):", data);
+            onSuccess();
         }
       }
     });

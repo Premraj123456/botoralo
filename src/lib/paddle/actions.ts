@@ -1,7 +1,7 @@
 
 'use server';
 
-import { Paddle, Environment } from 'paddle';
+import { Paddle, Environment, EventName } from '@paddle/paddle-sdk';
 import { updateUserPlan } from "../supabase/actions";
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!, {

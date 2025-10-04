@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import { PageLoader, NProgressProvider } from '@/components/layout/page-loader';
 import { Suspense } from 'react';
+import { PaddleProvider } from '@/components/paddle/paddle-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const sourceCodePro = Source_Code_Pro({ subsets: ['latin'], variable: '--font-source-code-pro' });
@@ -26,6 +27,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
             <NProgressProvider>
               <PageLoader />
+              <PaddleProvider />
               {children}
             </NProgressProvider>
         </Suspense>
