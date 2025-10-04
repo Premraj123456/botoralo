@@ -31,7 +31,7 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
     
     paddle.Checkout.open({
       items: [{
-        priceId: productId,
+        price_id: productId,
         quantity: 1
       }],
       customer: {
