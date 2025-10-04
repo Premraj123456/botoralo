@@ -35,7 +35,7 @@ const plans = [
     name: 'Pro',
     price: '$9',
     // IMPORTANT: Replace with your actual Paddle Sandbox Price ID
-    productId: 'pri_sdbx_01h9y2p00z2b0b1a2c3d4e5f6g',
+    productId: 'replace-with-your-pro-price-id', // e.g., 'pri_sdbx_01h9y2p00z2b0b1a2c3d4e5f6g'
     description: 'For serious bot developers who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
@@ -45,7 +45,7 @@ const plans = [
     name: 'Power',
     price: '$29',
     // IMPORTANT: Replace with your actual Paddle Sandbox Price ID
-    productId: 'pri_sdbx_01h9y2p11a2b3c4d5e6f7g8h9j',
+    productId: 'replace-with-your-power-price-id', // e.g., 'pri_sdbx_01h9y2p11a2b3c4d5e6f7g8h9j'
     description: 'For professionals running multiple complex bots.',
     ram: '1GB RAM',
     features: [
@@ -117,7 +117,13 @@ export default function PricingPage() {
     }
     
     // Paid plan CTA
-    if (!isPaddleConfigured) return null;
+    if (!isPaddleConfigured || !plan.productId.startsWith('pri_sdbx')) {
+        return (
+            <Button className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'} disabled>
+                Configure Price ID
+            </Button>
+        );
+    }
 
     if (user) {
         return (
@@ -149,15 +155,19 @@ export default function PricingPage() {
           </p>
         </div>
 
-        {!isPaddleConfigured && (
-            <Alert variant="destructive" className="max-w-2xl">
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>Paddle Not Configured</AlertTitle>
-                <AlertDescription>
-                   The Paddle Client Token is not set. Please add your `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` to your `.env` file to enable checkout.
-                </AlertDescription>
-            </Alert>
-        )}
+        <Alert variant="destructive" className="max-w-4xl">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Action Required: Configure Paddle Price IDs</AlertTitle>
+            <AlertDescription>
+                To enable checkout, you must replace the placeholder Price IDs in <code>src/app/(marketing)/pricing/page.tsx</code>.
+                <ol className="list-decimal list-inside mt-2 space-y-1">
+                    <li>Go to your Paddle Sandbox dashboard: <a href="https://sandbox-vendors.paddle.com/products" target="_blank" rel="noopener noreferrer" className="underline">Catalog → Products</a>.</li>
+                    <li>Create your "Pro" and "Power" products if they don't exist.</li>
+                    <li>For each product, go to the "Prices" tab and copy the Price ID (it starts with <code>pri_sdbx_...</code>).</li>
+                    <li>Paste the corresponding ID into the `productId` field for each plan in the file mentioned above.</li>
+                </ol>
+            </AlertDescription>
+        </Alert>
 
         <div className="grid gap-8 md:grid-cols-3 max-w-5xl w-full">
           {plans.map((plan) => (
@@ -193,13 +203,7 @@ export default function PricingPage() {
             </Card>
           ))}
         </div>
-        <Alert className="max-w-2xl">
-            <Terminal className="h-4 w-4" />
-            <AlertTitle>Sandbox Mode</AlertTitle>
-            <AlertDescription>
-                Checkout is currently in Sandbox mode. Replace the placeholder Price IDs in `src/app/(marketing)/pricing/page.tsx` with your own Paddle Sandbox Price IDs to test transactions.
-            </AlertDescription>
-        </Alert>
+        
       </div>
     </div>
   );
