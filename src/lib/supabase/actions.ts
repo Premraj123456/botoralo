@@ -92,17 +92,9 @@ export async function updateUserPlan({
         console.error('[updateUserPlan] - Supabase admin client not initialized. Check service role key.');
         throw new Error('Supabase admin client not initialized. Check service role key.');
     }
-    
-    // First, get the user's email from the auth schema, as it's the source of truth
-    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
-    if(authError || !authUser?.user?.email) {
-      console.error(`[updateUserPlan] - CRITICAL: Could not retrieve email for user ${userId}.`, authError);
-      throw new Error(`Could not find user email for ID: ${userId}`);
-    }
 
     const upsertData = { 
         id: userId,
-        email: authUser.user.email,
         plan, 
         paddle_subscription_id, 
         paddle_customer_id,
