@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import {
@@ -35,7 +34,8 @@ const plans = [
   {
     name: 'Pro',
     price: '$9',
-    productId: process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID,
+    // IMPORTANT: Replace with your actual Paddle Sandbox Price ID
+    productId: 'pri_sdbx_01h9y2p00z2b0b1a2c3d4e5f6g',
     description: 'For serious bot developers who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
@@ -44,7 +44,8 @@ const plans = [
   {
     name: 'Power',
     price: '$29',
-    productId: process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID,
+    // IMPORTANT: Replace with your actual Paddle Sandbox Price ID
+    productId: 'pri_sdbx_01h9y2p11a2b3c4d5e6f7g8h9j',
     description: 'For professionals running multiple complex bots.',
     ram: '1GB RAM',
     features: [
@@ -66,7 +67,7 @@ export default function PricingPage() {
   const router = useRouter();
   const supabase = createSupabaseClient();
   
-  const isPaddleConfigured = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN && process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID && process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID;
+  const isPaddleConfigured = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
 
   useEffect(() => {
     setIsClient(true);
@@ -153,7 +154,7 @@ export default function PricingPage() {
                 <Terminal className="h-4 w-4" />
                 <AlertTitle>Paddle Not Configured</AlertTitle>
                 <AlertDescription>
-                   The Paddle environment variables are not set. Please add your Client Token and Product IDs to your `.env` file to enable checkout.
+                   The Paddle Client Token is not set. Please add your `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` to your `.env` file to enable checkout.
                 </AlertDescription>
             </Alert>
         )}
@@ -192,6 +193,13 @@ export default function PricingPage() {
             </Card>
           ))}
         </div>
+        <Alert className="max-w-2xl">
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Sandbox Mode</AlertTitle>
+            <AlertDescription>
+                Checkout is currently in Sandbox mode. Replace the placeholder Price IDs in `src/app/(marketing)/pricing/page.tsx` with your own Paddle Sandbox Price IDs to test transactions.
+            </AlertDescription>
+        </Alert>
       </div>
     </div>
   );
