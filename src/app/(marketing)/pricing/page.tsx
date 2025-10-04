@@ -15,8 +15,6 @@ import { createSupabaseClient } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
 import { getUserSubscription } from '@/lib/supabase/actions';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Terminal } from 'lucide-react';
 import { Link } from '@/components/layout/page-loader';
 import { Button } from '@/components/ui/button';
 import { PaddleCheckout } from '@/components/paddle/paddle-checkout';
@@ -34,8 +32,7 @@ const plans = [
   {
     name: 'Pro',
     price: '$9',
-    // IMPORTANT: Replace with your actual Paddle Sandbox Price ID
-    productId: 'replace-with-your-pro-price-id', // e.g., 'pri_sdbx_01h9y2p00z2b0b1a2c3d4e5f6g'
+    productId: process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID,
     description: 'For serious bot developers who need more power.',
     ram: '512MB RAM',
     features: ['5 Bot Slots', '24/7 Uptime', 'Advanced Logging', 'AI Log Analysis', 'Email Support'],
@@ -44,8 +41,7 @@ const plans = [
   {
     name: 'Power',
     price: '$29',
-    // IMPORTANT: Replace with your actual Paddle Sandbox Price ID
-    productId: 'replace-with-your-power-price-id', // e.g., 'pri_sdbx_01h9y2p11a2b3c4d5e6f7g8h9j'
+    productId: process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID,
     description: 'For professionals running multiple complex bots.',
     ram: '1GB RAM',
     features: [
@@ -117,10 +113,10 @@ export default function PricingPage() {
     }
     
     // Paid plan CTA
-    if (!isPaddleConfigured || !plan.productId.startsWith('pri_sdbx')) {
+    if (!isPaddleConfigured || !plan.productId) {
         return (
             <Button className="w-full mt-4" variant={plan.isPrimary ? 'default' : 'outline'} disabled>
-                Configure Price ID
+                Configure Environment
             </Button>
         );
     }
@@ -154,20 +150,6 @@ export default function PricingPage() {
             Simple, transparent pricing. No hidden fees. Cancel anytime.
           </p>
         </div>
-
-        <Alert variant="destructive" className="max-w-4xl">
-            <Terminal className="h-4 w-4" />
-            <AlertTitle>Action Required: Configure Paddle Price IDs</AlertTitle>
-            <AlertDescription>
-                To enable checkout, you must replace the placeholder Price IDs in <code>src/app/(marketing)/pricing/page.tsx</code>.
-                <ol className="list-decimal list-inside mt-2 space-y-1">
-                    <li>Go to your Paddle Sandbox dashboard: <a href="https://sandbox-vendors.paddle.com/products" target="_blank" rel="noopener noreferrer" className="underline">Catalog → Products</a>.</li>
-                    <li>Create your "Pro" and "Power" products if they don't exist.</li>
-                    <li>For each product, go to the "Prices" tab and copy the Price ID (it starts with <code>pri_sdbx_...</code>).</li>
-                    <li>Paste the corresponding ID into the `productId` field for each plan in the file mentioned above.</li>
-                </ol>
-            </AlertDescription>
-        </Alert>
 
         <div className="grid gap-8 md:grid-cols-3 max-w-5xl w-full">
           {plans.map((plan) => (
