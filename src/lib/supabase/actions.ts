@@ -60,6 +60,7 @@ export async function upsertUserProfile({
   const profileData = {
     id: userId,
     email: email,
+    updated_at: new Date().toISOString(),
   };
 
   const { data, error } = await supabase
@@ -92,21 +93,19 @@ export async function updateUserPlan({
         throw new Error('Supabase admin client not initialized.');
     }
     
-    // First, ensure a profile exists.
-    // The webhook might fire before the user is created in our system,
-    // so we create a placeholder if needed.
-    // The email will be backfilled on first login.
+    // First, ensure a profile exists. The auth callback should have created it.
     const { data: existingProfile, error: profileError } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userId)
         .single();
 
-    if (!existingProfile) {
+    if (profileError || !existingProfile) {
+        // If the profile doesn't exist, create it with a placeholder email.
         const placeholderEmail = `${userId}@placeholder.botoralo.app`;
         const { error: newProfileError } = await supabase
             .from('profiles')
-            .insert({ id: userId, email: placeholderEmail });
+            .insert({ id: userId, email: placeholderEmail, updated_at: new Date().toISOString() });
 
         if (newProfileError) {
             console.error(`[updateUserPlan] - CRITICAL: Error creating placeholder profile for ${userId}:`, JSON.stringify(newProfileError, null, 2));
@@ -115,6 +114,7 @@ export async function updateUserPlan({
         console.log(`[updateUserPlan] - Created placeholder profile for new user ${userId}.`);
     }
 
+    // Now, perform a clean update of the subscription details.
     const updateData = { 
         plan, 
         paddle_subscription_id, 

@@ -1,7 +1,7 @@
 
 'use server';
 
-import { Paddle } from 'paddle';
+import { Paddle, Environment } from 'paddle';
 import { updateUserPlan } from "../supabase/actions";
 
 // Initialize Paddle with the correct environment setting
@@ -11,25 +11,30 @@ const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
 
 export async function handlePaddleWebhook(event: any) {
   console.log(`[handlePaddleWebhook] - Received Paddle webhook event: ${event.event_type}`);
-  console.log('[handlePaddleWebhook] - Full event data:', JSON.stringify(event.data, null, 2));
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[handlePaddleWebhook] - Full event data:', JSON.stringify(event.data, null, 2));
+  }
 
 
   switch (event.event_type) {
     case 'subscription.activated':
     case 'subscription.updated': {
+        const eventType = event.event_type;
+        console.log(`[handlePaddleWebhook] - Processing ${eventType}.`);
+
         const subscriptionId = event.data.id;
         const customerId = event.data.customer_id;
         const userId = event.data.customData?.user_id;
 
         if (!userId) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for subscription ${subscriptionId}. Cannot update user plan.`);
+            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for ${eventType} on subscription ${subscriptionId}. Cannot update user plan.`);
             return;
         }
         
-        // Find the recurring plan item to determine the plan
         const planItem = event.data.items.find((item: any) => item.price.type === 'recurring');
         if (!planItem) {
-             console.error(`[handlePaddleWebhook] - CRITICAL: No recurring plan item found in subscription ${subscriptionId}. Cannot determine plan.`);
+             console.error(`[handlePaddleWebhook] - CRITICAL: No recurring plan item found in ${eventType} on subscription ${subscriptionId}. Cannot determine plan.`);
              return;
         }
         
@@ -49,20 +54,21 @@ export async function handlePaddleWebhook(event: any) {
             paddle_subscription_id: subscriptionId, 
             paddle_customer_id: customerId 
         };
-        console.log('[handlePaddleWebhook] - Calling updateUserPlan with payload:', updatePayload);
+        console.log(`[handlePaddleWebhook] - Calling updateUserPlan for ${eventType} with payload:`, updatePayload);
 
         await updateUserPlan(updatePayload);
-        console.log(`[handlePaddleWebhook] - Successfully processed subscription update for user ${userId}. Plan: ${plan}`);
+        console.log(`[handlePaddleWebhook] - Successfully processed ${eventType} for user ${userId}. Plan set to: ${plan}`);
         break;
     }
 
     case 'subscription.canceled': {
+        console.log(`[handlePaddleWebhook] - Processing subscription.canceled.`);
         const subscriptionId = event.data.id;
         const userId = event.data.customData?.user_id;
         const customerId = event.data.customer_id;
 
         if (!userId) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for subscription ${subscriptionId} cancellation. Cannot downgrade plan.`);
+            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for subscription.canceled on subscription ${subscriptionId}. Cannot downgrade plan.`);
             return;
         }
 
@@ -90,15 +96,8 @@ export async function manageSubscription(customerId: string) {
     }
     try {
         console.log(`[manageSubscription] - Generating customer portal link for customerId: ${customerId}`);
-        const transaction = await paddle.transactions.list({ customer_id: customerId, status: 'completed' });
-        if (!transaction || !transaction.data.length) {
-            throw new Error("No completed transaction found for this customer.");
-        }
-        const customerPortalUrl = transaction.data[0].checkout?.url;
-        if (!customerPortalUrl) {
-            throw new Error("Could not retrieve customer portal URL from transaction.");
-        }
-        return { url: customerPortalUrl };
+        const customerPortal = await paddle.customerPortal.create({ customerId: customerId });
+        return { url: customerPortal.url };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
         throw new Error("Could not generate subscription management link.");
