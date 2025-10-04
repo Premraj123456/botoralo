@@ -1,10 +1,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { Paddle, EventName } from 'paddle';
+import { Paddle } from 'paddle';
 import { handlePaddleWebhook } from '@/lib/paddle/actions';
 
-const paddle = new Paddle(process.env.PADDLE_API_KEY!);
+// Initialize Paddle with the correct environment setting
+const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
+    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production',
+});
 
 export async function POST(req: NextRequest) {
   const reqBody = await req.text();
