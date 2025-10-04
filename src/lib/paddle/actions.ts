@@ -18,10 +18,10 @@ export async function handlePaddleWebhook(event: any) {
     case 'subscription.updated': {
         const subscriptionId = event.data.id;
         const customerId = event.data.customer_id;
-        const userId = event.data.custom_data?.user_id;
+        const userId = event.data.customData?.user_id;
 
         if (!userId) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in custom_data for subscription ${subscriptionId}. Cannot update user plan.`);
+            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for subscription ${subscriptionId}. Cannot update user plan.`);
             return;
         }
         
@@ -57,11 +57,11 @@ export async function handlePaddleWebhook(event: any) {
 
     case 'subscription.canceled': {
         const subscriptionId = event.data.id;
-        const userId = event.data.custom_data?.user_id;
+        const userId = event.data.customData?.user_id;
         const customerId = event.data.customer_id;
 
         if (!userId) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in custom_data for subscription ${subscriptionId} cancellation. Cannot downgrade plan.`);
+            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for subscription ${subscriptionId} cancellation. Cannot downgrade plan.`);
             return;
         }
 
