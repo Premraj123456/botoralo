@@ -91,25 +91,30 @@ export async function updateUserPlan({
     // Use the admin client to bypass RLS for server-side operations.
     const supabase = createSupabaseAdminClient();
     if (!supabase) {
+        console.error('[updateUserPlan] - Supabase admin client not initialized. Check service role key.');
         throw new Error('Supabase admin client not initialized. Check service role key.');
     }
+
+    const upsertData = { 
+        id: userId,
+        email: email,
+        plan, 
+        paddle_subscription_id, 
+        paddle_customer_id,
+        updated_at: new Date().toISOString()
+    };
     
-    const { error } = await supabase
+    console.log('[updateUserPlan] - Attempting to upsert profile with data:', upsertData);
+
+    const { data, error } = await supabase
         .from('profiles')
-        .upsert({ 
-            id: userId,
-            email: email,
-            plan, 
-            paddle_subscription_id, 
-            paddle_customer_id,
-            updated_at: new Date().toISOString()
-        }, { onConflict: 'id' });
+        .upsert(upsertData, { onConflict: 'id' });
     
     if (error) {
-        console.error('Error upserting user plan with admin client:', error);
+        console.error('[updateUserPlan] - Error upserting user plan with admin client:', error);
         throw new Error('Could not update user plan.');
     }
-    console.log(`Successfully upserted plan for ${userId} to ${plan}`);
+    console.log(`[updateUserPlan] - Successfully upserted plan for ${userId} to ${plan}. Result:`, data);
 }
 
 
