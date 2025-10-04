@@ -1,11 +1,12 @@
 
 'use server';
 
-import { Paddle, Environment } from 'paddle';
+import { Paddle } from 'paddle';
 import { updateUserPlan } from "../supabase/actions";
 
+// Initialize Paddle with the correct environment setting
 const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
-    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? Environment.Sandbox : Environment.Live,
+    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production',
 });
 
 export async function handlePaddleWebhook(event: any) {
@@ -89,9 +90,15 @@ export async function manageSubscription(customerId: string) {
     }
     try {
         console.log(`[manageSubscription] - Generating customer portal link for customerId: ${customerId}`);
-        const portalLink = await paddle.customerPortal.create(customerId);
-        console.log(`[manageSubscription] - Successfully fetched portal URL.`);
-        return { url: portalLink.url };
+        const transaction = await paddle.transactions.list({ customer_id: customerId, status: 'completed' });
+        if (!transaction || !transaction.data.length) {
+            throw new Error("No completed transaction found for this customer.");
+        }
+        const customerPortalUrl = transaction.data[0].checkout?.url;
+        if (!customerPortalUrl) {
+            throw new Error("Could not retrieve customer portal URL from transaction.");
+        }
+        return { url: customerPortalUrl };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
         throw new Error("Could not generate subscription management link.");
