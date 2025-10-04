@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     
     if (!error && data.user) {
       // This is the key step. A profile is created as soon as the user is authenticated.
-      // This ensures the profile exists before any Paddle webhook arrives.
+      // This ensures the profile exists with an email before any Paddle webhook arrives.
       await upsertUserProfile({ userId: data.user.id, email: data.user.email! });
       return NextResponse.redirect(`${origin}/dashboard`);
     }

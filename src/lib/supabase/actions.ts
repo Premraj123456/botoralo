@@ -86,32 +86,54 @@ export async function updateUserPlan({
     paddle_subscription_id: string | null,
     paddle_customer_id: string | null
 }) {
-    // Use the admin client to bypass RLS for server-side operations.
     const supabase = createSupabaseAdminClient();
     if (!supabase) {
         console.error('[updateUserPlan] - Supabase admin client not initialized. Check service role key.');
-        throw new Error('Supabase admin client not initialized. Check service role key.');
+        throw new Error('Supabase admin client not initialized.');
+    }
+    
+    // First, ensure a profile exists.
+    // The webhook might fire before the user is created in our system,
+    // so we create a placeholder if needed.
+    // The email will be backfilled on first login.
+    const { data: existingProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+
+    if (!existingProfile) {
+        const placeholderEmail = `${userId}@placeholder.botoralo.app`;
+        const { error: newProfileError } = await supabase
+            .from('profiles')
+            .insert({ id: userId, email: placeholderEmail });
+
+        if (newProfileError) {
+            console.error(`[updateUserPlan] - CRITICAL: Error creating placeholder profile for ${userId}:`, JSON.stringify(newProfileError, null, 2));
+            throw new Error('Could not create placeholder user profile.');
+        }
+        console.log(`[updateUserPlan] - Created placeholder profile for new user ${userId}.`);
     }
 
-    const upsertData = { 
-        id: userId,
+    const updateData = { 
         plan, 
         paddle_subscription_id, 
         paddle_customer_id,
         updated_at: new Date().toISOString()
     };
     
-    console.log('[updateUserPlan] - Attempting to upsert profile with data:', JSON.stringify(upsertData, null, 2));
+    console.log(`[updateUserPlan] - Attempting to update profile ${userId} with data:`, JSON.stringify(updateData, null, 2));
 
-    const { data, error } = await supabase
+    const { error } = await supabase
         .from('profiles')
-        .upsert(upsertData, { onConflict: 'id' });
+        .update(updateData)
+        .eq('id', userId);
     
     if (error) {
-        console.error('[updateUserPlan] - CRITICAL: Error upserting user plan with admin client:', JSON.stringify(error, null, 2));
+        console.error('[updateUserPlan] - CRITICAL: Error updating user plan with admin client:', JSON.stringify(error, null, 2));
         throw new Error('Could not update user plan in database.');
     }
-    console.log(`[updateUserPlan] - Successfully upserted plan for ${userId} to ${plan}.`);
+    console.log(`[updateUserPlan] - Successfully updated plan for ${userId} to ${plan}.`);
 }
 
 
