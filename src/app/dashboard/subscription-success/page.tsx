@@ -1,20 +1,15 @@
 
-'use client';
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Link } from "@/components/layout/page-loader";
+import { Link } from '@/components/layout/page-loader';
+import { revalidatePath } from 'next/cache';
 
 export default function SubscriptionSuccessPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Revalidate the dashboard data to reflect the new subscription
-    router.refresh();
-  }, [router]);
+  // Revalidate the dashboard data to reflect the new subscription.
+  // This is a server-side action that ensures the dashboard is up-to-date
+  // when the user navigates back to it.
+  revalidatePath('/dashboard');
 
   return (
     <div className="flex items-center justify-center py-20">

@@ -1,17 +1,13 @@
 
-
 import { Link } from '@/components/layout/page-loader';
-import { PlusCircle, Terminal } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
 import { getUserBots, getUserSubscription } from '@/lib/supabase/actions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { getBotInfoFromBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
-import { Suspense } from 'react';
-import { SubscriptionRefresher } from '@/components/dashboard/subscription-refresher';
 
 const planLimits = {
   Free: 1,
@@ -70,9 +66,6 @@ export default async function Dashboard() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Suspense fallback={null}>
-        <SubscriptionRefresher />
-      </Suspense>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold md:text-3xl">My Bots</h1>
         {canCreateBot ? (
