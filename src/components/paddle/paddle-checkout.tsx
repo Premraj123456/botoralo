@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -25,6 +26,8 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
     }
 
     setIsProcessing(true);
+
+    const successUrl = `${window.location.origin}/dashboard/subscription-success`;
     
     paddle.Checkout.open({
       items: [{
@@ -35,6 +38,9 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
         email: email,
       },
       customData: passthrough,
+      settings: {
+        successUrl: successUrl,
+      },
       events: {
         onClose: () => {
             setIsProcessing(false);
@@ -50,6 +56,7 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
         onComplete: (data: any) => {
             // This is the recommended event for v2.
             console.log("Paddle checkout successful (onComplete event):", data);
+            // The successUrl will handle the redirect, but we can call onSuccess as a backup.
             onSuccess();
         }
       }

@@ -1,4 +1,5 @@
 
+
 import { Link } from '@/components/layout/page-loader';
 import { PlusCircle, Terminal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,17 +19,9 @@ const planLimits = {
   Power: 20,
 };
 
-export default async function Dashboard({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined }}) {
+export default async function Dashboard() {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
-  
-  const subscriptionSuccess = searchParams?.subscription_success === 'true';
-
-  if (subscriptionSuccess) {
-    // If returning from a successful PayPal checkout, revalidate the path
-    // to ensure the subscription data is fresh.
-    revalidatePath('/dashboard');
-  }
 
   if (!user) {
     return (
@@ -80,15 +73,6 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
       <Suspense fallback={null}>
         <SubscriptionRefresher />
       </Suspense>
-      {subscriptionSuccess && (
-          <Alert>
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Subscription Activated!</AlertTitle>
-              <AlertDescription>
-                  Your checkout was successful and your new plan is now active.
-              </AlertDescription>
-          </Alert>
-      )}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold md:text-3xl">My Bots</h1>
         {canCreateBot ? (
@@ -128,5 +112,3 @@ export default async function Dashboard({ searchParams }: { searchParams: { [key
     </div>
   );
 }
-
-    

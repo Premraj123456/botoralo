@@ -87,7 +87,8 @@ export default function PricingPage() {
   }
   
   const onCheckoutSuccess = () => {
-    router.push(`/dashboard?subscription_success=true`);
+    // Webhooks will handle the plan update. We just need to navigate.
+    router.push(`/dashboard/subscription-success`);
   }
 
   const renderCta = (plan: typeof plans[0]) => {
