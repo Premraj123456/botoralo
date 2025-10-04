@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { Paddle, EventName } from '@paddle/sdk-node';
+import { Paddle, EventName } from 'paddle';
 import { handlePaddleWebhook } from '@/lib/paddle/actions';
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!);

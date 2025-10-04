@@ -1,11 +1,11 @@
 
 'use server';
 
-import { Paddle, Environment, EventName } from '@paddle/sdk-node';
+import { Paddle, Environment, EventName } from 'paddle';
 import { updateUserPlan } from "../supabase/actions";
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
-    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? Environment.sandbox : Environment.production,
+    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? Environment.Sandbox : Environment.Production,
 });
 
 export async function handlePaddleWebhook(event: any) {
@@ -76,16 +76,14 @@ export async function manageSubscription(customerId: string) {
     }
     try {
         const customer = await paddle.customers.get(customerId);
-        if (!customer) {
-            throw new Error("Customer not found.");
+        if (!customer || !(customer as any).management_urls) {
+             const portal = await paddle.customerPortal.create(customerId);
+             return { url: portal.url };
         }
 
-        const portal = await paddle.customerPortal.create(customer.id);
-        
-        return { url: portal.url };
+        return { url: (customer as any).management_urls.customer_portal };
     } catch (error) {
         console.error("Error generating Paddle management link", error);
         throw new Error("Could not generate subscription management link.");
     }
 }
-
