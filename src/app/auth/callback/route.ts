@@ -12,8 +12,10 @@ export async function GET(request: NextRequest) {
   if (code) {
     const supabase = createSupabaseServerClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    
     if (!error && data.user) {
-      // Create a profile for the new user
+      // This is the key step. A profile is created as soon as the user is authenticated.
+      // This ensures the profile exists before any Paddle webhook arrives.
       await upsertUserProfile({ userId: data.user.id, email: data.user.email! });
       return NextResponse.redirect(`${origin}/dashboard`);
     }
