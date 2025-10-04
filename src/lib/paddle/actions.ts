@@ -1,11 +1,11 @@
 
 'use server';
 
-import { Paddle, Environment } from 'paddle';
+import { Paddle } from 'paddle';
 import { updateUserPlan } from "../supabase/actions";
 
 // Initialize Paddle with the correct environment setting
-const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
+export const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
     environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production',
 });
 
