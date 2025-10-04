@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 
-const PADDLE_SCRIPT_URL = "https://cdn.paddle.com/paddle/paddle.js";
+const PADDLE_SCRIPT_URL = "https://cdn.paddle.com/v2/paddle.js";
 let scriptLoading = false;
 let scriptLoaded = false;
 
