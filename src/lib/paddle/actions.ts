@@ -1,11 +1,11 @@
 
 'use server';
 
-import { Paddle, Environment, EventName } from 'paddle';
+import { Paddle, Environment } from 'paddle';
 import { updateUserPlan } from "../supabase/actions";
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
-    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? Environment.Sandbox : Environment.Production,
+    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? Environment.Sandbox : Environment.Live,
 });
 
 export async function handlePaddleWebhook(event: any) {
