@@ -14,9 +14,15 @@ import type { User } from "@supabase/supabase-js";
 import { manageSubscription } from "@/lib/paddle/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+type Subscription = {
+  plan: string;
+  paddle_subscription_id: string | null;
+  paddle_customer_id: string | null;
+}
+
 export default function BillingPage() {
   const [user, setUser] = useState<User | null>(null);
-  const [subscription, setSubscription] = useState<{ plan: string; paddle_subscription_id: string | null } | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isManaging, setIsManaging] = useState(false);
   const { toast } = useToast();
@@ -26,7 +32,7 @@ export default function BillingPage() {
     setIsLoading(true);
     try {
       const sub = await getUserSubscription(userId);
-      setSubscription(sub);
+      setSubscription(sub as Subscription);
     } catch (error) {
       toast({ title: "Error", description: "Could not fetch subscription details.", variant: "destructive" });
     } finally {
@@ -52,13 +58,13 @@ export default function BillingPage() {
   }, [supabase, fetchSubscription]);
   
   const handleManageSubscription = async () => {
-    if (!subscription?.paddle_subscription_id) {
-        toast({ title: "Error", description: "No subscription ID found to manage.", variant: "destructive" });
+    if (!subscription?.paddle_customer_id) {
+        toast({ title: "Error", description: "No customer ID found to manage billing.", variant: "destructive" });
         return;
     }
     setIsManaging(true);
     try {
-        const { url } = await manageSubscription(subscription.paddle_subscription_id);
+        const { url } = await manageSubscription(subscription.paddle_customer_id);
         if (url) {
             window.location.href = url;
         } else {
@@ -96,7 +102,7 @@ export default function BillingPage() {
               </Badge>
             </div>
             
-            {subscription?.paddle_subscription_id ? (
+            {subscription?.paddle_customer_id ? (
               <>
                 <Button onClick={handleManageSubscription} disabled={isManaging} className="w-full">
                   {isManaging ? <Loader2 className="h-4 w-4 mr-2 animate-spin"/> : <ExternalLink className="mr-2 h-4 w-4" />}
@@ -128,5 +134,3 @@ export default function BillingPage() {
     </Card>
   );
 }
-
-    

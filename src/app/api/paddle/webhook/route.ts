@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { Paddle, EventName } from '@paddle/paddle-sdk';
+import { Paddle, EventName } from '@paddle/sdk-node';
 import { handlePaddleWebhook } from '@/lib/paddle/actions';
 
 const paddle = new Paddle(process.env.PADDLE_API_KEY!);
@@ -32,5 +32,3 @@ export async function POST(req: NextRequest) {
     return new NextResponse(`Webhook Error: ${errorMessage}`, { status: 400 });
   }
 }
-
-    

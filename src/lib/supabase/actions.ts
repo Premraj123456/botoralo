@@ -27,19 +27,19 @@ export async function getUserSubscription(userId: string) {
     
     const { data: profile } = await supabase
       .from('profiles')
-      .select('plan, paddle_subscription_id')
+      .select('plan, paddle_subscription_id, paddle_customer_id')
       .eq('id', userId)
       .single();
       
     if (!profile) {
       console.log(`No profile found for user ${userId}. Defaulting to Free plan.`);
-      return { plan: 'Free', paddle_subscription_id: null };
+      return { plan: 'Free', paddle_subscription_id: null, paddle_customer_id: null };
     }
     
-    return { plan: profile.plan || 'Free', paddle_subscription_id: profile.paddle_subscription_id };
+    return { plan: profile.plan || 'Free', paddle_subscription_id: profile.paddle_subscription_id, paddle_customer_id: profile.paddle_customer_id };
   } catch (error) {
     console.error("Error getting user subscription:", (error as Error).message);
-    return { plan: 'Free', paddle_subscription_id: null };
+    return { plan: 'Free', paddle_subscription_id: null, paddle_customer_id: null };
   }
 }
 
@@ -75,12 +75,14 @@ export async function upsertUserProfile({
 }
 
 export async function updateUserPlan({ 
-    userId, 
+    userId,
+    email,
     plan, 
     paddle_subscription_id, 
     paddle_customer_id 
 }: { 
-    userId: string, 
+    userId: string,
+    email: string,
     plan: string, 
     paddle_subscription_id: string | null,
     paddle_customer_id: string | null
@@ -88,14 +90,20 @@ export async function updateUserPlan({
     const supabase = createSupabaseServerClient();
     const { error } = await supabase
         .from('profiles')
-        .update({ plan, paddle_subscription_id, paddle_customer_id })
-        .eq('id', userId);
+        .upsert({ 
+            id: userId,
+            email: email,
+            plan, 
+            paddle_subscription_id, 
+            paddle_customer_id,
+            updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
     
     if (error) {
-        console.error('Error updating user plan:', error);
+        console.error('Error upserting user plan:', error);
         throw new Error('Could not update user plan.');
     }
-    console.log(`Successfully updated plan for ${userId} to ${plan}`);
+    console.log(`Successfully upserted plan for ${userId} to ${plan}`);
 }
 
 
@@ -281,4 +289,3 @@ export async function deleteBot(prevState: any, formData: FormData) {
     }
 }
 
-    
