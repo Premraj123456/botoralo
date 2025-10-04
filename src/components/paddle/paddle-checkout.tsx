@@ -17,17 +17,17 @@ interface PaddleCheckoutProps {
 export function PaddleCheckout({ productId, email, passthrough, onSuccess }: PaddleCheckoutProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
-  const isPaddleReady = usePaddle();
+  const paddle = usePaddle();
 
   const handleCheckout = () => {
-    if (!isPaddleReady || !window.Paddle) {
-        toast({ title: 'Checkout Not Ready', description: 'Please wait a moment for the checkout to load.'});
+    if (!paddle) {
+        toast({ title: 'Checkout Not Ready', description: 'Please wait a moment for the billing system to load.'});
         return;
     }
 
     setIsProcessing(true);
     
-    window.Paddle.Checkout.open({
+    paddle.Checkout.open({
       items: [{
         priceId: productId,
         quantity: 1
@@ -36,8 +36,11 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
         email: email,
       },
       customData: passthrough,
-      callbacks: {
-        onCheckout: (data: any) => {
+      events: {
+        onClose: () => {
+            setIsProcessing(false);
+        },
+        onCheckout: (data) => {
             if (data.status === 'complete') {
                 console.log("Paddle checkout successful:", data);
                 onSuccess();
@@ -46,17 +49,24 @@ export function PaddleCheckout({ productId, email, passthrough, onSuccess }: Pad
       }
     });
 
-    // Reset processing state in case user closes modal
-    setTimeout(() => setIsProcessing(false), 3000);
+    // Reset processing state as a fallback if the modal is closed unexpectedly
+    setTimeout(() => {
+        if (isProcessing) {
+            setIsProcessing(false);
+        }
+    }, 5000);
   };
+
+  const isPaddleReady = !!paddle;
 
   return (
       <Button
         onClick={handleCheckout}
         disabled={!isPaddleReady || isProcessing}
         className="w-full mt-4"
+        variant="default"
       >
-        {(isProcessing || !isPaddleReady) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {(isProcessing || !isPaddleReady) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {isProcessing ? 'Processing...' : (isPaddleReady ? 'Upgrade Now' : 'Loading Billing...')}
       </Button>
   );
