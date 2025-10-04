@@ -52,12 +52,12 @@ export async function upsertUserProfile({
   userId: string;
   email: string;
 }) {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
+  if (!supabase) {
+    throw new Error('Supabase admin client not initialized.');
+  }
 
-  const profileData: {
-    id: string;
-    email: string;
-  } = {
+  const profileData = {
     id: userId,
     email: email,
   };
@@ -77,13 +77,11 @@ export async function upsertUserProfile({
 
 export async function updateUserPlan({ 
     userId,
-    email,
     plan, 
     paddle_subscription_id, 
     paddle_customer_id 
 }: { 
     userId: string,
-    email: string,
     plan: string, 
     paddle_subscription_id: string | null,
     paddle_customer_id: string | null
@@ -94,27 +92,34 @@ export async function updateUserPlan({
         console.error('[updateUserPlan] - Supabase admin client not initialized. Check service role key.');
         throw new Error('Supabase admin client not initialized. Check service role key.');
     }
+    
+    // First, get the user's email from the auth schema, as it's the source of truth
+    const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId);
+    if(authError || !authUser?.user?.email) {
+      console.error(`[updateUserPlan] - CRITICAL: Could not retrieve email for user ${userId}.`, authError);
+      throw new Error(`Could not find user email for ID: ${userId}`);
+    }
 
     const upsertData = { 
         id: userId,
-        email: email,
+        email: authUser.user.email,
         plan, 
         paddle_subscription_id, 
         paddle_customer_id,
         updated_at: new Date().toISOString()
     };
     
-    console.log('[updateUserPlan] - Attempting to upsert profile with data:', upsertData);
+    console.log('[updateUserPlan] - Attempting to upsert profile with data:', JSON.stringify(upsertData, null, 2));
 
     const { data, error } = await supabase
         .from('profiles')
         .upsert(upsertData, { onConflict: 'id' });
     
     if (error) {
-        console.error('[updateUserPlan] - Error upserting user plan with admin client:', error);
-        throw new Error('Could not update user plan.');
+        console.error('[updateUserPlan] - CRITICAL: Error upserting user plan with admin client:', JSON.stringify(error, null, 2));
+        throw new Error('Could not update user plan in database.');
     }
-    console.log(`[updateUserPlan] - Successfully upserted plan for ${userId} to ${plan}. Result:`, data);
+    console.log(`[updateUserPlan] - Successfully upserted plan for ${userId} to ${plan}.`);
 }
 
 
