@@ -19,22 +19,24 @@ export async function handlePaddleWebhook(event: any) {
         console.log(`[handlePaddleWebhook] - Processing ${eventType}.`);
 
         const customerId = event.data.customer_id;
+        const customerEmail = event.data.customer.email; // Use email as the primary link
         const userId = event.data.customData?.user_id;
 
-        if (!userId) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for ${eventType} on subscription ${event.data.id}. Cannot update user.`);
+        if (!customerEmail) {
+            console.error(`[handlePaddleWebhook] - CRITICAL: No email found for customer ${customerId} in ${eventType}. Cannot update user.`);
             return;
         }
         
-        // The only thing we need to store is the customer_id to link the user to Paddle.
+        // Pass both email and customerId to link the accounts
         const updatePayload = { 
-            userId,
-            paddle_customer_id: customerId 
+            email: customerEmail,
+            paddle_customer_id: customerId,
+            userId: userId, // Pass userId if available from custom data
         };
         console.log(`[handlePaddleWebhook] - Calling updateUserPlan for ${eventType} with payload:`, updatePayload);
 
         await updateUserPlan(updatePayload);
-        console.log(`[handlePaddleWebhook] - Successfully processed ${eventType} for user ${userId}.`);
+        console.log(`[handlePaddleWebhook] - Successfully processed ${eventType} for email ${customerEmail}.`);
         break;
     }
 

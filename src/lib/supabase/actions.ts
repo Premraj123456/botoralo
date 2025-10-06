@@ -95,63 +95,62 @@ export async function upsertUserProfile({
   return data;
 }
 
-export async function updateUserPlan({ 
-    userId,
-    paddle_customer_id 
-}: { 
-    userId: string,
-    paddle_customer_id: string | null
+export async function updateUserPlan({
+  email,
+  paddle_customer_id,
+  userId,
+}: {
+  email: string;
+  paddle_customer_id: string | null;
+  userId?: string;
 }) {
-    const supabase = createSupabaseAdminClient();
-    if (!supabase) {
-        console.error('[updateUserPlan] - Supabase admin client not initialized. Check service role key.');
-        throw new Error('Supabase admin client not initialized.');
-    }
+  const supabase = createSupabaseAdminClient();
+  if (!supabase) {
+    console.error('[updateUserPlan] - Supabase admin client not initialized.');
+    throw new Error('Supabase admin client not initialized.');
+  }
+
+  // Use email to find the user's profile
+  const { data: profile, error: findError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('email', email)
+    .single();
+
+  if (findError || !profile) {
+    console.warn(`[updateUserPlan] - Profile for email ${email} not found. This might happen if checkout occurs before signup.`);
     
-    // First, ensure a profile exists. The auth callback should have created it.
-    const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', userId)
-        .single();
-
-    if (profileError && !existingProfile) {
-        // If the profile doesn't exist (e.g., webhook fired before user signed in fully), create it.
-        const placeholderEmail = `${userId}@placeholder.botoralo.app`;
-        const { error: newProfileError } = await supabase
+    // If we have a userId from passthrough, we can create the profile now
+    if (userId) {
+        await upsertUserProfile({ userId, email });
+        // Now update it with the customer_id
+        const { error: updateError } = await supabase
             .from('profiles')
-            .insert({ 
-                id: userId, 
-                email: placeholderEmail, 
-                updated_at: new Date().toISOString(),
-                paddle_customer_id: paddle_customer_id,
-            });
-
-        if (newProfileError) {
-            console.error(`[updateUserPlan] - CRITICAL: Error creating placeholder profile for ${userId}:`, JSON.stringify(newProfileError, null, 2));
-            throw new Error('Could not create placeholder user profile.');
-        }
-        console.log(`[updateUserPlan] - Created placeholder profile for new user ${userId}.`);
-    } else {
-        // If profile exists, just update the customer ID.
-        const updateData = { 
-            paddle_customer_id,
-            updated_at: new Date().toISOString()
-        };
-        
-        console.log(`[updateUserPlan] - Attempting to update profile ${userId} with data:`, JSON.stringify(updateData, null, 2));
-
-        const { error } = await supabase
-            .from('profiles')
-            .update(updateData)
+            .update({ paddle_customer_id, updated_at: new Date().toISOString() })
             .eq('id', userId);
-        
-        if (error) {
-            console.error('[updateUserPlan] - CRITICAL: Error updating user plan with admin client:', JSON.stringify(error, null, 2));
-            throw new Error('Could not update user plan in database.');
+        if (updateError) {
+             console.error(`[updateUserPlan] - CRITICAL: Error updating newly created profile for ${userId}:`, JSON.stringify(updateError, null, 2));
+             throw new Error('Could not update newly created user profile.');
         }
-        console.log(`[updateUserPlan] - Successfully updated customer ID for ${userId}.`);
+        console.log(`[updateUserPlan] - Created profile for ${email} and set customer ID.`);
+    } else {
+         console.error(`[updateUserPlan] - CRITICAL: No profile found for ${email} and no userId provided. Cannot link subscription.`);
     }
+    return;
+  }
+
+  // If profile exists, update it with the customer ID
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ paddle_customer_id, updated_at: new Date().toISOString() })
+    .eq('id', profile.id);
+
+  if (updateError) {
+    console.error('[updateUserPlan] - CRITICAL: Error updating user plan with admin client:', JSON.stringify(updateError, null, 2));
+    throw new Error('Could not update user plan in database.');
+  }
+
+  console.log(`[updateUserPlan] - Successfully updated customer ID for ${email}.`);
 }
 
 
