@@ -28,7 +28,7 @@ export async function manageSubscription({ customerId }: { customerId: string })
             environment: process.env.NODE_ENV === 'development' ? 'sandbox' : 'production',
         });
 
-        // The customerId should be passed directly as an argument, not in an object.
+        // The customerId should be passed directly as an argument.
         const customerPortal = await paddleClient.customerPortalSessions.create(customerId);
         return { url: customerPortal.url };
     } catch (error) {
