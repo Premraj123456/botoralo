@@ -6,7 +6,9 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
-import { Paddle, Subscription } from '@paddle/paddle-node-sdk';
+import { paddle } from '@/lib/paddle/client';
+import type { Subscription } from '@paddle/paddle-node-sdk';
+
 
 const planLimits = {
   Free: 1,
@@ -37,10 +39,6 @@ export async function getUserSubscription() {
   console.log(`[getUserSubscription] - Found authenticated user email: ${userEmail}`);
 
   try {
-    const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
-        environment: process.env.NODE_ENV === 'development' ? 'sandbox' : 'production',
-    });
-
     // 1. Find customer by email
     console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${userEmail}`);
     const customers = await paddle.customers.list({ email: userEmail });
@@ -83,7 +81,7 @@ export async function getUserSubscription() {
     
     // 3. Get full details for the latest subscription to ensure product data is present
     console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
-    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id, {include: ['product']});
+    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id);
     
     if (!latestSubscription) {
         console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
@@ -148,41 +146,56 @@ export async function upsertUserProfile({
   return data;
 }
 
-export async function updateUserPlan({
-  email,
-  paddle_customer_id,
-}: {
-  email: string;
-  paddle_customer_id: string | null;
-}) {
-  const supabase = createSupabaseAdminClient();
-  if (!supabase) {
-    console.error('[updateUserPlan] - Supabase admin client not initialized.');
-    throw new Error('Supabase admin client not initialized.');
+export async function handlePaddleWebhook(event: any) {
+  console.log(`[handlePaddleWebhook] - Received Paddle webhook event: ${event.event_type}`);
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[handlePaddleWebhook] - Full event data:', JSON.stringify(event.data, null, 2));
   }
 
-  const { data: profile, error: findError } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('email', email)
-    .single();
+  if (['subscription.activated', 'subscription.created', 'subscription.updated'].includes(event.event_type)) {
+    const customerId = event.data.customer_id;
+    const customer = await paddle.customers.get(customerId);
+    
+    if (!customer || !customer.email) {
+      console.error(`[handlePaddleWebhook] - CRITICAL: No email found for customer ${customerId}. Cannot link subscription.`);
+      return;
+    }
 
-  if (findError || !profile) {
-    console.error(`[updateUserPlan] - CRITICAL: No profile found for ${email}. Cannot link subscription.`);
-    return;
+    console.log(`[handlePaddleWebhook] - Storing customer ID for email: ${customer.email}`);
+    
+    const supabase = createSupabaseAdminClient();
+    if (!supabase) {
+        console.error('[handlePaddleWebhook] - Supabase admin client not initialized.');
+        return;
+    }
+
+    const { data: profile, error: findError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', customer.email)
+        .single();
+
+    if (findError || !profile) {
+        console.error(`[handlePaddleWebhook] - CRITICAL: No profile found for ${customer.email}. Cannot link subscription.`);
+        return;
+    }
+
+    const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ paddle_customer_id: customerId, updated_at: new Date().toISOString() })
+        .eq('id', profile.id);
+
+    if (updateError) {
+        console.error('[handlePaddleWebhook] - CRITICAL: Error updating user profile with admin client:', JSON.stringify(updateError, null, 2));
+        throw new Error('Could not update user profile in database.');
+    }
+
+    console.log(`[handlePaddleWebhook] - Successfully updated customer ID for ${customer.email}.`);
+
+  } else {
+    console.log(`[handlePaddleWebhook] - Ignoring event type: ${event.event_type} as it does not require DB action.`);
   }
-
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ paddle_customer_id, updated_at: new Date().toISOString() })
-    .eq('id', profile.id);
-
-  if (updateError) {
-    console.error('[updateUserPlan] - CRITICAL: Error updating user plan with admin client:', JSON.stringify(updateError, null, 2));
-    throw new Error('Could not update user plan in database.');
-  }
-
-  console.log(`[updateUserPlan] - Successfully updated customer ID for ${email}.`);
 }
 
 
@@ -220,6 +233,7 @@ export async function updateUserProfile(data: { name: string }) {
     throw new Error('Failed to update profile.');
   }
 
+  revalidatePath('/dashboard/settings');
   return { success: true };
 }
 
