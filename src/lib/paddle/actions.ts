@@ -1,6 +1,7 @@
 'use server';
 
 import { paddle } from "./client";
+import { Paddle } from '@paddle/paddle-node-sdk';
 
 export async function handlePaddleWebhook(event: any) {
   console.log(`[handlePaddleWebhook] - Received Paddle webhook event: ${event.event_type}`);
@@ -20,7 +21,13 @@ export async function manageSubscription(customerId: string) {
     }
     try {
         console.log(`[manageSubscription] - Generating customer portal link for customerId: ${customerId}`);
-        const customerPortal = await paddle.customerPortalSessions.create({ customerId: customerId });
+        
+        // Initialize Paddle client directly within the server action to ensure it's available.
+        const paddleClient = new Paddle(process.env.PADDLE_API_KEY!, {
+            environment: process.env.NODE_ENV === 'development' ? 'sandbox' : 'production',
+        });
+
+        const customerPortal = await paddleClient.customerPortalSessions.create({ customerId: customerId });
         return { url: customerPortal.url };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
