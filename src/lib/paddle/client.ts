@@ -1,4 +1,4 @@
-import { Paddle } from 'paddle';
+import { Paddle } from '@paddle/paddle-node-sdk';
 
 // This file is NOT a server action file. It is a server-side utility.
 // Initialize Paddle with the correct environment setting
