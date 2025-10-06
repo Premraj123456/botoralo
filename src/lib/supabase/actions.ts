@@ -25,6 +25,7 @@ export type Bot = {
 
 // This is the new subscription fetching logic.
 export async function getUserSubscription(userId: string) {
+  console.log(`[getUserSubscription] - Starting for userId: ${userId}`);
   const supabase = createSupabaseServerClient();
   const { data: profile } = await supabase
     .from('profiles')
@@ -33,42 +34,54 @@ export async function getUserSubscription(userId: string) {
     .single();
 
   if (!profile || !profile.email) {
+    console.log('[getUserSubscription] - No profile or email found for user. Defaulting to Free plan.');
     return { plan: 'Free', paddle_customer_id: null };
   }
 
+  console.log(`[getUserSubscription] - Found email: ${profile.email}`);
+
   try {
     // 1. Find customer by email
+    console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${profile.email}`);
     const customers = paddle.customers.list({ email: profile.email });
     const customer = (await customers.next()).value;
 
     if (!customer) {
+      console.log('[getUserSubscription] - No Paddle customer found for this email. Defaulting to Free plan.');
       return { plan: 'Free', paddle_customer_id: null };
     }
 
     const customerId = customer.id;
+    console.log(`[getUserSubscription] - Found Paddle customer ID: ${customerId}`);
 
     // 2. Find active subscription for that customer
+    console.log(`[getUserSubscription] - Searching for active subscriptions for customer ID: ${customerId}`);
     const subscriptions = paddle.subscriptions.list({
       customerId: [customerId],
       status: ['active'],
     });
 
     for await (const subscription of subscriptions) {
+        console.log(`[getUserSubscription] - Checking subscription: ${subscription.id}`);
         const planItem = subscription.items.find((item) => item.price?.type === 'recurring');
         if (planItem?.price?.id) {
+             console.log(`[getUserSubscription] - Found plan item with price ID: ${planItem.price.id}`);
              if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID) {
+                console.log('[getUserSubscription] - Matched Pro Plan. Returning "Pro".');
                 return { plan: 'Pro', paddle_customer_id: customerId };
             }
             if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID) {
+                console.log('[getUserSubscription] - Matched Power Plan. Returning "Power".');
                 return { plan: 'Power', paddle_customer_id: customerId };
             }
         }
     }
-    // If no active subscription found, they might have other products. Return customerId anyway.
+    
+    console.log('[getUserSubscription] - No active Pro or Power subscription found. Defaulting to Free plan.');
     return { plan: 'Free', paddle_customer_id: customerId };
 
   } catch (error) {
-    console.error("Error fetching subscription from Paddle:", error);
+    console.error("[getUserSubscription] - Error fetching subscription from Paddle:", error);
     // If Paddle API fails, default to Free to prevent locking user out.
     return { plan: 'Free', paddle_customer_id: null };
   }
