@@ -11,8 +11,8 @@ import type { Subscription } from '@paddle/paddle-node-sdk';
 
 const planLimits = {
   Free: 1,
-  Pro: 5,
-  Power: 20,
+  PRO: 5,
+  POWER: 20,
 };
 
 export type Bot = {
@@ -88,12 +88,12 @@ export async function getUserSubscription() {
         console.log(`[getUserSubscription] - Found plan item with price ID: ${priceId} and product name: "${productName}"`);
 
         if (priceId === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID || productName.includes('power')) {
-            console.log('[getUserSubscription] - Matched Power Plan. Returning "Power".');
-            return { plan: 'Power', paddle_customer_id: customerId };
+            console.log('[getUserSubscription] - Matched Power Plan. Returning "POWER".');
+            return { plan: 'POWER', paddle_customer_id: customerId };
         }
         if (priceId === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID || productName.includes('pro')) {
-            console.log('[getUserSubscription] - Matched Pro Plan. Returning "Pro".');
-            return { plan: 'Pro', paddle_customer_id: customerId };
+            console.log('[getUserSubscription] - Matched Pro Plan. Returning "PRO".');
+            return { plan: 'PRO', paddle_customer_id: customerId };
         }
     }
     

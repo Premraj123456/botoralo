@@ -27,7 +27,7 @@ const plans = [
     isPrimary: false,
   },
   {
-    name: 'Pro',
+    name: 'PRO',
     price: '$9',
     productId: process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID,
     description: 'For serious bot developers who need more power.',
@@ -36,7 +36,7 @@ const plans = [
     isPrimary: true,
   },
   {
-    name: 'Power',
+    name: 'POWER',
     price: '$29',
     productId: process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID,
     description: 'For professionals running multiple complex bots.',
