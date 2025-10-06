@@ -28,17 +28,28 @@ export async function getUserSubscription(userId: string) {
   const supabase = createSupabaseServerClient();
   const { data: profile } = await supabase
     .from('profiles')
-    .select('paddle_customer_id')
+    .select('email')
     .eq('id', userId)
     .single();
 
-  if (!profile || !profile.paddle_customer_id) {
+  if (!profile || !profile.email) {
     return { plan: 'Free', paddle_customer_id: null };
   }
 
   try {
+    // 1. Find customer by email
+    const customers = paddle.customers.list({ email: profile.email });
+    const customer = (await customers.next()).value;
+
+    if (!customer) {
+      return { plan: 'Free', paddle_customer_id: null };
+    }
+
+    const customerId = customer.id;
+
+    // 2. Find active subscription for that customer
     const subscriptions = paddle.subscriptions.list({
-      customerId: [profile.paddle_customer_id],
+      customerId: [customerId],
       status: ['active'],
     });
 
@@ -46,21 +57,21 @@ export async function getUserSubscription(userId: string) {
         const planItem = subscription.items.find((item) => item.price?.type === 'recurring');
         if (planItem?.price?.id) {
              if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID) {
-                return { plan: 'Pro', paddle_customer_id: profile.paddle_customer_id };
+                return { plan: 'Pro', paddle_customer_id: customerId };
             }
             if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID) {
-                return { plan: 'Power', paddle_customer_id: profile.paddle_customer_id };
+                return { plan: 'Power', paddle_customer_id: customerId };
             }
         }
     }
+    // If no active subscription found, they might have other products. Return customerId anyway.
+    return { plan: 'Free', paddle_customer_id: customerId };
+
   } catch (error) {
     console.error("Error fetching subscription from Paddle:", error);
     // If Paddle API fails, default to Free to prevent locking user out.
-    return { plan: 'Free', paddle_customer_id: profile.paddle_customer_id };
+    return { plan: 'Free', paddle_customer_id: null };
   }
-
-  // If no active subscription found in Paddle, they are on the Free plan.
-  return { plan: 'Free', paddle_customer_id: profile.paddle_customer_id };
 }
 
 
@@ -98,11 +109,9 @@ export async function upsertUserProfile({
 export async function updateUserPlan({
   email,
   paddle_customer_id,
-  userId,
 }: {
   email: string;
   paddle_customer_id: string | null;
-  userId?: string;
 }) {
   const supabase = createSupabaseAdminClient();
   if (!supabase) {
@@ -118,24 +127,7 @@ export async function updateUserPlan({
     .single();
 
   if (findError || !profile) {
-    console.warn(`[updateUserPlan] - Profile for email ${email} not found. This might happen if checkout occurs before signup.`);
-    
-    // If we have a userId from passthrough, we can create the profile now
-    if (userId) {
-        await upsertUserProfile({ userId, email });
-        // Now update it with the customer_id
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ paddle_customer_id, updated_at: new Date().toISOString() })
-            .eq('id', userId);
-        if (updateError) {
-             console.error(`[updateUserPlan] - CRITICAL: Error updating newly created profile for ${userId}:`, JSON.stringify(updateError, null, 2));
-             throw new Error('Could not update newly created user profile.');
-        }
-        console.log(`[updateUserPlan] - Created profile for ${email} and set customer ID.`);
-    } else {
-         console.error(`[updateUserPlan] - CRITICAL: No profile found for ${email} and no userId provided. Cannot link subscription.`);
-    }
+    console.error(`[updateUserPlan] - CRITICAL: No profile found for ${email}. Cannot link subscription.`);
     return;
   }
 

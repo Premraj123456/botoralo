@@ -19,21 +19,19 @@ export async function handlePaddleWebhook(event: any) {
         console.log(`[handlePaddleWebhook] - Processing ${eventType}.`);
 
         const customerId = event.data.customer_id;
-        const customerEmail = event.data.customer.email; // Use email as the primary link
-        const userId = event.data.customData?.user_id;
+        const customerEmail = event.data.customer?.email; 
 
         if (!customerEmail) {
             console.error(`[handlePaddleWebhook] - CRITICAL: No email found for customer ${customerId} in ${eventType}. Cannot update user.`);
             return;
         }
         
-        // Pass both email and customerId to link the accounts
+        // The only thing we need to do is ensure the customer_id is stored.
         const updatePayload = { 
             email: customerEmail,
             paddle_customer_id: customerId,
-            userId: userId, // Pass userId if available from custom data
         };
-        console.log(`[handlePaddleWebhook] - Calling updateUserPlan for ${eventType} with payload:`, updatePayload);
+        console.log(`[handlePaddleWebhook] - Calling updateUserPlan for ${eventType} to store customer ID with payload:`, updatePayload);
 
         await updateUserPlan(updatePayload);
         console.log(`[handlePaddleWebhook] - Successfully processed ${eventType} for email ${customerEmail}.`);
@@ -41,9 +39,8 @@ export async function handlePaddleWebhook(event: any) {
     }
 
     case 'subscription.canceled': {
-        // We don't need to do anything here.
-        // When the subscription is no longer 'active', the live API call in getUserSubscription will correctly return 'Free'.
-        console.log(`[handlePaddleWebhook] - Processed subscription.canceled for user ${event.data.customData?.user_id}. No database action needed.`);
+        // We fetch live data, so no action is needed here.
+        console.log(`[handlePaddleWebhook] - Processed subscription.canceled. No database action needed.`);
         break;
     }
     

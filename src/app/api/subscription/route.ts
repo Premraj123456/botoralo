@@ -22,23 +22,6 @@ export async function GET(req: NextRequest) {
 
   // 3. Fetch subscription details
   try {
-    const supabaseAdmin = createSupabaseAdminClient();
-    if (!supabaseAdmin) {
-      throw new Error("Admin client not initialized");
-    }
-
-    // We need to get the paddle_customer_id from the profiles table first
-    const { data: profile, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .select('paddle_customer_id')
-        .eq('id', userId)
-        .single();
-    
-    if (profileError || !profile) {
-        return NextResponse.json({ error: `Profile not found for userId: ${userId}` }, { status: 404 });
-    }
-
-
     // Use the existing server action to get subscription from Paddle
     const subscription = await getUserSubscription(userId);
 
