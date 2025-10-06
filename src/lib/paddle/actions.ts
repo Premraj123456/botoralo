@@ -20,7 +20,7 @@ export async function manageSubscription(customerId: string) {
     }
     try {
         console.log(`[manageSubscription] - Generating customer portal link for customerId: ${customerId}`);
-        const customerPortal = await paddle.customerPortal.create({ customerId: customerId });
+        const customerPortal = await paddle.customerPortalSessions.create({ customerId: customerId });
         return { url: customerPortal.url };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
