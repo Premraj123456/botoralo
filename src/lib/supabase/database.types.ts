@@ -50,27 +50,21 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
-          paddle_subscription_id: string | null
           paddle_customer_id: string | null
-          plan: string | null
           updated_at: string | null
         }
         Insert: {
           email: string
           full_name?: string | null
           id: string
-          paddle_subscription_id?: string | null
           paddle_customer_id?: string | null
-          plan?: string | null
           updated_at?: string | null
         }
         Update: {
           email?: string
           full_name?: string | null
           id?: string
-          paddle_subscription_id?: string | null
           paddle_customer_id?: string | null
-          plan?: string | null
           updated_at?: string | null
         }
         Relationships: [

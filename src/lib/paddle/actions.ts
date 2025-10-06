@@ -23,65 +23,30 @@ export async function handlePaddleWebhook(event: any) {
         const eventType = event.event_type;
         console.log(`[handlePaddleWebhook] - Processing ${eventType}.`);
 
-        const subscriptionId = event.data.id;
         const customerId = event.data.customer_id;
         const userId = event.data.customData?.user_id;
 
         if (!userId) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for ${eventType} on subscription ${subscriptionId}. Cannot update user plan.`);
+            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for ${eventType} on subscription ${event.data.id}. Cannot update user.`);
             return;
         }
         
-        const planItem = event.data.items.find((item: any) => item.price.type === 'recurring');
-        if (!planItem) {
-             console.error(`[handlePaddleWebhook] - CRITICAL: No recurring plan item found in ${eventType} on subscription ${subscriptionId}. Cannot determine plan.`);
-             return;
-        }
-        
-        const priceId = planItem.price.id;
-        let plan = 'Free'; // Default
-        if (priceId === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID) {
-            plan = 'Pro';
-        } else if (priceId === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID) {
-            plan = 'Power';
-        } else {
-            console.warn(`[handlePaddleWebhook] - Warning: Unrecognized price ID "${priceId}" for subscription ${subscriptionId}. Defaulting to Free plan.`);
-        }
-        
+        // The only thing we need to store is the customer_id to link the user to Paddle.
         const updatePayload = { 
             userId,
-            plan, 
-            paddle_subscription_id: subscriptionId, 
             paddle_customer_id: customerId 
         };
         console.log(`[handlePaddleWebhook] - Calling updateUserPlan for ${eventType} with payload:`, updatePayload);
 
         await updateUserPlan(updatePayload);
-        console.log(`[handlePaddleWebhook] - Successfully processed ${eventType} for user ${userId}. Plan set to: ${plan}`);
+        console.log(`[handlePaddleWebhook] - Successfully processed ${eventType} for user ${userId}.`);
         break;
     }
 
     case 'subscription.canceled': {
-        console.log(`[handlePaddleWebhook] - Processing subscription.canceled.`);
-        const subscriptionId = event.data.id;
-        const userId = event.data.customData?.user_id;
-        const customerId = event.data.customer_id;
-
-        if (!userId) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No user_id in customData for subscription.canceled on subscription ${subscriptionId}. Cannot downgrade plan.`);
-            return;
-        }
-
-        const updatePayload = { 
-            userId, 
-            plan: 'Free', 
-            paddle_subscription_id: null, // Clear the subscription ID
-            paddle_customer_id: customerId 
-        };
-        console.log('[handlePaddleWebhook] - Calling updateUserPlan for cancellation with payload:', updatePayload);
-
-        await updateUserPlan(updatePayload);
-        console.log(`[handlePaddleWebhook] - Successfully processed subscription cancellation for user ${userId}.`);
+        // We don't need to do anything here.
+        // When the subscription is no longer 'active', the live API call in getUserSubscription will correctly return 'Free'.
+        console.log(`[handlePaddleWebhook] - Processed subscription.canceled for user ${event.data.customData?.user_id}. No database action needed.`);
         break;
     }
     

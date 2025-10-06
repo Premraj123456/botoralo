@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
+import { paddle } from '@/lib/paddle/actions';
 
 const planLimits = {
   Free: 1,
@@ -22,26 +23,44 @@ export type Bot = {
   status: 'running' | 'stopped' | 'error';
 };
 
+// This is the new subscription fetching logic.
 export async function getUserSubscription(userId: string) {
-  try {
-    const supabase = createSupabaseServerClient();
-    
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('plan, paddle_subscription_id, paddle_customer_id')
-      .eq('id', userId)
-      .single();
-      
-    if (!profile) {
-      console.log(`No profile found for user ${userId}. Defaulting to Free plan.`);
-      return { plan: 'Free', paddle_subscription_id: null, paddle_customer_id: null };
-    }
-    
-    return { plan: profile.plan || 'Free', paddle_subscription_id: profile.paddle_subscription_id, paddle_customer_id: profile.paddle_customer_id };
-  } catch (error) {
-    console.error("Error getting user subscription:", (error as Error).message);
-    return { plan: 'Free', paddle_subscription_id: null, paddle_customer_id: null };
+  const supabase = createSupabaseServerClient();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('paddle_customer_id')
+    .eq('id', userId)
+    .single();
+
+  if (!profile || !profile.paddle_customer_id) {
+    return { plan: 'Free', paddle_customer_id: null };
   }
+
+  try {
+    const subscriptions = paddle.subscriptions.list({
+      customerId: [profile.paddle_customer_id],
+      status: ['active'],
+    });
+
+    for await (const subscription of subscriptions) {
+        const planItem = subscription.items.find((item) => item.price?.type === 'recurring');
+        if (planItem?.price?.id) {
+             if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID) {
+                return { plan: 'Pro', paddle_customer_id: profile.paddle_customer_id };
+            }
+            if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID) {
+                return { plan: 'Power', paddle_customer_id: profile.paddle_customer_id };
+            }
+        }
+    }
+  } catch (error) {
+    console.error("Error fetching subscription from Paddle:", error);
+    // If Paddle API fails, default to Free to prevent locking user out.
+    return { plan: 'Free', paddle_customer_id: profile.paddle_customer_id };
+  }
+
+  // If no active subscription found in Paddle, they are on the Free plan.
+  return { plan: 'Free', paddle_customer_id: profile.paddle_customer_id };
 }
 
 
@@ -78,13 +97,9 @@ export async function upsertUserProfile({
 
 export async function updateUserPlan({ 
     userId,
-    plan, 
-    paddle_subscription_id, 
     paddle_customer_id 
 }: { 
     userId: string,
-    plan: string, 
-    paddle_subscription_id: string | null,
     paddle_customer_id: string | null
 }) {
     const supabase = createSupabaseAdminClient();
@@ -100,40 +115,43 @@ export async function updateUserPlan({
         .eq('id', userId)
         .single();
 
-    if (profileError || !existingProfile) {
-        // If the profile doesn't exist, create it with a placeholder email.
+    if (profileError && !existingProfile) {
+        // If the profile doesn't exist (e.g., webhook fired before user signed in fully), create it.
         const placeholderEmail = `${userId}@placeholder.botoralo.app`;
         const { error: newProfileError } = await supabase
             .from('profiles')
-            .insert({ id: userId, email: placeholderEmail, updated_at: new Date().toISOString() });
+            .insert({ 
+                id: userId, 
+                email: placeholderEmail, 
+                updated_at: new Date().toISOString(),
+                paddle_customer_id: paddle_customer_id,
+            });
 
         if (newProfileError) {
             console.error(`[updateUserPlan] - CRITICAL: Error creating placeholder profile for ${userId}:`, JSON.stringify(newProfileError, null, 2));
             throw new Error('Could not create placeholder user profile.');
         }
         console.log(`[updateUserPlan] - Created placeholder profile for new user ${userId}.`);
-    }
+    } else {
+        // If profile exists, just update the customer ID.
+        const updateData = { 
+            paddle_customer_id,
+            updated_at: new Date().toISOString()
+        };
+        
+        console.log(`[updateUserPlan] - Attempting to update profile ${userId} with data:`, JSON.stringify(updateData, null, 2));
 
-    // Now, perform a clean update of the subscription details.
-    const updateData = { 
-        plan, 
-        paddle_subscription_id, 
-        paddle_customer_id,
-        updated_at: new Date().toISOString()
-    };
-    
-    console.log(`[updateUserPlan] - Attempting to update profile ${userId} with data:`, JSON.stringify(updateData, null, 2));
-
-    const { error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', userId);
-    
-    if (error) {
-        console.error('[updateUserPlan] - CRITICAL: Error updating user plan with admin client:', JSON.stringify(error, null, 2));
-        throw new Error('Could not update user plan in database.');
+        const { error } = await supabase
+            .from('profiles')
+            .update(updateData)
+            .eq('id', userId);
+        
+        if (error) {
+            console.error('[updateUserPlan] - CRITICAL: Error updating user plan with admin client:', JSON.stringify(error, null, 2));
+            throw new Error('Could not update user plan in database.');
+        }
+        console.log(`[updateUserPlan] - Successfully updated customer ID for ${userId}.`);
     }
-    console.log(`[updateUserPlan] - Successfully updated plan for ${userId} to ${plan}.`);
 }
 
 

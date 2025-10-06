@@ -16,7 +16,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Subscription = {
   plan: string;
-  paddle_subscription_id: string | null;
   paddle_customer_id: string | null;
 }
 
