@@ -22,6 +22,7 @@ export async function POST(req: NextRequest) {
     console.log(`[/api/paddle/webhook] - Successfully unmarshalled event: ${event?.event_type}`);
     
     if (event) {
+        // The app now relies on direct fetching, but we can still process webhooks if needed for other purposes.
         await handlePaddleWebhook(event);
         return new NextResponse('OK', { status: 200 });
     } else {

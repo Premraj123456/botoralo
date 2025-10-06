@@ -89,17 +89,16 @@ export async function getUserSubscription() {
     }
 
     const planItem = latestSubscription.items.find((item) => item.price?.type === 'recurring');
-    if (planItem?.price?.id) {
-        const priceId = planItem.price.id;
-        const productName = (planItem.product?.name || '').toLowerCase();
-        console.log(`[getUserSubscription] - Inspected plan item. Price ID: ${priceId}, Product Name: "${productName}"`);
+    if (planItem?.product?.name) {
+        const productName = (planItem.product.name || '').toLowerCase();
+        console.log(`[getUserSubscription] - Inspected plan item. Product Name: "${productName}"`);
 
 
-        if (priceId === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID || productName.includes('power')) {
+        if (productName.includes('power')) {
             console.log('[getUserSubscription] - Matched Power Plan. Returning "POWER".');
             return { plan: 'POWER', paddle_customer_id: customerId };
         }
-        if (priceId === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID || productName.includes('pro')) {
+        if (productName.includes('pro')) {
             console.log('[getUserSubscription] - Matched Pro Plan. Returning "PRO".');
             return { plan: 'PRO', paddle_customer_id: customerId };
         }
@@ -145,59 +144,6 @@ export async function upsertUserProfile({
   }
   return data;
 }
-
-export async function handlePaddleWebhook(event: any) {
-  console.log(`[handlePaddleWebhook] - Received Paddle webhook event: ${event.event_type}`);
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[handlePaddleWebhook] - Full event data:', JSON.stringify(event.data, null, 2));
-  }
-
-  if (['subscription.activated', 'subscription.created', 'subscription.updated'].includes(event.event_type)) {
-    const customerId = event.data.customer_id;
-    const customer = await paddle.customers.get(customerId);
-    
-    if (!customer || !customer.email) {
-      console.error(`[handlePaddleWebhook] - CRITICAL: No email found for customer ${customerId}. Cannot link subscription.`);
-      return;
-    }
-
-    console.log(`[handlePaddleWebhook] - Storing customer ID for email: ${customer.email}`);
-    
-    const supabase = createSupabaseAdminClient();
-    if (!supabase) {
-        console.error('[handlePaddleWebhook] - Supabase admin client not initialized.');
-        return;
-    }
-
-    const { data: profile, error: findError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', customer.email)
-        .single();
-
-    if (findError || !profile) {
-        console.error(`[handlePaddleWebhook] - CRITICAL: No profile found for ${customer.email}. Cannot link subscription.`);
-        return;
-    }
-
-    const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ paddle_customer_id: customerId, updated_at: new Date().toISOString() })
-        .eq('id', profile.id);
-
-    if (updateError) {
-        console.error('[handlePaddleWebhook] - CRITICAL: Error updating user profile with admin client:', JSON.stringify(updateError, null, 2));
-        throw new Error('Could not update user profile in database.');
-    }
-
-    console.log(`[handlePaddleWebhook] - Successfully updated customer ID for ${customer.email}.`);
-
-  } else {
-    console.log(`[handlePaddleWebhook] - Ignoring event type: ${event.event_type} as it does not require DB action.`);
-  }
-}
-
 
 export async function getUserProfile() {
   const { user } = await getCurrentUser();

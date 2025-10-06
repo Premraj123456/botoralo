@@ -1,7 +1,6 @@
 
 'use server';
 
-import { updateUserPlan } from "../supabase/actions";
 import { paddle } from "./client";
 
 export async function handlePaddleWebhook(event: any) {
@@ -11,25 +10,9 @@ export async function handlePaddleWebhook(event: any) {
     console.log('[handlePaddleWebhook] - Full event data:', JSON.stringify(event.data, null, 2));
   }
 
-  // Handle subscription creation, updates, and activations
-  if (['subscription.activated', 'subscription.created', 'subscription.updated'].includes(event.event_type)) {
-    const customerId = event.data.customer_id;
-    // We need to get the email associated with this customer
-    const customer = await paddle.customers.get(customerId);
-    
-    if (!customer || !customer.email) {
-      console.error(`[handlePaddleWebhook] - CRITICAL: No email found for customer ${customerId}. Cannot link subscription.`);
-      return;
-    }
-
-    console.log(`[handlePaddleWebhook] - Storing customer ID for email: ${customer.email}`);
-    await updateUserPlan({
-      email: customer.email,
-      paddle_customer_id: customerId,
-    });
-  } else {
-    console.log(`[handlePaddleWebhook] - Ignoring event type: ${event.event_type} as it does not require DB action.`);
-  }
+  // Business logic for webhooks can be added here.
+  // For now, the app relies on direct fetching, so this can be minimal.
+  console.log(`[handlePaddleWebhook] - Ignoring event type: ${event.event_type} as no DB action is required.`);
 }
 
 export async function manageSubscription(customerId: string) {
