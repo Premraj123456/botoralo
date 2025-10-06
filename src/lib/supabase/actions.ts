@@ -25,26 +25,24 @@ export type Bot = {
 };
 
 // This is the new subscription fetching logic.
-export async function getUserSubscription(userId: string) {
-  console.log(`[getUserSubscription] - Starting for userId: ${userId}`);
+export async function getUserSubscription() {
   const supabase = createSupabaseServerClient();
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('email')
-    .eq('id', userId)
-    .single();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!profile || !profile.email) {
-    console.log('[getUserSubscription] - No profile or email found for user. Defaulting to Free plan.');
+  console.log(`[getUserSubscription] - Starting...`);
+
+  if (!user || !user.email) {
+    console.log('[getUserSubscription] - No authenticated user or email found. Defaulting to Free plan.');
     return { plan: 'Free', paddle_customer_id: null };
   }
 
-  console.log(`[getUserSubscription] - Found email: ${profile.email}`);
+  const userEmail = user.email;
+  console.log(`[getUserSubscription] - Found authenticated user email: ${userEmail}`);
 
   try {
     // 1. Find customer by email
-    console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${profile.email}`);
-    const customers = paddle.customers.list({ email: profile.email });
+    console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${userEmail}`);
+    const customers = paddle.customers.list({ email: userEmail });
     const customer = (await customers.next()).value;
 
     if (!customer) {
@@ -72,7 +70,7 @@ export async function getUserSubscription(userId: string) {
         return { plan: 'Free', paddle_customer_id: customerId };
     }
 
-    // Sort by creation date to find the latest one, as you suggested.
+    // Sort by creation date to find the latest one
     activeSubscriptions.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
 
     const latestSubscription = activeSubscriptions[0];
@@ -220,7 +218,7 @@ export async function createBot(data: { name: string, code: string }) {
   const supabase = createSupabaseServerClient();
 
   const [subscription, { count }] = await Promise.all([
-    getUserSubscription(user.id),
+    getUserSubscription(),
     supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
   ]);
 
@@ -354,3 +352,4 @@ export async function deleteBot(prevState: any, formData: FormData) {
         return { message: (e as Error).message, success: false };
     }
 }
+

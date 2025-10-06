@@ -8,9 +8,11 @@ export default async function PricingPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   let subscription = null;
+  // We only need to check subscription if user exists
   if (user) {
-    subscription = await getUserSubscription(user.id);
+    subscription = await getUserSubscription();
   }
+
 
   return (
     <div className="py-12 md:py-20 lg:py-24 z-10 relative">

@@ -36,7 +36,7 @@ export default async function Dashboard() {
   }
 
   const [subscription, userBotsFromDb] = await Promise.all([
-    getUserSubscription(user.id),
+    getUserSubscription(),
     getUserBots(),
   ]);
 

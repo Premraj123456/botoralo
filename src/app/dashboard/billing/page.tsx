@@ -9,7 +9,7 @@ export default async function BillingPage() {
 
   let subscription = null;
   if (user) {
-    subscription = await getUserSubscription(user.id);
+    subscription = await getUserSubscription();
   }
 
   return <BillingClient user={user} subscription={subscription} />;
