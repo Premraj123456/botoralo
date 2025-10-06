@@ -25,7 +25,7 @@ export type Bot = {
 };
 
 // This is the new subscription fetching logic.
-export async function getUserSubscription(userId?: string) {
+export async function getUserSubscription() {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -44,11 +44,10 @@ export async function getUserSubscription(userId?: string) {
     console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${userEmail}`);
     const customers = paddle.customers.list({ email: userEmail });
     
-    // The list method returns an async iterator. We need to loop through it.
     let customer = null;
     for await (const c of customers) {
       customer = c;
-      break; // Found the first customer, break the loop
+      break; 
     }
 
     if (!customer) {
@@ -76,7 +75,6 @@ export async function getUserSubscription(userId?: string) {
         return { plan: 'Free', paddle_customer_id: customerId };
     }
 
-    // Sort by creation date to find the latest one
     activeSubscriptions.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
 
     const latestSubscription = activeSubscriptions[0];
@@ -84,14 +82,18 @@ export async function getUserSubscription(userId?: string) {
 
     const planItem = latestSubscription.items.find((item) => item.price?.type === 'recurring');
     if (planItem?.price?.id) {
-        console.log(`[getUserSubscription] - Found plan item with price ID: ${planItem.price.id}`);
-        if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID) {
-            console.log('[getUserSubscription] - Matched Pro Plan. Returning "Pro".');
-            return { plan: 'Pro', paddle_customer_id: customerId };
-        }
-        if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID) {
+        const priceId = planItem.price.id;
+        const productName = (planItem.price.product?.name || '').toLowerCase();
+
+        console.log(`[getUserSubscription] - Found plan item with price ID: ${priceId} and product name: "${productName}"`);
+
+        if (priceId === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID || productName.includes('power')) {
             console.log('[getUserSubscription] - Matched Power Plan. Returning "Power".');
             return { plan: 'Power', paddle_customer_id: customerId };
+        }
+        if (priceId === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID || productName.includes('pro')) {
+            console.log('[getUserSubscription] - Matched Pro Plan. Returning "Pro".');
+            return { plan: 'Pro', paddle_customer_id: customerId };
         }
     }
     
@@ -100,7 +102,6 @@ export async function getUserSubscription(userId?: string) {
 
   } catch (error) {
     console.error("[getUserSubscription] - Error fetching subscription from Paddle:", error);
-    // If Paddle API fails, default to Free to prevent locking user out.
     return { plan: 'Free', paddle_customer_id: null };
   }
 }
@@ -150,7 +151,6 @@ export async function updateUserPlan({
     throw new Error('Supabase admin client not initialized.');
   }
 
-  // Use email to find the user's profile
   const { data: profile, error: findError } = await supabase
     .from('profiles')
     .select('id')
@@ -162,7 +162,6 @@ export async function updateUserPlan({
     return;
   }
 
-  // If profile exists, update it with the customer ID
   const { error: updateError } = await supabase
     .from('profiles')
     .update({ paddle_customer_id, updated_at: new Date().toISOString() })
@@ -257,7 +256,6 @@ export async function createBot(data: { name: string, code: string }) {
     await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
   } catch (backendError) {
     console.error("Backend deployment failed:", backendError);
-    // If deployment fails, we should delete the bot record to avoid orphaned entries
     await supabase.from('bots').delete().eq('id', newBot.id);
     throw new Error(`Bot deployment failed: ${(backendError as Error).message}`);
   }
@@ -353,7 +351,6 @@ export async function deleteBot(prevState: any, formData: FormData) {
         return { message: "Bot has been deleted.", success: true };
     } catch (e) {
         console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted from the database.`, e);
-        // Still return success if DB deletion worked, as it's the source of truth.
         revalidatePath('/dashboard');
         return { message: (e as Error).message, success: false };
     }
