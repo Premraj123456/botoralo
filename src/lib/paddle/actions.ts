@@ -11,8 +11,8 @@ export async function handlePaddleWebhook(event: any) {
     console.log('[handlePaddleWebhook] - Full event data:', JSON.stringify(event.data, null, 2));
   }
 
-  // Only handle subscription creation/activation to store the customer ID
-  if (event.event_type === 'subscription.activated' || event.event_type === 'subscription.created') {
+  // Handle subscription creation, updates, and activations
+  if (['subscription.activated', 'subscription.created', 'subscription.updated'].includes(event.event_type)) {
     const customerId = event.data.customer_id;
     // We need to get the email associated with this customer
     const customer = await paddle.customers.get(customerId);
