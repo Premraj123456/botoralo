@@ -7,7 +7,7 @@ import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
 import { paddle } from '@/lib/paddle/client';
-import type { Subscription } from 'paddle';
+import type { Subscription } from '@paddle/paddle-node-sdk';
 
 const planLimits = {
   Free: 1,
@@ -43,7 +43,13 @@ export async function getUserSubscription() {
     // 1. Find customer by email
     console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${userEmail}`);
     const customers = paddle.customers.list({ email: userEmail });
-    const customer = (await customers.next()).value;
+    
+    // The list method returns an async iterator. We need to loop through it.
+    let customer = null;
+    for await (const c of customers) {
+      customer = c;
+      break; // Found the first customer, break the loop
+    }
 
     if (!customer) {
       console.log('[getUserSubscription] - No Paddle customer found for this email. Defaulting to Free plan.');
@@ -352,4 +358,3 @@ export async function deleteBot(prevState: any, formData: FormData) {
         return { message: (e as Error).message, success: false };
     }
 }
-
