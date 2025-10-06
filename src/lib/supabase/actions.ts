@@ -6,8 +6,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
-import { paddle } from '@/lib/paddle/client';
-import type { Subscription } from '@paddle/paddle-node-sdk';
+import { Paddle, Subscription } from '@paddle/paddle-node-sdk';
 
 const planLimits = {
   Free: 1,
@@ -38,6 +37,10 @@ export async function getUserSubscription() {
   console.log(`[getUserSubscription] - Found authenticated user email: ${userEmail}`);
 
   try {
+    const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
+        environment: process.env.NODE_ENV === 'development' ? 'sandbox' : 'production',
+    });
+
     // 1. Find customer by email
     console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${userEmail}`);
     const customers = await paddle.customers.list({ email: userEmail });
@@ -80,7 +83,7 @@ export async function getUserSubscription() {
     
     // 3. Get full details for the latest subscription to ensure product data is present
     console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
-    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id);
+    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id, {include: ['product']});
     
     if (!latestSubscription) {
         console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
@@ -90,9 +93,9 @@ export async function getUserSubscription() {
     const planItem = latestSubscription.items.find((item) => item.price?.type === 'recurring');
     if (planItem?.price?.id) {
         const priceId = planItem.price.id;
-        const productName = (planItem.price.product?.name || '').toLowerCase();
-
+        const productName = (planItem.product?.name || '').toLowerCase();
         console.log(`[getUserSubscription] - Inspected plan item. Price ID: ${priceId}, Product Name: "${productName}"`);
+
 
         if (priceId === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID || productName.includes('power')) {
             console.log('[getUserSubscription] - Matched Power Plan. Returning "POWER".');
