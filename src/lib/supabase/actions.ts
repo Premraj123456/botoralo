@@ -29,8 +29,6 @@ export async function getUserSubscription() {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  console.log(`[getUserSubscription] - Starting...`);
-
   if (!user || !user.email) {
     console.log('[getUserSubscription] - No authenticated user or email found. Defaulting to Free plan.');
     return { plan: 'Free', paddle_customer_id: null };
@@ -78,7 +76,7 @@ export async function getUserSubscription() {
     activeSubscriptions.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
 
     const latestSubscriptionFromList = activeSubscriptions[0];
-    console.log(`[getUserSubscription] - Found ${activeSubscriptions.length} active subscriptions. Latest ID is: ${latestSubscriptionFromList.id}`);
+    console.log(`[getUserSubscription] - Found ${activeSubscriptions.length} active subscriptions. Selecting the latest one: ${latestSubscriptionFromList.id}`);
     
     // 3. Get full details for the latest subscription to ensure product data is present
     console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
@@ -89,11 +87,9 @@ export async function getUserSubscription() {
         return { plan: 'Free', paddle_customer_id: customerId };
     }
 
-
     const planItem = latestSubscription.items.find((item) => item.price?.type === 'recurring');
     if (planItem?.price?.id) {
         const priceId = planItem.price.id;
-        // The product object should be included in the 'get' response.
         const productName = (planItem.price.product?.name || '').toLowerCase();
 
         console.log(`[getUserSubscription] - Inspected plan item. Price ID: ${priceId}, Product Name: "${productName}"`);
