@@ -42,7 +42,7 @@ export async function getUserSubscription() {
   try {
     // 1. Find customer by email
     console.log(`[getUserSubscription] - Searching for Paddle customer with email: ${userEmail}`);
-    const customers = paddle.customers.list({ email: userEmail });
+    const customers = await paddle.customers.list({ email: userEmail });
     
     let customer = null;
     for await (const c of customers) {
@@ -77,15 +77,26 @@ export async function getUserSubscription() {
 
     activeSubscriptions.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
 
-    const latestSubscription = activeSubscriptions[0];
-    console.log(`[getUserSubscription] - Found ${activeSubscriptions.length} active subscriptions. Selecting the latest one: ${latestSubscription.id}`);
+    const latestSubscriptionFromList = activeSubscriptions[0];
+    console.log(`[getUserSubscription] - Found ${activeSubscriptions.length} active subscriptions. Latest ID is: ${latestSubscriptionFromList.id}`);
+    
+    // 3. Get full details for the latest subscription to ensure product data is present
+    console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
+    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id);
+    
+    if (!latestSubscription) {
+        console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
+        return { plan: 'Free', paddle_customer_id: customerId };
+    }
+
 
     const planItem = latestSubscription.items.find((item) => item.price?.type === 'recurring');
     if (planItem?.price?.id) {
         const priceId = planItem.price.id;
+        // The product object should be included in the 'get' response.
         const productName = (planItem.price.product?.name || '').toLowerCase();
 
-        console.log(`[getUserSubscription] - Found plan item with price ID: ${priceId} and product name: "${productName}"`);
+        console.log(`[getUserSubscription] - Inspected plan item. Price ID: ${priceId}, Product Name: "${productName}"`);
 
         if (priceId === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID || productName.includes('power')) {
             console.log('[getUserSubscription] - Matched Power Plan. Returning "POWER".');
