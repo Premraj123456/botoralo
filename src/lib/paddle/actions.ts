@@ -11,41 +11,24 @@ export async function handlePaddleWebhook(event: any) {
     console.log('[handlePaddleWebhook] - Full event data:', JSON.stringify(event.data, null, 2));
   }
 
-
-  switch (event.event_type) {
-    case 'subscription.activated':
-    case 'subscription.updated': {
-        const eventType = event.event_type;
-        console.log(`[handlePaddleWebhook] - Processing ${eventType}.`);
-
-        const customerId = event.data.customer_id;
-        const customerEmail = event.data.customer?.email; 
-
-        if (!customerEmail) {
-            console.error(`[handlePaddleWebhook] - CRITICAL: No email found for customer ${customerId} in ${eventType}. Cannot update user.`);
-            return;
-        }
-        
-        // The only thing we need to do is ensure the customer_id is stored.
-        const updatePayload = { 
-            email: customerEmail,
-            paddle_customer_id: customerId,
-        };
-        console.log(`[handlePaddleWebhook] - Calling updateUserPlan for ${eventType} to store customer ID with payload:`, updatePayload);
-
-        await updateUserPlan(updatePayload);
-        console.log(`[handlePaddleWebhook] - Successfully processed ${eventType} for email ${customerEmail}.`);
-        break;
-    }
-
-    case 'subscription.canceled': {
-        // We fetch live data, so no action is needed here.
-        console.log(`[handlePaddleWebhook] - Processed subscription.canceled. No database action needed.`);
-        break;
-    }
+  // Only handle subscription creation/activation to store the customer ID
+  if (event.event_type === 'subscription.activated' || event.event_type === 'subscription.created') {
+    const customerId = event.data.customer_id;
+    // We need to get the email associated with this customer
+    const customer = await paddle.customers.get(customerId);
     
-    default:
-        console.log(`[handlePaddleWebhook] - Unhandled Paddle event type: ${event.event_type}`);
+    if (!customer || !customer.email) {
+      console.error(`[handlePaddleWebhook] - CRITICAL: No email found for customer ${customerId}. Cannot link subscription.`);
+      return;
+    }
+
+    console.log(`[handlePaddleWebhook] - Storing customer ID for email: ${customer.email}`);
+    await updateUserPlan({
+      email: customer.email,
+      paddle_customer_id: customerId,
+    });
+  } else {
+    console.log(`[handlePaddleWebhook] - Ignoring event type: ${event.event_type} as it does not require DB action.`);
   }
 }
 

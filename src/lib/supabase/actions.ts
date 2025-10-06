@@ -7,6 +7,7 @@ import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
 import { paddle } from '@/lib/paddle/client';
+import type { Subscription } from '@paddle/paddle-node-sdk/dist/types/entities';
 
 const planLimits = {
   Free: 1,
@@ -54,30 +55,43 @@ export async function getUserSubscription(userId: string) {
     const customerId = customer.id;
     console.log(`[getUserSubscription] - Found Paddle customer ID: ${customerId}`);
 
-    // 2. Find active subscription for that customer
+    // 2. Find active subscriptions for that customer
     console.log(`[getUserSubscription] - Searching for active subscriptions for customer ID: ${customerId}`);
     const subscriptions = paddle.subscriptions.list({
       customerId: [customerId],
       status: ['active'],
     });
 
+    const activeSubscriptions: Subscription[] = [];
     for await (const subscription of subscriptions) {
-        console.log(`[getUserSubscription] - Checking subscription: ${subscription.id}`);
-        const planItem = subscription.items.find((item) => item.price?.type === 'recurring');
-        if (planItem?.price?.id) {
-             console.log(`[getUserSubscription] - Found plan item with price ID: ${planItem.price.id}`);
-             if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID) {
-                console.log('[getUserSubscription] - Matched Pro Plan. Returning "Pro".');
-                return { plan: 'Pro', paddle_customer_id: customerId };
-            }
-            if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID) {
-                console.log('[getUserSubscription] - Matched Power Plan. Returning "Power".');
-                return { plan: 'Power', paddle_customer_id: customerId };
-            }
+      activeSubscriptions.push(subscription);
+    }
+    
+    if (activeSubscriptions.length === 0) {
+        console.log('[getUserSubscription] - No active subscriptions found. Defaulting to Free plan.');
+        return { plan: 'Free', paddle_customer_id: customerId };
+    }
+
+    // Sort by creation date to find the latest one, as you suggested.
+    activeSubscriptions.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+
+    const latestSubscription = activeSubscriptions[0];
+    console.log(`[getUserSubscription] - Found ${activeSubscriptions.length} active subscriptions. Selecting the latest one: ${latestSubscription.id}`);
+
+    const planItem = latestSubscription.items.find((item) => item.price?.type === 'recurring');
+    if (planItem?.price?.id) {
+        console.log(`[getUserSubscription] - Found plan item with price ID: ${planItem.price.id}`);
+        if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_PRO_PLAN_ID) {
+            console.log('[getUserSubscription] - Matched Pro Plan. Returning "Pro".');
+            return { plan: 'Pro', paddle_customer_id: customerId };
+        }
+        if (planItem.price.id === process.env.NEXT_PUBLIC_PADDLE_POWER_PLAN_ID) {
+            console.log('[getUserSubscription] - Matched Power Plan. Returning "Power".');
+            return { plan: 'Power', paddle_customer_id: customerId };
         }
     }
     
-    console.log('[getUserSubscription] - No active Pro or Power subscription found. Defaulting to Free plan.');
+    console.log('[getUserSubscription] - No active Pro or Power subscription found among items. Defaulting to Free plan.');
     return { plan: 'Free', paddle_customer_id: customerId };
 
   } catch (error) {
