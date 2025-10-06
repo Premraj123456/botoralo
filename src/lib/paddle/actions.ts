@@ -15,7 +15,7 @@ export async function handlePaddleWebhook(event: any) {
   console.log(`[handlePaddleWebhook] - Ignoring event type: ${event.event_type} as no DB action is required.`);
 }
 
-export async function manageSubscription(customerId: string) {
+export async function manageSubscription({ customerId }: { customerId: string }) {
     if (!customerId) {
         throw new Error("No customer ID provided.");
     }
@@ -27,7 +27,7 @@ export async function manageSubscription(customerId: string) {
             environment: process.env.NODE_ENV === 'development' ? 'sandbox' : 'production',
         });
 
-        const customerPortal = await paddleClient.customerPortalSessions.create({ customerId: customerId });
+        const customerPortal = await paddleClient.customerPortalSessions.create({ customerId });
         return { url: customerPortal.url };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
