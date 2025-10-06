@@ -1,7 +1,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import { paddle, handlePaddleWebhook } from '@/lib/paddle/actions';
+import { handlePaddleWebhook } from '@/lib/paddle/actions';
+import { paddle } from '@/lib/paddle/client';
 
 export async function POST(req: NextRequest) {
   const reqBody = await req.text();

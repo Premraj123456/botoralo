@@ -1,13 +1,8 @@
 
 'use server';
 
-import { Paddle } from 'paddle';
 import { updateUserPlan } from "../supabase/actions";
-
-// Initialize Paddle with the correct environment setting
-export const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
-    environment: process.env.PADDLE_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production',
-});
+import { paddle } from "./client";
 
 export async function handlePaddleWebhook(event: any) {
   console.log(`[handlePaddleWebhook] - Received Paddle webhook event: ${event.event_type}`);

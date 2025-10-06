@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
-import { paddle } from '@/lib/paddle/actions';
+import { paddle } from '@/lib/paddle/client';
 
 const planLimits = {
   Free: 1,
