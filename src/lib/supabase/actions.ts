@@ -25,7 +25,7 @@ export type Bot = {
 };
 
 // This is the new subscription fetching logic.
-export async function getUserSubscription() {
+export async function getUserSubscription(userId?: string) {
   const supabase = createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
