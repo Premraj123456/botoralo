@@ -1,3 +1,4 @@
+
 'use server';
 
 import { paddle } from "./client";
@@ -27,7 +28,8 @@ export async function manageSubscription({ customerId }: { customerId: string })
             environment: process.env.NODE_ENV === 'development' ? 'sandbox' : 'production',
         });
 
-        const customerPortal = await paddleClient.customerPortalSessions.create({ customerId });
+        // The customerId should be passed directly as an argument, not in an object.
+        const customerPortal = await paddleClient.customerPortalSessions.create(customerId);
         return { url: customerPortal.url };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
