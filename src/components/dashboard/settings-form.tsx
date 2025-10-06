@@ -12,13 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { Loader2, Save } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format } from "date-fns";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters.").max(50, "Name cannot be longer than 50 characters."),
   email: z.string().email(),
-  id: z.string(),
-  updated_at: z.string(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -40,8 +37,6 @@ export function SettingsForm() {
     defaultValues: {
       name: "",
       email: "",
-      id: "",
-      updated_at: ""
     },
   });
 
@@ -54,8 +49,6 @@ export function SettingsForm() {
         form.reset({
           name: userProfile.full_name || "",
           email: userProfile.email || "",
-          id: userProfile.id || "",
-          updated_at: userProfile.updated_at ? format(new Date(userProfile.updated_at), "PPP p") : "N/A",
         });
       }
       setIsLoading(false);
@@ -84,9 +77,9 @@ export function SettingsForm() {
       <div className="space-y-6">
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-24 ml-auto" />
+        <div className="flex justify-end">
+          <Skeleton className="h-10 w-24" />
+        </div>
       </div>
     );
   }
@@ -119,35 +112,6 @@ export function SettingsForm() {
               <FormDescription>
                 Your email is used for authentication and cannot be changed.
               </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-         <FormField
-          control={form.control}
-          name="id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>User ID</FormLabel>
-              <FormControl>
-                <Input {...field} disabled />
-              </FormControl>
-              <FormDescription>
-                This is your unique user identifier.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="updated_at"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Last Updated</FormLabel>
-              <FormControl>
-                <Input {...field} disabled />
-              </FormControl>
               <FormMessage />
             </FormItem>
           )}

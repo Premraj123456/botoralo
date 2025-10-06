@@ -163,7 +163,18 @@ export async function getUserProfile() {
 
   if (error) {
     console.error("Error fetching profile:", error.message);
-    return null;
+    // If profile doesn't exist, we can still return basic info
+    return {
+      id: user.id,
+      email: user.email ?? null,
+      full_name: null,
+      updated_at: null,
+    };
+  }
+
+  // Ensure the email is always fresh from the auth user
+  if (data) {
+    data.email = user.email ?? data.email;
   }
 
   return data;
@@ -176,7 +187,7 @@ export async function updateUserProfile(data: { name: string }) {
   const supabase = createSupabaseServerClient();
   const { error } = await supabase
     .from('profiles')
-    .update({ full_name: data.name })
+    .update({ full_name: data.name, updated_at: new Date().toISOString() })
     .eq('id', user.id);
 
   if (error) {
