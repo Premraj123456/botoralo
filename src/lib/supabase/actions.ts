@@ -32,7 +32,7 @@ export async function getUserSubscription() {
 
   if (!user || !user.email) {
     console.log('[getUserSubscription] - No authenticated user or email found. Defaulting to Free plan.');
-    return { plan: 'Free', paddle_customer_id: null };
+    return { plan: 'Free' };
   }
 
   const userEmail = user.email;
@@ -51,7 +51,7 @@ export async function getUserSubscription() {
 
     if (!customer) {
       console.log('[getUserSubscription] - No Paddle customer found for this email. Defaulting to Free plan.');
-      return { plan: 'Free', paddle_customer_id: null };
+      return { plan: 'Free' };
     }
 
     const customerId = customer.id;
@@ -71,7 +71,7 @@ export async function getUserSubscription() {
     
     if (activeSubscriptions.length === 0) {
         console.log('[getUserSubscription] - No active subscriptions found. Defaulting to Free plan.');
-        return { plan: 'Free', paddle_customer_id: customerId };
+        return { plan: 'Free' };
     }
 
     activeSubscriptions.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
@@ -85,31 +85,38 @@ export async function getUserSubscription() {
     
     if (!latestSubscription) {
         console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
-        return { plan: 'Free', paddle_customer_id: customerId };
+        return { plan: 'Free' };
     }
 
-    const planItem = latestSubscription.items.find((item) => item.price?.type === 'recurring');
-    if (planItem?.product?.name) {
-        const productName = (planItem.product.name || '').toLowerCase();
-        console.log(`[getUserSubscription] - Inspected plan item. Product Name: "${productName}"`);
+    // DEBUG: Log the entire subscription object
+    console.log('[getUserSubscription] - Full subscription object:', JSON.stringify(latestSubscription, null, 2));
 
 
-        if (productName.includes('power')) {
-            console.log('[getUserSubscription] - Matched Power Plan. Returning "POWER".');
-            return { plan: 'POWER', paddle_customer_id: customerId };
-        }
-        if (productName.includes('pro')) {
-            console.log('[getUserSubscription] - Matched Pro Plan. Returning "PRO".');
-            return { plan: 'PRO', paddle_customer_id: customerId };
+    for (const planItem of latestSubscription.items) {
+        // DEBUG: Log each item in the subscription
+        console.log('[getUserSubscription] - Inspecting plan item:', JSON.stringify(planItem, null, 2));
+
+        if (planItem.product?.name) {
+            const productName = (planItem.product.name || '').toLowerCase();
+            console.log(`[getUserSubscription] - Found Product Name: "${productName}"`);
+
+            if (productName.includes('power')) {
+                console.log('[getUserSubscription] - Matched Power Plan. Returning "POWER".');
+                return { plan: 'POWER' };
+            }
+            if (productName.includes('pro')) {
+                console.log('[getUserSubscription] - Matched Pro Plan. Returning "PRO".');
+                return { plan: 'PRO' };
+            }
         }
     }
     
     console.log('[getUserSubscription] - No active Pro or Power subscription found among items. Defaulting to Free plan.');
-    return { plan: 'Free', paddle_customer_id: customerId };
+    return { plan: 'Free' };
 
   } catch (error) {
     console.error("[getUserSubscription] - Error fetching subscription from Paddle:", error);
-    return { plan: 'Free', paddle_customer_id: null };
+    return { plan: 'Free' };
   }
 }
 
