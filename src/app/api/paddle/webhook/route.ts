@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { handlePaddleWebhook } from '@/lib/paddle/actions';

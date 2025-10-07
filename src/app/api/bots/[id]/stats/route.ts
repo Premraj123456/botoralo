@@ -1,4 +1,3 @@
-
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getBotById } from '@/lib/supabase/actions';
@@ -53,5 +52,3 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
-
-    

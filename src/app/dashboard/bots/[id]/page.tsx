@@ -1,4 +1,3 @@
-
 import { notFound } from "next/navigation";
 import { getBotById } from "@/lib/supabase/actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

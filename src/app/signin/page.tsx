@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Bot, Terminal } from 'lucide-react';
