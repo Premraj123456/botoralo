@@ -135,5 +135,3 @@ export default function NewBotPage() {
     </div>
   );
 }
-
-    

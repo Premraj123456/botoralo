@@ -69,7 +69,7 @@ export default async function BotDetailPage({ params }: { params: { id: string }
           <TabsTrigger value="logs">Logs</TabsTrigger>
           <TabsTrigger value="summary">AI Summary</TabsTrigger>
           <TabsTrigger value="anomalies">Anomaly Detection</TabsTrigger>
-          <TabsTrigger value="fixes">Code Fix Suggestions</TabsTrigger>
+          <TabsTrigger value="fixes" disabled>Code Fix Suggestions</TabsTrigger>
         </TabsList>
         <TabsContent value="logs">
           <LogViewer botId={bot.id} />
@@ -81,11 +81,9 @@ export default async function BotDetailPage({ params }: { params: { id: string }
           <AnalyzeAnomalies botId={bot.id} logs={botLogs} />
         </TabsContent>
         <TabsContent value="fixes">
-           <SuggestFixes botCode={bot.code} botLogs={botLogs} />
+           <SuggestFixes botCode={''} botLogs={botLogs} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
-
-    

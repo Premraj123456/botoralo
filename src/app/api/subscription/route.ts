@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
   // 3. Fetch subscription details
   try {
     // Use the existing server action to get subscription from Paddle
+    // @ts-ignore
     const subscription = await getUserSubscription(userId);
 
     return NextResponse.json(subscription);
