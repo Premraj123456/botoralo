@@ -24,8 +24,10 @@ if not MASTER_KEY:
 TEST_USER_ID = "test-user-123"
 TEST_BOT_ID = str(uuid.uuid4())
 TEST_BOT_NAME = "MyTestBot"
+TEST_BOT_FILENAME = "bot_to_test.py"
 HEADERS = {
     'Authorization': f'Bearer {MASTER_KEY}',
+    'Accept': 'application/json',
 }
 
 # --- Helper Functions ---
@@ -46,24 +48,9 @@ def print_response(response):
 # --- Main Test Execution ---
 def run_test():
     """Executes the full lifecycle test for a single bot."""
-
-    # Create a dummy bot file to upload
-    bot_code_content = """
-import time
-import sys
-
-print("Hello from the test bot!")
-sys.stdout.flush()
-for i in range(10):
-    print(f"Bot heartbeat {i+1}/10...")
-    sys.stdout.flush()
-    time.sleep(2)
-print("Test bot finished its run.")
-sys.stdout.flush()
-"""
     
     # 1. DEPLOY THE BOT
-    print_step("Deploying Bot")
+    print_step(f"Deploying Bot ({TEST_BOT_FILENAME})")
     try:
         meta_data = {
             "userId": TEST_USER_ID,
@@ -71,18 +58,24 @@ sys.stdout.flush()
             "name": TEST_BOT_NAME,
             "auto_start": True # Deploy and start immediately
         }
-        files = {
-            'meta': (None, json.dumps(meta_data), 'application/json'),
-            'code': ('bot.py', bot_code_content, 'text/plain')
-        }
         
-        response = requests.post(f"{BACKEND_URL}/deploy", headers=HEADERS, files=files, timeout=30)
+        with open(TEST_BOT_FILENAME, 'rb') as f:
+            files = {
+                'meta': (None, json.dumps(meta_data), 'application/json'),
+                'code': (TEST_BOT_FILENAME, f, 'text/plain')
+            }
+            
+            response = requests.post(f"{BACKEND_URL}/deploy", headers=HEADERS, files=files, timeout=30)
+        
         print_response(response)
         response.raise_for_status()
         print("Waiting for bot to start and install dependencies (if any)...")
         time.sleep(15) # Give time for container to start, install, and restart
     except requests.exceptions.RequestException as e:
         print(f"ERROR: Could not deploy bot. {e}")
+        return
+    except FileNotFoundError:
+        print(f"ERROR: The test bot file '{TEST_BOT_FILENAME}' was not found. Make sure it's in the same directory.")
         return
 
     # 2. GET BOT INFO
@@ -110,15 +103,16 @@ sys.stdout.flush()
         with requests.post(f"{BACKEND_URL}/logs", headers=HEADERS, json=payload, stream=True, timeout=10) as r:
             start_time = time.time()
             for chunk in r.iter_content(chunk_size=None, decode_unicode=True):
-                print(chunk.strip())
+                if chunk: # Filter out keep-alive chunks
+                    print(chunk.strip())
                 if time.time() - start_time > 5:
                     break
     except requests.exceptions.RequestException as e:
         print(f"ERROR: Could not stream logs. {e}")
 
     # Let the bot run for a bit longer
-    print("\nLetting bot run for another 10 seconds...")
-    time.sleep(10)
+    print("\nLetting bot run for another 5 seconds...")
+    time.sleep(5)
     
     # 5. STOP THE BOT
     print_step("Stopping Bot")
@@ -174,14 +168,12 @@ sys.stdout.flush()
         payload = {"userId": TEST_USER_ID, "botoraloBotId": TEST_BOT_ID}
         response = requests.post(f"{BACKEND_URL}/info", headers=HEADERS, json=payload, timeout=10)
         print_response(response)
-        print("\nTest finished. The final status should be 'stopped' or a 404-like error.")
+        print("\nTest finished. The final info call should show status 'stopped' or result in a 404-like error if completely deleted.")
     except requests.exceptions.RequestException as e:
-        print(f"ERROR: Could not get bot info. {e}")
+        print(f"ERROR: Could not get bot info post-deletion. This is expected. {e}")
 
 
 if __name__ == '__main__':
     print("Starting Botoralo Backend API Test...")
     print(f"Targeting backend: {BACKEND_URL}")
     run_test()
-
-    
