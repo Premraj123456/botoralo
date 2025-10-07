@@ -24,6 +24,7 @@ import zipfile
 import subprocess
 import requests
 import threading
+import traceback
 from functools import wraps
 from flask import Flask, request, jsonify, Response, stream_with_context
 import docker
@@ -120,49 +121,133 @@ def get_container(botoralo_bot_id):
     except docker.errors.NotFound:
         return None
 
-def save_bot_code(bot_code_dir, code_file):
-    """Saves uploaded code file or extracts zip archive."""
-    file_extension = os.path.splitext(code_file.filename)[1].lower()
+def save_bot_code(bot_code_dir, files):
+    """Saves uploaded code, accepting a single file, a directory structure, or a zip file."""
+    app.logger.info(f"Saving bot code to {bot_code_dir}")
     
-    if file_extension == '.zip':
+    # Check for zip file first
+    zip_file = files.get('code_zip')
+    if zip_file and zip_file.filename:
+        if not zip_file.filename.endswith('.zip'):
+             raise ValueError("The uploaded archive must be a .zip file.")
         zip_path = os.path.join(bot_code_dir, 'source.zip')
-        code_file.save(zip_path)
+        zip_file.save(zip_path)
         with zipfile.ZipFile(zip_path, 'r') as zip_ref:
             zip_ref.extractall(bot_code_dir)
         os.remove(zip_path)
+        app.logger.info(f"Extracted zip archive to {bot_code_dir}")
+        return
+
+    # Handle single file or directory upload
+    uploaded_files = files.getlist('code')
+    if not uploaded_files or not uploaded_files[0].filename:
+        raise ValueError("No code files were provided in the upload.")
+
+    if len(uploaded_files) == 1 and not uploaded_files[0].filename.endswith('.zip'):
+        # Single file upload
+        file = uploaded_files[0]
+        file.save(os.path.join(bot_code_dir, file.filename))
+        app.logger.info(f"Saved single file: {file.filename}")
     else:
-        # It's a single file, save it directly.
-        code_file.save(os.path.join(bot_code_dir, code_file.filename))
+        # Directory upload (multiple files)
+        for file in uploaded_files:
+            # The 'filename' in a directory upload includes the relative path
+            save_path = os.path.join(bot_code_dir, file.filename)
+            # Ensure parent directories exist
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            file.save(save_path)
+        app.logger.info(f"Saved {len(uploaded_files)} files from directory upload.")
+
+
+def detect_runtime_and_entrypoint(bot_code_dir):
+    """
+    Detects the runtime (node/python) and the command to run the bot.
+    Priority:
+    1. Node.js: package.json with 'start' script
+    2. Node.js: package.json with 'main' field
+    3. Python: main.py
+    4. Python: bot.py
+    5. Fallback to first .py file found.
+    """
+    app.logger.info(f"Detecting runtime and entrypoint in {bot_code_dir}")
+    
+    # Check for Node.js
+    package_json_path = os.path.join(bot_code_dir, 'package.json')
+    if os.path.exists(package_json_path):
+        app.logger.info("Found package.json, assuming Node.js runtime.")
+        with open(package_json_path) as f:
+            pkg = json.load(f)
+            if pkg.get('scripts', {}).get('start'):
+                app.logger.info("Found 'start' script in package.json.")
+                # 'npm start' is run by the image's default CMD, so just return the runtime
+                return ['npm', 'start']
+            if pkg.get('main'):
+                entrypoint = pkg['main']
+                app.logger.info(f"Found 'main' field in package.json: {entrypoint}")
+                return ['node', entrypoint]
+
+    # Check for Python
+    py_files = [f for f in os.listdir(bot_code_dir) if f.endswith('.py')]
+    if 'main.py' in py_files:
+        app.logger.info("Found main.py, assuming Python runtime.")
+        return ['python', '-u', 'main.py']
+    if 'bot.py' in py_files:
+        app.logger.info("Found bot.py, assuming Python runtime.")
+        return ['python', '-u', 'bot.py']
+    if py_files:
+        entrypoint = py_files[0]
+        app.logger.warning(f"No explicit entrypoint found, falling back to first Python file: {entrypoint}")
+        return ['python', '-u', entrypoint]
+
+    raise RuntimeError("Could not determine the main script to run. Please use a standard entrypoint like main.py, bot.py, or a package.json with a 'start' or 'main' field.")
+
 
 def install_dependencies(container):
     """Installs dependencies from requirements.txt or package.json inside the container."""
-    bot_code_dir = get_bot_code_dir(container.name.replace("botoralo-bot-", ""))
-    
-    if os.path.exists(os.path.join(bot_code_dir, 'requirements.txt')):
-        print(f"Found requirements.txt, installing Python dependencies for {container.name}...")
+    botoralo_bot_id = container.name.replace("botoralo-bot-", "")
+    bot_code_dir = get_bot_code_dir(botoralo_bot_id)
+    app.logger.info(f"Checking for dependencies for bot {botoralo_bot_id}")
+
+    requirements_path = os.path.join(bot_code_dir, 'requirements.txt')
+    if os.path.exists(requirements_path):
+        app.logger.info(f"Found requirements.txt, installing Python dependencies for {container.name}...")
         exit_code, output = container.exec_run('pip install --no-cache-dir -r /bot/requirements.txt')
         if exit_code != 0:
-             raise RuntimeError(f"Failed to install Python dependencies: {output.decode(errors='ignore')}")
-        print(f"Python dependencies installed for {container.name}.")
+             logs = output.decode(errors='ignore')
+             app.logger.error(f"Failed to install Python dependencies for {container.name}: {logs}")
+             raise RuntimeError(f"Failed to install Python dependencies: {logs}")
+        app.logger.info(f"Python dependencies installed for {container.name}.")
 
-    if os.path.exists(os.path.join(bot_code_dir, 'package.json')):
-        print(f"Found package.json, installing Node.js dependencies for {container.name}...")
-        exit_code, output = container.exec_run('npm install')
+    package_json_path = os.path.join(bot_code_dir, 'package.json')
+    if os.path.exists(package_json_path):
+        app.logger.info(f"Found package.json, installing Node.js dependencies for {container.name}...")
+        # Use 'npm ci' for faster, more reliable installs if package-lock.json exists
+        lock_file_exists = os.path.exists(os.path.join(bot_code_dir, 'package-lock.json'))
+        install_command = 'npm ci' if lock_file_exists else 'npm install'
+        
+        exit_code, output = container.exec_run(install_command)
         if exit_code != 0:
-            raise RuntimeError(f"Failed to install Node.js dependencies: {output.decode(errors='ignore')}")
-        print(f"Node.js dependencies installed for {container.name}.")
+            logs = output.decode(errors='ignore')
+            app.logger.error(f"Failed to install Node.js dependencies for {container.name}: {logs}")
+            raise RuntimeError(f"Failed to install Node.js dependencies: {logs}")
+        app.logger.info(f"Node.js dependencies installed for {container.name}.")
 
 
 def _start_bot_process(botoralo_bot_id):
     """Internal function to handle the full start process."""
+    app.logger.info(f"Starting bot process for {botoralo_bot_id}")
     container = get_container(botoralo_bot_id)
     if not container:
+        app.logger.error(f"Container not found for bot {botoralo_bot_id} during start process.")
         raise RuntimeError(f"Container not found for bot {botoralo_bot_id}")
 
     try:
+        app.logger.info(f"Starting container {container.name}")
         container.start()
         install_dependencies(container)
-        container.restart(timeout=5)
+        # Restart is crucial to apply any newly installed dependencies that might be needed at boot
+        app.logger.info(f"Restarting container {container.name} to apply dependencies.")
+        container.restart(timeout=10)
         app.logger.info(f"Successfully started and restarted bot container {botoralo_bot_id}")
     except Exception as e:
         app.logger.error(f"Error during async start for {botoralo_bot_id}: {str(e)}")
@@ -179,61 +264,43 @@ def _start_bot_process(botoralo_bot_id):
 @parse_json_body(required_fields=['userId', 'botoraloBotId', 'name'])
 def deploy_bot():
     """
-    Saves bot code, creates a container, and optionally starts it.
+    Saves bot code (from file, dir, or zip), creates a container, and optionally starts it.
     - meta: JSON string with userId, botoraloBotId, name, auto_start (boolean).
-    - code: The user's code file (e.g., .py, .js, or .zip).
+    - code: The user's code file(s) (e.g., bot.py).
+    - code_zip: The user's zipped project.
     """
     data = request.data_json
     botoralo_bot_id = data['botoraloBotId']
     memory_mb = int(data.get('memory_mb', 128))
     auto_start = data.get('auto_start', False)
-
-    if 'code' not in request.files:
-        return jsonify({'error': "Missing 'code' file in form data"}), 400
+    debug_mode = data.get('debug', False)
     
-    code_file = request.files['code']
+    app.logger.info(f"--- Deployment started for bot {botoralo_bot_id} ---")
+
     bot_code_dir = get_bot_code_dir(botoralo_bot_id)
 
+    # Clean up previous deployment
     if os.path.exists(bot_code_dir):
         shutil.rmtree(bot_code_dir)
     os.makedirs(bot_code_dir, exist_ok=True)
     
     try:
-        save_bot_code(bot_code_dir, code_file)
+        # 1. Save code from upload
+        save_bot_code(bot_code_dir, request.files)
         
-        main_script_name = code_file.filename
-        main_script_cmd = None
-
-        if main_script_name.endswith('.zip'):
-             if os.path.exists(os.path.join(bot_code_dir, 'package.json')):
-                with open(os.path.join(bot_code_dir, 'package.json')) as f:
-                    pkg = json.load(f)
-                    if pkg.get('scripts', {}).get('start'):
-                        main_script_cmd = ['npm', 'start']
-                    elif pkg.get('main'):
-                        main_script_cmd = ['node', pkg['main']]
-             if not main_script_cmd:
-                py_scripts = [f for f in os.listdir(bot_code_dir) if f.endswith('.py')]
-                if 'main.py' in py_scripts:
-                    main_script_cmd = ['python', '-u', 'main.py']
-                elif 'bot.py' in py_scripts:
-                    main_script_cmd = ['python', '-u', 'bot.py']
-                elif py_scripts:
-                    main_script_cmd = ['python', '-u', py_scripts[0]]
-        else: # Single file upload
-             if main_script_name.endswith(('.js', '.ts')):
-                 main_script_cmd = ['node', main_script_name]
-             elif main_script_name.endswith('.py'):
-                 main_script_cmd = ['python', '-u', main_script_name]
+        # 2. Determine runtime and entrypoint command
+        main_script_cmd = detect_runtime_and_entrypoint(bot_code_dir)
+        app.logger.info(f"Determined run command for {botoralo_bot_id}: {' '.join(main_script_cmd)}")
         
-        if not main_script_cmd:
-            raise RuntimeError("Could not determine the main script to run.")
-        
+        # 3. Remove any existing container
         container_name = get_container_name(botoralo_bot_id)
         existing_container = get_container(botoralo_bot_id)
         if existing_container:
+            app.logger.warning(f"Removing existing container for bot {botoralo_bot_id}")
             existing_container.remove(force=True)
 
+        # 4. Create the new container
+        app.logger.info(f"Creating Docker container '{container_name}' with image '{BOT_IMAGE}'")
         container = docker_client.containers.create(
             BOT_IMAGE,
             command=main_script_cmd,
@@ -245,19 +312,28 @@ def deploy_bot():
             working_dir='/bot',
             read_only=False, 
             tty=False,
-            user='1000:1000'
+            user='1000:1000' # Run as non-root user
         )
+        app.logger.info(f"Container {container.id} created successfully.")
         
+        # 5. Start the bot if requested
         if auto_start:
+            app.logger.info(f"Auto-start is enabled. Starting bot {botoralo_bot_id} in a background thread.")
             thread = threading.Thread(target=_start_bot_process, args=(botoralo_bot_id,))
             thread.daemon = True
             thread.start()
 
     except Exception as e:
+        # Clean up failed deployment
         shutil.rmtree(bot_code_dir, ignore_errors=True)
         app.logger.error(f"Error deploying bot {botoralo_bot_id}: {str(e)}")
+        if debug_mode:
+            trace = traceback.format_exc()
+            app.logger.error(trace)
+            return jsonify({'error': 'Failed to deploy bot', 'details': str(e), 'trace': trace}), 500
         return jsonify({'error': 'Failed to deploy bot', 'details': str(e)}), 500
 
+    app.logger.info(f"--- Deployment finished for bot {botoralo_bot_id} ---")
     return jsonify({
         'status': 'starting' if auto_start else 'deployed',
         'botoraloBotId': botoralo_bot_id,
@@ -274,12 +350,15 @@ def start_bot():
     """
     data = request.data_json
     botoralo_bot_id = data['botoraloBotId']
+    app.logger.info(f"Received request to start bot {botoralo_bot_id}")
     container = get_container(botoralo_bot_id)
     
     if not container:
+        app.logger.error(f"Cannot start bot {botoralo_bot_id}: container not found.")
         return jsonify({'error': 'Bot is not deployed. Please deploy it first.'}), 404
     
     if container.status == 'running':
+        app.logger.warning(f"Bot {botoralo_bot_id} is already running.")
         return jsonify({'status': 'already_running'})
 
     thread = threading.Thread(target=_start_bot_process, args=(botoralo_bot_id,))
@@ -295,16 +374,16 @@ def start_bot():
 def stop_bot():
     data = request.data_json
     botoralo_bot_id = data['botoraloBotId']
+    app.logger.info(f"Received request to stop bot {botoralo_bot_id}")
     container = get_container(botoralo_bot_id)
     
-    if not container:
-        return jsonify({'status': 'already_stopped'}), 200
-        
-    if container.status != 'running':
+    if not container or container.status != 'running':
+        app.logger.warning(f"Bot {botoralo_bot_id} is already stopped or does not exist.")
         return jsonify({'status': 'already_stopped'}), 200
 
     try:
-        container.stop(timeout=5)
+        container.stop(timeout=10)
+        app.logger.info(f"Successfully stopped container for bot {botoralo_bot_id}")
         return jsonify({'status': 'stopped'})
     except Exception as e:
         app.logger.error(f"Failed to stop container for bot {botoralo_bot_id}: {str(e)}")
@@ -317,17 +396,19 @@ def stop_bot():
 def delete_bot():
     data = request.data_json
     botoralo_bot_id = data['botoraloBotId']
+    app.logger.info(f"Received request to delete bot {botoralo_bot_id}")
     container = get_container(botoralo_bot_id)
 
     if container:
         try:
+            app.logger.info(f"Removing container for bot {botoralo_bot_id}")
             container.remove(force=True)
         except Exception as e:
-            app.logger.warning(f"Could not remove container for bot {botoralo_bot_id}: {str(e)}")
-
+            app.logger.warning(f"Could not remove container for bot {botoralo_bot_id} (may have already been removed): {str(e)}")
 
     bot_code_dir = get_bot_code_dir(botoralo_bot_id)
     if os.path.exists(bot_code_dir):
+        app.logger.info(f"Deleting code directory {bot_code_dir}")
         shutil.rmtree(bot_code_dir, ignore_errors=True)
 
     return jsonify({'status': 'deleted'})
@@ -432,7 +513,6 @@ if __name__ == '__main__':
     print(f"Starting Flask worker on {FLASK_HOST}:{FLASK_PORT}")
     print(f"Storing bot code under: {BOTS_DIR}")
     print("WARNING: This is a development server. Do not use in a production environment.")
-    app.run(host=FLASK_HOST, port=FLASK_PORT, debug=True)
-
+    app.run(host=FLAST_HOST, port=FLASK_PORT, debug=True)
 
     

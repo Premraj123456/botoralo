@@ -18,8 +18,8 @@ const botFormSchema = z.object({
   name: z.string().min(3, "Bot name must be at least 3 characters."),
   codeFile: z
     .custom<FileList>()
-    .refine((files) => files?.length > 0, "A code file is required.")
-    .refine((files) => files?.[0]?.size <= 5 * 1024 * 1024, `Max file size is 5MB.`),
+    .refine((files) => files?.length > 0, "A code file or .zip archive is required.")
+    .refine((files) => files?.[0]?.size <= 10 * 1024 * 1024, `Max file size is 10MB.`),
 });
 
 type BotFormValues = z.infer<typeof botFormSchema>;
@@ -38,9 +38,12 @@ export default function NewBotPage() {
   const onSubmit = async (values: BotFormValues) => {
     try {
       const file = values.codeFile[0];
-      const code = await file.text();
+      // The `createBot` action now handles the FormData creation
+      const formData = new FormData();
+      formData.append("name", values.name);
+      formData.append("codeFile", file);
 
-      const newBot: { id: string } | null = await createBot({ name: values.name, code });
+      const newBot: { id: string } | null = await createBot(formData);
       if (newBot) {
         toast({ title: "Success", description: "Your bot has been deployed." });
         router.push(`/dashboard/bots/${newBot.id}`);
@@ -67,7 +70,7 @@ export default function NewBotPage() {
             Create a New Bot
           </CardTitle>
           <CardDescription>
-            Upload your bot's code file (e.g., `bot.py` or `index.js`) to deploy it in seconds.
+            Upload your bot's code file (e.g., `bot.py`, `index.js`) or a `.zip` archive to deploy it.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -75,9 +78,13 @@ export default function NewBotPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <Alert>
                 <Info className="h-4 w-4" />
-                <AlertTitle>Important Logging Note</AlertTitle>
+                <AlertTitle>Important Notes</AlertTitle>
                 <AlertDescription>
-                  For real-time logs, ensure your Python scripts flush their output (e.g., using `sys.stdout.flush()` after a print statement).
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>For Python, flush output for real-time logs (e.g., `sys.stdout.flush()`).</li>
+                    <li>For projects, include `requirements.txt` (Python) or `package.json` (Node.js).</li>
+                    <li>The entrypoint will be auto-detected (e.g. `main.py`, `bot.py`, `npm start`).</li>
+                  </ul>
                 </AlertDescription>
               </Alert>
               <FormField
@@ -87,7 +94,7 @@ export default function NewBotPage() {
                   <FormItem>
                     <FormLabel>Bot Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., My Discord Bot" {...field} />
+                      <Input placeholder="e.g., My Awesome Bot" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -98,11 +105,11 @@ export default function NewBotPage() {
                 name="codeFile"
                 render={({ field: { onChange, value, ...rest } }) => (
                   <FormItem>
-                    <FormLabel>Bot Code File</FormLabel>
+                    <FormLabel>Bot Code (Single File or .zip)</FormLabel>
                     <FormControl>
                       <Input 
                         type="file" 
-                        accept=".py,.js,.ts"
+                        accept=".py,.js,.ts,.zip"
                         onChange={(e) => onChange(e.target.files)} 
                         {...rest} 
                       />
