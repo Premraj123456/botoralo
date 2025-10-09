@@ -26,23 +26,24 @@ const levelColors: { [key in LogEntry['level']]: string } = {
 
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const timestamp = new Date().toLocaleTimeString();
-    
-    line = line.replace(/^data: /m, '').trim();
+    const message = line.trim();
 
-    if (line.toLowerCase().includes('error')) {
-        return { timestamp, level: 'error', message: line };
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('error')) {
+        return { timestamp, level: 'error', message };
     }
-    if (line.toLowerCase().includes('warn')) {
-        return { timestamp, level: 'warn', message: line };
+    if (lowerMessage.includes('warn')) {
+        return { timestamp, level: 'warn', message };
     }
-    if (line.startsWith('[error streaming logs]')) {
-         return { timestamp, level: 'error', message: line };
+    if (message.startsWith('[error streaming logs]')) {
+         return { timestamp, level: 'error', message };
     }
-    if (line.startsWith('[info]')) {
-         return { timestamp, level: 'info', message: line.substring(6) };
+    if (message.startsWith('[info]')) {
+         return { timestamp, level: 'info', message: message.substring(6) };
     }
     
-    return { timestamp, level: 'info', message: line };
+    return { timestamp, level: 'info', message };
 };
 
 
@@ -63,10 +64,13 @@ export function LogViewer({ botId }: LogViewerProps) {
 
       es.onopen = () => {
         setIsConnected(true);
-        setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}]);
+        if (logs.length === 0 || logs[logs.length-1].message !== 'Log stream connected...') {
+          setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}]);
+        }
       };
 
       es.onmessage = (event) => {
+        // The event.data is just the message content, no "data:" prefix
         const newLog = parseLogLine(event.data);
         setLogs((prevLogs) => [...prevLogs, { ...newLog, id: Date.now() + Math.random() }]);
       };
@@ -87,6 +91,7 @@ export function LogViewer({ botId }: LogViewerProps) {
         eventSourceRef.current.close();
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [botId]);
   
    useEffect(() => {
@@ -136,5 +141,3 @@ export function LogViewer({ botId }: LogViewerProps) {
     </Card>
   );
 }
-
-    
