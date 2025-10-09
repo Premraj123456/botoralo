@@ -6,7 +6,7 @@ import type { Bot } from '@/lib/supabase/actions';
 import { getBotById } from '@/lib/supabase/actions';
 
 const BACKEND_URL = process.env.BOT_BACKEND_URL;
-const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
+const MASTER_KEY = process.env.MASTER_BACKEND_KEY;
 
 if (!BACKEND_URL || !MASTER_KEY) {
   console.warn("Bot backend URL or master key is not configured. Bot operations will be simulated.");
