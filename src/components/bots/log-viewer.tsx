@@ -26,7 +26,9 @@ const levelColors: { [key in LogEntry['level']]: string } = {
 
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const timestamp = new Date().toLocaleTimeString();
-    const message = line.trim();
+    // The EventSource `onmessage` handler already gives us the data content.
+    // We just need to format it for display.
+    const message = line;
     const lowerMessage = message.toLowerCase();
 
     if (lowerMessage.startsWith('[error]')) {
@@ -39,7 +41,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
          return { timestamp, level: 'info', message: message.substring(6).trim() };
     }
     
-    // Default case for any log line that doesn't match the above
+    // Default case for any log line that doesn't match the above (like the bot heartbeat).
     return { timestamp, level: 'info', message };
 };
 
