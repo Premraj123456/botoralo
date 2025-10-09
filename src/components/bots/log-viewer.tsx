@@ -27,22 +27,19 @@ const levelColors: { [key in LogEntry['level']]: string } = {
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const timestamp = new Date().toLocaleTimeString();
     const message = line.trim();
-
     const lowerMessage = message.toLowerCase();
 
-    if (lowerMessage.includes('error')) {
-        return { timestamp, level: 'error', message };
+    if (lowerMessage.startsWith('[error]')) {
+        return { timestamp, level: 'error', message: message.substring(7).trim() };
     }
-    if (lowerMessage.includes('warn')) {
-        return { timestamp, level: 'warn', message };
+    if (lowerMessage.startsWith('[warn]')) {
+        return { timestamp, level: 'warn', message: message.substring(6).trim() };
     }
-    if (message.startsWith('[error streaming logs]')) {
-         return { timestamp, level: 'error', message };
-    }
-    if (message.startsWith('[info]')) {
-         return { timestamp, level: 'info', message: message.substring(6) };
+    if (lowerMessage.startsWith('[info]')) {
+         return { timestamp, level: 'info', message: message.substring(6).trim() };
     }
     
+    // Default case for any log line that doesn't match the above
     return { timestamp, level: 'info', message };
 };
 
@@ -64,22 +61,24 @@ export function LogViewer({ botId }: LogViewerProps) {
 
       es.onopen = () => {
         setIsConnected(true);
-        if (logs.length === 0 || logs[logs.length-1].message !== 'Log stream connected...') {
+        // Prevent duplicate "connected" messages on retry
+        if (logs.length === 0 || logs[logs.length-1]?.message !== 'Log stream connected...') {
           setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}]);
         }
       };
 
       es.onmessage = (event) => {
-        // The event.data is just the message content, no "data:" prefix
-        const newLog = parseLogLine(event.data);
-        setLogs((prevLogs) => [...prevLogs, { ...newLog, id: Date.now() + Math.random() }]);
+        if (event.data) {
+            const newLog = parseLogLine(event.data);
+            setLogs((prevLogs) => [...prevLogs, { ...newLog, id: Date.now() + Math.random() }]);
+        }
       };
       
       es.onerror = (err) => {
         setIsConnected(false);
         setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Log stream disconnected. Retrying...'}]);
         es.close();
-        // Optional: Implement a retry mechanism
+        // Implement a retry mechanism
         setTimeout(connect, 5000); // Retry after 5 seconds
       };
     }
