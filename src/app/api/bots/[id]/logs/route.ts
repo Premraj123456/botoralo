@@ -48,25 +48,26 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         'Accept': 'text/event-stream',
       },
       body,
-      // @ts-ignore - duplex is required for streaming request bodies in some environments
+      // @ts-ignore - duplex is required for streaming request bodies
       duplex: 'half', 
     });
 
     if (!backendResponse.ok || !backendResponse.body) {
       const errorText = await backendResponse.text();
+      console.error(`Log stream connection failed: ${errorText}`);
       throw new Error(`Failed to connect to log stream: ${errorText}`);
     }
     
-    // Directly return the response from the backend. This pipes the stream
-    // without any intermediate processing, which is the most reliable way.
-    // The key is adding the correct headers to disable buffering.
+    // Directly pipe the stream from the backend to the client.
+    // The key is to add the correct headers to disable any proxy buffering.
     return new Response(backendResponse.body, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
-        'X-Accel-Buffering': 'no', // For NGINX and other reverse proxies
+        // This header is crucial for disabling buffering in proxies like Vercel's
+        'X-Accel-Buffering': 'no', 
       },
     });
 
