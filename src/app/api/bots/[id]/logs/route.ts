@@ -8,38 +8,6 @@ const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
 export const runtime = "nodejs";
 
-// Helper to transform a stream of text into a stream of SSE events.
-function createSSEStream(responseStream: ReadableStream<Uint8Array>) {
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
-  let buffer = '';
-
-  const transform = new TransformStream({
-    transform(chunk, controller) {
-      buffer += decoder.decode(chunk, { stream: true });
-      const lines = buffer.split('\n\n');
-      
-      // The last item might be a partial message, so we keep it in the buffer
-      buffer = lines.pop() || ''; 
-
-      for (const line of lines) {
-        // The backend sends 'data: ...\n\n', so we just need to forward it.
-        if (line.trim()) {
-           controller.enqueue(encoder.encode(`${line}\n\n`));
-        }
-      }
-    },
-    flush(controller) {
-      // If there's any remaining data in the buffer, send it.
-      if (buffer.trim()) {
-        controller.enqueue(encoder.encode(`${buffer}\n\n`));
-      }
-    }
-  });
-
-  return responseStream.pipeThrough(transform);
-}
-
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   if (!BACKEND_URL || !MASTER_KEY) {
     const stream = new ReadableStream({
@@ -66,11 +34,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return new NextResponse('Bot not found or not authorized', { status: 404 });
   }
 
-  const body = JSON.stringify({
-    userId: user.id,
-    botoraloBotId: botId,
-  });
-
   try {
     const backendResponse = await fetch(`${BACKEND_URL}/logs`, {
       method: 'POST',
@@ -79,7 +42,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
       },
-      body,
+      body: JSON.stringify({
+        userId: user.id,
+        botoraloBotId: botId,
+      }),
       // @ts-ignore - duplex is required for streaming request bodies
       duplex: 'half', 
     });
@@ -90,16 +56,15 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       throw new Error(`Failed to connect to log stream: ${errorText}`);
     }
     
-    // Pipe the raw stream from the backend through our SSE formatter
-    const sseStream = createSSEStream(backendResponse.body);
-
-    return new Response(sseStream, {
+    // Directly pipe the stream from the backend to the client.
+    // This is the most robust way to proxy SSE.
+    return new Response(backendResponse.body, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
-        'X-Accel-Buffering': 'no', 
+        'X-Accel-Buffering': 'no', // Critical for Vercel/Nginx to not buffer the response
       },
     });
 

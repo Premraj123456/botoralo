@@ -73,17 +73,27 @@ export function LogViewer({ botId }: LogViewerProps) {
 
       es.onmessage = (event) => {
         if (event.data) {
-          const lines = event.data
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
+          // Robustly handle cases where multiple SSE messages are bundled into one event.data
+          const messageChunk = event.data.replace(/\\n\\n/g, '\n\n');
+          const lines = messageChunk.split('\n\n');
       
-          const newLogs = lines.map(line => ({
-            ...parseLogLine(line),
-            id: Date.now() + Math.random(),
-          }));
+          const newLogs = lines
+            .map(line => {
+                // Remove the "data: " prefix and trim whitespace
+                const cleanLine = line.replace(/^data:\s*/, '').trim();
+                if (cleanLine) {
+                    return {
+                        ...parseLogLine(cleanLine),
+                        id: Date.now() + Math.random(),
+                    };
+                }
+                return null;
+            })
+            .filter((log): log is LogEntry => log !== null);
 
-          setLogs(prevLogs => [...prevLogs, ...newLogs]);
+          if (newLogs.length > 0) {
+            setLogs(prevLogs => [...prevLogs, ...newLogs]);
+          }
         }
       };
       
