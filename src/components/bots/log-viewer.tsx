@@ -26,8 +26,6 @@ const levelColors: { [key in LogEntry['level']]: string } = {
 
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const timestamp = new Date().toLocaleTimeString();
-    // The EventSource `onmessage` handler already gives us the data content.
-    // We just need to format it for display.
     const message = line;
     const lowerMessage = message.toLowerCase();
 
@@ -41,7 +39,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
          return { timestamp, level: 'info', message: message.substring(6).trim() };
     }
     
-    // Default case for any log line that doesn't match the above (like the bot heartbeat).
+    // Default case for any log line that doesn't match the above.
     return { timestamp, level: 'info', message };
 };
 
@@ -63,15 +61,19 @@ export function LogViewer({ botId }: LogViewerProps) {
 
       es.onopen = () => {
         setIsConnected(true);
-        // Prevent duplicate "connected" messages on retry
-        if (logs.length === 0 || logs[logs.length-1]?.message !== 'Log stream connected...') {
-          setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}]);
-        }
+        // Use functional update to prevent race conditions and ensure we don't add duplicate messages.
+        setLogs(prev => {
+          if (prev.length > 0 && prev[prev.length - 1]?.message.includes('Log stream connected')) {
+            return prev;
+          }
+          return [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}];
+        });
       };
 
       es.onmessage = (event) => {
         if (event.data) {
             const newLog = parseLogLine(event.data);
+            // CRITICAL FIX: Use functional update to always append to the latest state.
             setLogs((prevLogs) => [...prevLogs, { ...newLog, id: Date.now() + Math.random() }]);
         }
       };
