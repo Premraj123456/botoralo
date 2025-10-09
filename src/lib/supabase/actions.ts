@@ -2,7 +2,6 @@
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
@@ -118,88 +117,6 @@ export async function getUserSubscription() {
   }
 }
 
-
-export async function upsertUserProfile({
-  userId,
-  email,
-}: {
-  userId: string;
-  email: string;
-}) {
-  const supabase = createSupabaseAdminClient();
-  if (!supabase) {
-    throw new Error('Supabase admin client not initialized.');
-  }
-
-  const profileData = {
-    id: userId,
-    email: email,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase
-    .from('profiles')
-    .upsert(profileData, { onConflict: 'id' })
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Error upserting user profile:', error);
-    throw new Error('Could not upsert user profile.');
-  }
-  return data;
-}
-
-export async function getUserProfile() {
-  const { user } = await getCurrentUser();
-  if (!user) return null;
-
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-
-  if (error) {
-    console.error("Error fetching profile:", error.message);
-    // If profile doesn't exist, we can still return basic info
-    return {
-      id: user.id,
-      email: user.email ?? null,
-      full_name: null,
-      updated_at: null,
-    };
-  }
-
-  // Ensure the email is always fresh from the auth user
-  if (data) {
-    data.email = user.email ?? data.email;
-  }
-
-  return data;
-}
-
-export async function updateUserProfile(data: { name: string }) {
-  const { user } = await getCurrentUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const supabase = createSupabaseServerClient();
-  const { error } = await supabase
-    .from('profiles')
-    .update({ full_name: data.name, updated_at: new Date().toISOString() })
-    .eq('id', user.id);
-
-  if (error) {
-    console.error("Error updating profile:", error.message);
-    throw new Error('Failed to update profile.');
-  }
-
-  revalidatePath('/dashboard/settings');
-  return { success: true };
-}
-
-
 // --- BOT ACTIONS ---
 
 export async function createBot(data: { name: string, code: string }) {
@@ -233,7 +150,7 @@ export async function createBot(data: { name: string, code: string }) {
     .single();
 
   if (error) {
-    console.error('Error creating bot:', error);
+    console.error('Error creating bot in database:', error);
     throw new Error('Failed to create bot in database.');
   }
   
@@ -336,8 +253,10 @@ export async function deleteBot(prevState: any, formData: FormData) {
         revalidatePath('/dashboard');
         return { message: "Bot has been deleted.", success: true };
     } catch (e) {
-        console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted from the database.`, e);
+        // If the backend delete fails, we should still proceed as the DB record is gone.
+        // The container might be orphaned, but it's better than blocking the user.
+        console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
         revalidatePath('/dashboard');
-        return { message: (e as Error).message, success: false };
+        return { message: "Bot has been deleted from the dashboard.", success: true };
     }
 }

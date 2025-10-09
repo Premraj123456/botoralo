@@ -2,7 +2,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, PlusCircle, DollarSign, CreditCard, Settings } from "lucide-react";
+import { LayoutDashboard, PlusCircle, DollarSign, CreditCard } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Link } from '@/components/layout/page-loader';
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ const primaryNav = [
 const secondaryNav = [
   { name: "Pricing", href: "/pricing", icon: DollarSign },
   { name: "Billing", href: "/dashboard/billing", icon: CreditCard },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
 export function SidebarNav() {

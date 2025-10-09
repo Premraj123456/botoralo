@@ -54,11 +54,6 @@ export function Header({ user }: { user: User | null }) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <Link href="/dashboard/settings">
-              <DropdownMenuItem>
-                Settings
-              </DropdownMenuItem>
-            </Link>
              <Link href="/dashboard/billing">
               <DropdownMenuItem>
                 Billing
