@@ -48,13 +48,11 @@ export function LogViewer({ botId }: LogViewerProps) {
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log(`[LogViewer] Initializing for bot ID: ${botId}`);
     setLogs([]); // Clear logs on bot change
     const controller = new AbortController();
     const { signal } = controller;
 
     const connect = async () => {
-      console.log('[LogViewer] Attempting to connect to stream...');
       try {
         const response = await fetch(`/api/bots/${botId}/logs`, {
           method: 'POST',
@@ -65,7 +63,6 @@ export function LogViewer({ botId }: LogViewerProps) {
           throw new Error("Response has no body");
         }
         
-        console.log('[LogViewer] Stream connected successfully.');
         setIsConnected(true);
         setLogs([{ id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
 
@@ -76,32 +73,24 @@ export function LogViewer({ botId }: LogViewerProps) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            console.log('[LogViewer] Stream finished.');
             break;
           }
 
-          const chunk = decoder.decode(value, { stream: true });
-          console.log(`[LogViewer DEBUG] Received chunk: "${chunk.replace(/\n/g, '\\n')}"`);
-          buffer += chunk;
+          buffer += decoder.decode(value, { stream: true });
           
-          console.log(`[LogViewer DEBUG] Buffer content: "${buffer.replace(/\n/g, '\\n')}"`);
-
-          const parts = buffer.split('\n\n');
-          console.log(`[LogViewer DEBUG] Split buffer into parts:`, parts);
+          // Use regex to split by the SSE message delimiter
+          const parts = buffer.split(/\n\n/);
           
           // The last part might be an incomplete message, so keep it in the buffer
           const newBuffer = parts.pop() || '';
-          console.log(`[LogViewer DEBUG] New buffer for incomplete part: "${newBuffer.replace(/\n/g, '\\n')}"`);
           buffer = newBuffer;
 
           const newLogs: LogEntry[] = [];
           for (const part of parts) {
-            console.log(`[LogViewer DEBUG] Processing part: "${part.replace(/\n/g, '\\n')}"`);
             if (part.trim()) {
               const lines = part.split('\n').filter(line => line.startsWith('data:'));
               for (const line of lines) {
                  const message = line.slice(5).trim();
-                 console.log(`[LogViewer DEBUG] Extracted message: "${message}"`);
                  if (message) {
                     newLogs.push({ ...parseLogLine(message), id: Date.now() + Math.random() });
                  }
@@ -110,19 +99,16 @@ export function LogViewer({ botId }: LogViewerProps) {
           }
 
           if (newLogs.length > 0) {
-            console.log('[LogViewer DEBUG] Calling setLogs with new entries:', newLogs);
             setLogs(prev => [...prev, ...newLogs]);
           }
         }
       } catch (err: any) {
         if (err.name === 'AbortError') {
-          console.log('[LogViewer] Stream connection aborted as requested.');
+          // This is an expected error when the component unmounts
         } else {
-          console.error('[LogViewer] Stream error:', err);
-          setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${(err as Error).message}. Retrying...` }]);
+          setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${(err as Error).message}.` }]);
         }
       } finally {
-        console.log('[LogViewer] Set isConnected to false.');
         setIsConnected(false);
       }
     };
@@ -130,7 +116,6 @@ export function LogViewer({ botId }: LogViewerProps) {
     connect();
 
     return () => {
-      console.log('[LogViewer] Cleanup: Aborting stream connection.');
       controller.abort();
     };
   }, [botId]);
