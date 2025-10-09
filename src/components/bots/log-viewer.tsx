@@ -73,6 +73,8 @@ export function LogViewer({ botId }: LogViewerProps) {
         const rawData = event.data as string;
         
         // Split the incoming data in case multiple log lines are bundled in one event.
+        // The Flask backend sends "data: message\n\n", which EventSource might bundle.
+        // The raw string could look like "line1\nline2\nline3".
         const lines = rawData.split('\\n');
 
         const newLogs: LogEntry[] = [];
