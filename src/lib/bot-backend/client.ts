@@ -40,11 +40,11 @@ async function makeBackendRequest(endpoint: string, method: string, body: object
       try {
         errorData = JSON.parse(errorText);
       } catch (e) {
-        errorData = { error: "Unknown error", details: errorText };
+        errorData = { error: "Unknown backend error", details: errorText };
       }
       
       console.error(`Backend request failed: ${response.status}`, errorData);
-      throw new Error(errorData.error || `Request failed with status ${response.status}`);
+      throw new Error(errorData.details || errorData.error || `Request failed with status ${response.status}`);
     }
 
     return { success: true, data: await response.json() };
@@ -55,7 +55,7 @@ async function makeBackendRequest(endpoint: string, method: string, body: object
 }
 
 
-export async function deployBotToBackend(bot: Bot) {
+export async function deployBotToBackend(bot: Bot, codeFile: File) {
   const { user } = await getCurrentUser();
   if (!user) throw new Error("Not authenticated");
 
@@ -70,10 +70,13 @@ export async function deployBotToBackend(bot: Bot) {
   
   formData.append('meta', JSON.stringify(meta));
   
-  // Create a Blob from the bot code to simulate a file upload
-  const codeBlob = new Blob([bot.code], { type: 'text/plain' });
-  // You might want to adjust the filename based on bot language if available
-  formData.append('code', codeBlob, 'bot.py');
+  // The filename determines how the backend saves it.
+  // For zips, use a specific form field name.
+  if (codeFile.name.endsWith('.zip')) {
+      formData.append('code_zip', codeFile, 'source.zip');
+  } else {
+      formData.append('code', codeFile, codeFile.name);
+  }
 
   return makeBackendRequest('/deploy', 'POST', formData, true);
 }
@@ -115,5 +118,3 @@ export async function getBotInfoFromBackend(botId: string) {
         return null;
     }
 }
-
-    
