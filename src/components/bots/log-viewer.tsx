@@ -29,56 +29,72 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
   const trimmed = line.trim();
   const lower = trimmed.toLowerCase();
 
-  if (lower.startsWith('[error]'))
-    return { timestamp, level: 'error', message: trimmed.slice(7).trim() };
-  if (lower.startsWith('[warn]'))
-    return { timestamp, level: 'warn', message: trimmed.slice(6).trim() };
-  if (lower.startsWith('[info]'))
-    return { timestamp, level: 'info', message: trimmed.slice(6).trim() };
+  // Remove the 'data: ' prefix if it exists
+  const messageOnly = trimmed.startsWith('data:') ? trimmed.slice(5).trim() : trimmed;
 
-  return { timestamp, level: 'info', message: trimmed };
+  if (lower.includes('[error]'))
+    return { timestamp, level: 'error', message: messageOnly.replace(/\[error\]/i, '').trim() };
+  if (lower.includes('[warn]'))
+    return { timestamp, level: 'warn', message: messageOnly.replace(/\[warn\]/i, '').trim() };
+  if (lower.includes('[info]'))
+    return { timestamp, level: 'info', message: messageOnly.replace(/\[info\]/i, '').trim() };
+
+  return { timestamp, level: 'info', message: messageOnly };
 };
 
 export function LogViewer({ botId }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setLogs([]); // Clear logs on bot change
     const controller = new AbortController();
     const { signal } = controller;
 
     const connect = async () => {
       try {
-        const res = await fetch(`/api/bots/${botId}/logs`, { 
-            method: 'POST', // Use POST to match the backend
-            signal 
+        const response = await fetch(`/api/bots/${botId}/logs`, {
+          method: 'POST',
+          signal,
         });
-        if (!res.body) throw new Error("No response body");
+
+        if (!response.body) {
+          throw new Error("Response has no body");
+        }
 
         setIsConnected(true);
         setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
 
-        const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-        let buffer = "";
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
 
         while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
 
-          buffer += value;
-
-          const lines = buffer.split(/\r?\n/);
-          buffer = lines.pop() || "";
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Your backend uses \n\n to separate events.
+          const parts = buffer.split('\n\n');
+          
+          // The last part might be an incomplete message, so we keep it in the buffer.
+          buffer = parts.pop() || '';
 
           const newLogs: LogEntry[] = [];
-          for (const line of lines) {
-            if (!line.trim()) continue;
-
-            if (line.startsWith("data:")) {
-              const message = line.replace(/^data:\s*/, "");
-              if (message && message !== "[DONE]") {
-                newLogs.push({ ...parseLogLine(message), id: Date.now() + Math.random() });
+          for (const part of parts) {
+            if (part.trim()) {
+              // Each part can contain multiple lines, but your backend sends one log per `data:` block
+              const lines = part.split('\n').filter(line => line.startsWith('data:'));
+              for (const line of lines) {
+                 const message = line.slice(5).trim(); // Remove 'data:'
+                 if (message) {
+                    newLogs.push({ ...parseLogLine(message), id: Date.now() + Math.random() });
+                 }
               }
             }
           }
@@ -87,33 +103,29 @@ export function LogViewer({ botId }: LogViewerProps) {
             setLogs(prev => [...prev, ...newLogs]);
           }
         }
-
-        setIsConnected(false);
-        setLogs(prev => [
-          ...prev,
-          { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'warn', message: 'Stream ended.' },
-        ]);
-
       } catch (err: any) {
         if (err.name !== 'AbortError') {
-          console.error("Stream error:", err);
-          setIsConnected(false);
-          setLogs(prev => [
-            ...prev,
-            { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${err.message}` },
-          ]);
+          console.error("Log stream error:", err);
+           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${err.message}` }]);
         }
+      } finally {
+        setIsConnected(false);
       }
     };
 
     connect();
-    return () => controller.abort();
+
+    return () => {
+      controller.abort();
+    };
   }, [botId]);
 
-  // Auto-scroll to bottom when new logs come in
   useEffect(() => {
-    if (!scrollRef.current) return;
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const logContainer = logContainerRef.current;
+    if (logContainer) {
+        // Simple auto-scroll to bottom
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
   }, [logs]);
 
   return (
@@ -130,23 +142,21 @@ export function LogViewer({ botId }: LogViewerProps) {
       </CardHeader>
 
       <CardContent>
-        <ScrollArea className="h-[400px] w-full">
-          <div ref={scrollRef} className="bg-gray-900 text-white p-4 rounded-md font-mono text-sm space-y-1 overflow-y-auto h-[400px]">
-            {logs.length > 0 ? (
-              logs.map((log) => (
-                <div key={log.id} className="flex gap-3">
-                  <span className="text-gray-500 flex-shrink-0">{log.timestamp}</span>
-                  <span className={cn("font-bold uppercase w-14 text-right", levelColors[log.level])}>
-                    [{log.level}]
-                  </span>
-                  <span className="whitespace-pre-wrap break-words">{log.message}</span>
-                </div>
-              ))
-            ) : (
-              <div className="text-gray-500 animate-pulse">Waiting for logs...</div>
-            )}
-          </div>
-        </ScrollArea>
+        <div ref={logContainerRef} className="bg-gray-900 text-white p-4 rounded-md font-mono text-sm space-y-1 overflow-y-auto h-[400px]">
+          {logs.length > 0 ? (
+            logs.map((log) => (
+              <div key={log.id} className="flex gap-3">
+                <span className="text-gray-500 flex-shrink-0">{log.timestamp}</span>
+                <span className={cn("font-bold uppercase w-14 text-right flex-shrink-0", levelColors[log.level])}>
+                  [{log.level}]
+                </span>
+                <span className="whitespace-pre-wrap break-words">{log.message}</span>
+              </div>
+            ))
+          ) : (
+            <div className="text-gray-500 animate-pulse">Waiting for logs...</div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
