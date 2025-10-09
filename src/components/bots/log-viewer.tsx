@@ -30,6 +30,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     
     const lowerMessage = message.toLowerCase();
 
+    // Handle prefixed logs from the proxy or backend
     if (lowerMessage.startsWith('[error]')) {
         return { timestamp, level: 'error', message: message.substring(7).trim() };
     }
@@ -40,7 +41,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
          return { timestamp, level: 'info', message: message.substring(6).trim() };
     }
     
-    // Default case for bot output that doesn't have our custom prefixes.
+    // Handle raw output from the bot itself
     return { timestamp, level: 'info', message };
 };
 
@@ -49,61 +50,60 @@ export function LogViewer({ botId }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    // Ensure this effect runs only once.
-    if (eventSourceRef.current) {
-        return;
-    }
+    const controller = new AbortController();
+    const { signal } = controller;
 
-    const url = `/api/bots/${botId}/logs`;
-    const es = new EventSource(url);
-    eventSourceRef.current = es;
-
-    es.onopen = () => {
-        setIsConnected(true);
-        setLogs(prev => [{id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}]);
-    };
-
-    es.onmessage = (event) => {
-        // The event data from the stream might contain multiple messages.
-        // The backend formats them with 'data: ...\n\n'.
-        // EventSource gives us the raw data payload.
-        const rawData = event.data as string;
+    const connectToStream = async () => {
+      try {
+        const response = await fetch(`/api/bots/${botId}/logs`, { signal });
         
-        // Split the incoming data in case multiple log lines are bundled in one event.
-        // The Flask backend sends "data: message\n\n", which EventSource might bundle.
-        // The raw string could look like "line1\nline2\nline3".
-        const lines = rawData.split('\\n');
+        if (!response.body) {
+          throw new Error("Response has no body");
+        }
 
-        const newLogs: LogEntry[] = [];
-        for (const line of lines) {
-            if (line.trim()) {
-                newLogs.push({
-                    ...parseLogLine(line),
-                    id: Date.now() + Math.random(),
-                });
+        setIsConnected(true);
+        setLogs([{ id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...' }]);
+
+        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+        let buffer = '';
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            break;
+          }
+
+          buffer += value;
+          let boundary = buffer.indexOf('\n\n');
+          while (boundary !== -1) {
+            const chunk = buffer.substring(0, boundary);
+            buffer = buffer.substring(boundary + 2);
+
+            if (chunk.startsWith('data:')) {
+              const message = chunk.substring(5).trim();
+              if (message) {
+                  setLogs(prevLogs => [...prevLogs, { ...parseLogLine(message), id: Date.now() + Math.random() }]);
+              }
             }
+            boundary = buffer.indexOf('\n\n');
+          }
         }
-
-        if (newLogs.length > 0) {
-           setLogs(prevLogs => [...prevLogs, ...newLogs]);
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error("Stream error:", error);
+          setIsConnected(false);
+          setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Log stream disconnected.'}]);
         }
-    };
-
-    es.onerror = () => {
-        setIsConnected(false);
-        setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Log stream disconnected. Will attempt to reconnect...'}]);
-        // EventSource handles reconnection automatically. We just update the UI.
-    };
-
-    // Cleanup on component unmount
-    return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
       }
+    };
+
+    connectToStream();
+
+    // Cleanup function to abort fetch on component unmount
+    return () => {
+      controller.abort();
     };
   }, [botId]);
   
