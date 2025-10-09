@@ -26,18 +26,16 @@ const levelColors: Record<LogEntry['level'], string> = {
 
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
   const timestamp = new Date().toLocaleTimeString();
-  const trimmed = line.trim();
-  const lower = trimmed.toLowerCase();
+  // Remove the 'data: ' prefix before parsing
+  const messageOnly = line.startsWith('data:') ? line.slice(5).trim() : line.trim();
+  const lower = messageOnly.toLowerCase();
 
-  // Remove the 'data: ' prefix if it exists
-  const messageOnly = trimmed.startsWith('data:') ? trimmed.slice(5).trim() : trimmed;
-
-  if (lower.includes('[error]'))
-    return { timestamp, level: 'error', message: messageOnly.replace(/\[error\]/i, '').trim() };
-  if (lower.includes('[warn]'))
-    return { timestamp, level: 'warn', message: messageOnly.replace(/\[warn\]/i, '').trim() };
-  if (lower.includes('[info]'))
-    return { timestamp, level: 'info', message: messageOnly.replace(/\[info\]/i, '').trim() };
+  if (lower.startsWith('[error]'))
+    return { timestamp, level: 'error', message: messageOnly.slice(7).trim() };
+  if (lower.startsWith('[warn]'))
+    return { timestamp, level: 'warn', message: messageOnly.slice(6).trim() };
+  if (lower.startsWith('[info]'))
+    return { timestamp, level: 'info', message: messageOnly.slice(6).trim() };
 
   return { timestamp, level: 'info', message: messageOnly };
 };
@@ -45,7 +43,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
 export function LogViewer({ botId }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
-  const logContainerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLogs([]); // Clear logs on bot change
@@ -57,6 +55,10 @@ export function LogViewer({ botId }: LogViewerProps) {
         const response = await fetch(`/api/bots/${botId}/logs`, {
           method: 'POST',
           signal,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}) // API route requires a body, even if empty
         });
 
         if (!response.body) {
@@ -77,29 +79,29 @@ export function LogViewer({ botId }: LogViewerProps) {
           }
 
           buffer += decoder.decode(value, { stream: true });
-          
-          // Use regex to split by the SSE message delimiter
-          const parts = buffer.split(/\n\n/);
-          
-          // The last part might be an incomplete message, so keep it in the buffer
-          const newBuffer = parts.pop() || '';
-          buffer = newBuffer;
 
-          const newLogs: LogEntry[] = [];
-          for (const part of parts) {
-            if (part.trim()) {
-              const lines = part.split('\n').filter(line => line.startsWith('data:'));
-              for (const line of lines) {
-                 const message = line.slice(5).trim();
-                 if (message) {
-                    newLogs.push({ ...parseLogLine(message), id: Date.now() + Math.random() });
-                 }
+          // This is the robust parser. It looks for the SSE message delimiter.
+          let boundary = buffer.indexOf('\n\n');
+          while (boundary !== -1) {
+            // Extract the complete message.
+            const message = buffer.substring(0, boundary);
+            // Remove the processed message from the buffer.
+            buffer = buffer.substring(boundary + 2);
+
+            if (message.trim()) {
+              const newLogs = message.split('\n')
+                .filter(line => line.startsWith('data:'))
+                .map(line => ({
+                  ...parseLogLine(line),
+                  id: Date.now() + Math.random(),
+                }));
+              
+              if (newLogs.length > 0) {
+                 setLogs(prev => [...prev, ...newLogs]);
               }
             }
-          }
-
-          if (newLogs.length > 0) {
-            setLogs(prev => [...prev, ...newLogs]);
+            // Look for the next message boundary.
+            boundary = buffer.indexOf('\n\n');
           }
         }
       } catch (err: any) {
@@ -121,7 +123,7 @@ export function LogViewer({ botId }: LogViewerProps) {
   }, [botId]);
 
   useEffect(() => {
-    const logContainer = logContainerRef.current;
+    const logContainer = scrollRef.current;
     if (logContainer) {
         logContainer.scrollTop = logContainer.scrollHeight;
     }
@@ -141,7 +143,7 @@ export function LogViewer({ botId }: LogViewerProps) {
       </CardHeader>
 
       <CardContent>
-        <div ref={logContainerRef} className="bg-gray-900 text-white p-4 rounded-md font-mono text-sm space-y-1 overflow-y-auto h-[400px]">
+        <div ref={scrollRef} className="bg-gray-900 text-white p-4 rounded-md font-mono text-sm space-y-1 overflow-y-auto h-[400px]">
           {logs.length > 0 ? (
             logs.map((log) => (
               <div key={log.id} className="flex gap-3">
