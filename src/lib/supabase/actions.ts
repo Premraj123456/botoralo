@@ -119,9 +119,16 @@ export async function getUserSubscription() {
 
 // --- BOT ACTIONS ---
 
-export async function createBot(data: { name: string, code: string }) {
+export async function createBot(formData: FormData) {
   const { user } = await getCurrentUser();
   if (!user) throw new Error('Not authenticated');
+
+  const name = formData.get('name') as string;
+  const codeFile = formData.get('codeFile') as File;
+
+  if (!name || !codeFile) {
+    throw new Error("Bot name and code file are required.");
+  }
 
   const supabase = createSupabaseServerClient();
 
@@ -141,12 +148,12 @@ export async function createBot(data: { name: string, code: string }) {
   const { data: newBot, error } = await supabase
     .from('bots')
     .insert({
-      name: data.name,
-      code: data.code,
+      name: name,
       owner_id: user.id,
       status: 'stopped',
     })
     .select()
+    .select('id, created_at, name, status, owner_id ')
     .single();
 
   if (error) {
@@ -155,7 +162,7 @@ export async function createBot(data: { name: string, code: string }) {
   }
   
   try {
-    await deployBotToBackend(newBot as Bot);
+    await deployBotToBackend(newBot, codeFile);
     await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
   } catch (backendError) {
     console.error("Backend deployment failed:", backendError);
@@ -175,7 +182,7 @@ export async function getUserBots() {
   const supabase = createSupabaseServerClient();
   const { data: bots, error } = await supabase
     .from('bots')
-    .select('*')
+    .select('id, name, status, owner_id, created_at')
     .eq('owner_id', user.id);
 
   if (error) {
@@ -193,7 +200,7 @@ export async function getBotById(botId: string): Promise<Bot | null> {
   const supabase = createSupabaseServerClient();
   const { data: bot, error } = await supabase
     .from('bots')
-    .select('*')
+    .select('id, name, status, owner_id, created_at')
     .eq('id', botId)
     .single();
 
