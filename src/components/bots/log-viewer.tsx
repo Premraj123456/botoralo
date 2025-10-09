@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,8 +25,8 @@ const levelColors: Record<LogEntry['level'], string> = {
 
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
   const timestamp = new Date().toLocaleTimeString();
-  // Remove the 'data: ' prefix before parsing
-  const messageOnly = line.startsWith('data:') ? line.slice(5).trim() : line.trim();
+  // The message is already cleaned of the "data: " prefix
+  const messageOnly = line.trim();
   const lower = messageOnly.toLowerCase();
 
   if (lower.startsWith('[error]'))
@@ -39,6 +38,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
 
   return { timestamp, level: 'info', message: messageOnly };
 };
+
 
 export function LogViewer({ botId }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -55,10 +55,8 @@ export function LogViewer({ botId }: LogViewerProps) {
         const response = await fetch(`/api/bots/${botId}/logs`, {
           method: 'POST',
           signal,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({}) // API route requires a body, even if empty
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
         });
 
         if (!response.body) {
@@ -83,31 +81,22 @@ export function LogViewer({ botId }: LogViewerProps) {
           // This is the robust parser. It looks for the SSE message delimiter.
           let boundary = buffer.indexOf('\n\n');
           while (boundary !== -1) {
-            // Extract the complete message.
             const message = buffer.substring(0, boundary);
-            // Remove the processed message from the buffer.
-            buffer = buffer.substring(boundary + 2);
+            buffer = buffer.substring(boundary + 2); // Remove the processed message from the buffer
 
-            if (message.trim()) {
-              const newLogs = message.split('\n')
-                .filter(line => line.startsWith('data:'))
-                .map(line => ({
-                  ...parseLogLine(line),
-                  id: Date.now() + Math.random(),
-                }));
-              
-              if (newLogs.length > 0) {
-                 setLogs(prev => [...prev, ...newLogs]);
+            if (message.startsWith('data:')) {
+              const data = message.substring(5).trim();
+              if (data) {
+                const newLog = { ...parseLogLine(data), id: Date.now() + Math.random() };
+                setLogs(prev => [...prev, newLog]);
               }
             }
-            // Look for the next message boundary.
             boundary = buffer.indexOf('\n\n');
           }
         }
       } catch (err: any) {
-        if (err.name === 'AbortError') {
-          // This is an expected error when the component unmounts
-        } else {
+        if (err.name !== 'AbortError') {
+          console.error("Stream error:", err);
           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${(err as Error).message}.` }]);
         }
       } finally {
