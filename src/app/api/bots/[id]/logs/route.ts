@@ -6,7 +6,7 @@ import { getBotById } from '@/lib/supabase/actions';
 const BACKEND_URL = process.env.BOT_BACKEND_URL;
 const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
-// Ensure this route is not statically rendered and uses the Node.js runtime for streaming.
+// This is crucial to prevent Next.js from statically rendering this route.
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -39,7 +39,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     return new NextResponse('Error fetching bot data.', { status: 500 });
   }
 
-
   try {
     // This fetch call initiates the stream from the Python backend.
     const backendResponse = await fetch(`${BACKEND_URL}/logs`, {
@@ -53,12 +52,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         userId: user.id,
         botoraloBotId: botId,
       }),
-      // @ts-ignore - This is required for streaming the request body in some Node.js environments
+      // @ts-ignore - This is required for streaming the request body in some Node.js environments.
       duplex: 'half', 
     });
 
     if (!backendResponse.ok || !backendResponse.body) {
       const errorText = await backendResponse.text();
+      console.error(`Backend log stream failed: ${errorText}`);
       throw new Error(`Failed to connect to the backend log stream: ${errorText}`);
     }
     
