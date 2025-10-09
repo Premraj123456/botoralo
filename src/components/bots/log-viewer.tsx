@@ -72,9 +72,18 @@ export function LogViewer({ botId }: LogViewerProps) {
 
       es.onmessage = (event) => {
         if (event.data) {
-            const newLog = parseLogLine(event.data);
-            // CRITICAL FIX: Use functional update to always append to the latest state.
-            setLogs((prevLogs) => [...prevLogs, { ...newLog, id: Date.now() + Math.random() }]);
+          const lines = event.data
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+      
+          setLogs((prevLogs) => [
+            ...prevLogs,
+            ...lines.map(line => ({
+              ...parseLogLine(line),
+              id: Date.now() + Math.random(),
+            })),
+          ]);
         }
       };
       
