@@ -8,7 +8,8 @@ const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
 export const runtime = 'nodejs'; // Crucial for preventing response buffering
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+// IMPORTANT: This route now accepts POST requests to match the Python backend
+export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   if (!BACKEND_URL || !MASTER_KEY) {
     const stream = new ReadableStream({
       start(controller) {
@@ -49,7 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         userId: user.id,
         botoraloBotId: botId,
       }),
-      // @ts-ignore - This is required for streaming the request body in some Node.js environments.
+      // @ts-ignore - This is required for streaming in some Node.js environments.
       duplex: 'half', 
     });
 

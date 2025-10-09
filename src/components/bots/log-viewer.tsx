@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,11 +50,14 @@ export function LogViewer({ botId }: LogViewerProps) {
 
     const connect = async () => {
       try {
-        const res = await fetch(`/api/bots/${botId}/logs`, { signal });
+        const res = await fetch(`/api/bots/${botId}/logs`, { 
+            method: 'POST', // Use POST to match the backend
+            signal 
+        });
         if (!res.body) throw new Error("No response body");
 
         setIsConnected(true);
-        setLogs([{ id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
+        setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
 
         const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
         let buffer = "";
@@ -64,23 +68,23 @@ export function LogViewer({ botId }: LogViewerProps) {
 
           buffer += value;
 
-          // Split by line instead of double-newline
           const lines = buffer.split(/\r?\n/);
           buffer = lines.pop() || "";
 
+          const newLogs: LogEntry[] = [];
           for (const line of lines) {
             if (!line.trim()) continue;
 
-            // Handle Server-Sent Event format
             if (line.startsWith("data:")) {
               const message = line.replace(/^data:\s*/, "");
               if (message && message !== "[DONE]") {
-                setLogs(prev => [
-                  ...prev,
-                  { ...parseLogLine(message), id: Date.now() + Math.random() },
-                ]);
+                newLogs.push({ ...parseLogLine(message), id: Date.now() + Math.random() });
               }
             }
+          }
+
+          if (newLogs.length > 0) {
+            setLogs(prev => [...prev, ...newLogs]);
           }
         }
 
@@ -96,7 +100,7 @@ export function LogViewer({ botId }: LogViewerProps) {
           setIsConnected(false);
           setLogs(prev => [
             ...prev,
-            { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Stream disconnected.' },
+            { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${err.message}` },
           ]);
         }
       }
@@ -128,7 +132,7 @@ export function LogViewer({ botId }: LogViewerProps) {
       <CardContent>
         <ScrollArea className="h-[400px] w-full">
           <div ref={scrollRef} className="bg-gray-900 text-white p-4 rounded-md font-mono text-sm space-y-1 overflow-y-auto h-[400px]">
-            {logs.length ? (
+            {logs.length > 0 ? (
               logs.map((log) => (
                 <div key={log.id} className="flex gap-3">
                   <span className="text-gray-500 flex-shrink-0">{log.timestamp}</span>
