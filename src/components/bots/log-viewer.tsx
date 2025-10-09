@@ -28,11 +28,6 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const timestamp = new Date().toLocaleTimeString();
     let message = line.trim();
     
-    // Clean the "data: " prefix if it exists from the raw SSE line
-    if (message.startsWith('data:')) {
-        message = message.substring(5).trim();
-    }
-    
     const lowerMessage = message.toLowerCase();
 
     if (lowerMessage.startsWith('[error]')) {
@@ -54,79 +49,66 @@ export function LogViewer({ botId }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
-    const abortController = new AbortController();
+    // Ensure this effect runs only once.
+    if (eventSourceRef.current) {
+        return;
+    }
 
-    const connectAndStream = async () => {
-      try {
-        const response = await fetch(`/api/bots/${botId}/logs`, {
-          signal: abortController.signal,
-        });
+    const url = `/api/bots/${botId}/logs`;
+    const es = new EventSource(url);
+    eventSourceRef.current = es;
 
-        if (!response.body) {
-          throw new Error("Response has no body");
-        }
-        
+    es.onopen = () => {
         setIsConnected(true);
-        setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}]);
-
-        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
-        let buffer = '';
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) {
-            break;
-          }
-
-          buffer += value;
-          const lines = buffer.split('\n');
-
-          // The last line might be incomplete, so we keep it in the buffer
-          buffer = lines.pop() || ''; 
-          
-          const newLogs: LogEntry[] = [];
-          for (const line of lines) {
-            // SSE messages are separated by double newlines, but here we process line-by-line from the decoded stream
-            const trimmedLine = line.trim();
-            if (trimmedLine.startsWith('data:')) {
-              newLogs.push({
-                ...parseLogLine(trimmedLine),
-                id: Date.now() + Math.random(),
-              });
-            }
-          }
-          
-          if (newLogs.length > 0) {
-            setLogs(prevLogs => [...prevLogs, ...newLogs]);
-          }
-        }
-
-      } catch (error) {
-        if ((error as Error).name === 'AbortError') {
-          console.log('Fetch aborted');
-        } else {
-          console.error('Streaming error:', error);
-          setIsConnected(false);
-          setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Log stream disconnected. Will attempt to reconnect...'}]);
-          // Optional: implement retry logic here
-        }
-      }
+        setLogs(prev => [{id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Log stream connected...'}]);
     };
-    
-    connectAndStream();
+
+    es.onmessage = (event) => {
+        // The event data from the stream might contain multiple messages.
+        // The backend formats them with 'data: ...\n\n'.
+        // EventSource gives us the raw data payload.
+        const rawData = event.data as string;
+        
+        // Split the incoming data in case multiple log lines are bundled in one event.
+        const lines = rawData.split('\\n');
+
+        const newLogs: LogEntry[] = [];
+        for (const line of lines) {
+            if (line.trim()) {
+                newLogs.push({
+                    ...parseLogLine(line),
+                    id: Date.now() + Math.random(),
+                });
+            }
+        }
+
+        if (newLogs.length > 0) {
+           setLogs(prevLogs => [...prevLogs, ...newLogs]);
+        }
+    };
+
+    es.onerror = () => {
+        setIsConnected(false);
+        setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Log stream disconnected. Will attempt to reconnect...'}]);
+        // EventSource handles reconnection automatically. We just update the UI.
+    };
 
     // Cleanup on component unmount
     return () => {
-      abortController.abort();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
   }, [botId]);
   
    useEffect(() => {
     // Auto-scroll to the bottom when new logs arrive
     if (scrollAreaRef.current) {
-      const viewport = scrollAreaRef.current.querySelector('div');
+      const viewport = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight;
       }
