@@ -57,41 +57,10 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       const errorText = await backendResponse.text();
       throw new Error(`Failed to connect to log stream: ${errorText}`);
     }
-
-    const reader = backendResponse.body.getReader();
-    const encoder = new TextEncoder();
-
-    const stream = new ReadableStream({
-      async start(controller) {
-        controller.enqueue(encoder.encode('data: [info] Log stream connected...\n\n'));
-        
-        req.signal.addEventListener("abort", () => {
-          reader.cancel();
-          controller.close();
-        });
-
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break;
-            }
-            // The value from the backend is already formatted as "data: ...\n\n"
-            // We just forward it directly.
-            controller.enqueue(value);
-          }
-        } catch (error) {
-          console.error('Error while reading from backend stream:', error);
-          try {
-            controller.enqueue(encoder.encode(`data: [error] An error occurred while reading logs: ${(error as Error).message}\n\n`));
-          } catch(e) {}
-        } finally {
-          controller.close();
-        }
-      }
-    });
     
-    return new Response(stream, {
+    // Directly return the response from the backend. This pipes the stream
+    // without any intermediate processing, which is the most reliable way.
+    return new Response(backendResponse.body, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
