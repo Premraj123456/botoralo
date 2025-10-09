@@ -6,13 +6,15 @@ import { getBotById } from '@/lib/supabase/actions';
 const BACKEND_URL = process.env.BOT_BACKEND_URL;
 const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
-export const runtime = "nodejs";
+// Ensure this route is not statically rendered and uses the Node.js runtime for streaming.
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   if (!BACKEND_URL || !MASTER_KEY) {
     const stream = new ReadableStream({
       start(controller) {
-        const message = "data: [error] Backend not configured. Cannot stream logs.\n\n";
+        const message = "data: [error] Backend service is not configured on the server. Cannot stream logs.\n\n";
         controller.enqueue(new TextEncoder().encode(message));
         controller.close();
       },
@@ -28,13 +30,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 
   const botId = params.id;
-  const bot = await getBotById(botId);
-
-  if (!bot || bot.owner_id !== user.id) {
-    return new NextResponse('Bot not found or not authorized', { status: 404 });
+  try {
+    const bot = await getBotById(botId);
+    if (!bot || bot.owner_id !== user.id) {
+      return new NextResponse('Bot not found or you do not have permission to view it.', { status: 404 });
+    }
+  } catch (e) {
+    return new NextResponse('Error fetching bot data.', { status: 500 });
   }
 
+
   try {
+    // This fetch call initiates the stream from the Python backend.
     const backendResponse = await fetch(`${BACKEND_URL}/logs`, {
       method: 'POST',
       headers: {
@@ -46,25 +53,25 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
         userId: user.id,
         botoraloBotId: botId,
       }),
-      // @ts-ignore - duplex is required for streaming request bodies
+      // @ts-ignore - This is required for streaming the request body in some Node.js environments
       duplex: 'half', 
     });
 
     if (!backendResponse.ok || !backendResponse.body) {
       const errorText = await backendResponse.text();
-      console.error(`Log stream connection failed: ${errorText}`);
-      throw new Error(`Failed to connect to log stream: ${errorText}`);
+      throw new Error(`Failed to connect to the backend log stream: ${errorText}`);
     }
     
     // Directly pipe the stream from the backend to the client.
-    // This is the most robust way to proxy SSE.
+    // This is the most robust way to proxy an SSE stream.
     return new Response(backendResponse.body, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
-        'X-Accel-Buffering': 'no', // Critical for Vercel/Nginx to not buffer the response
+        // This header is crucial for Vercel and other Nginx-based platforms to not buffer the response.
+        'X-Accel-Buffering': 'no', 
       },
     });
 
