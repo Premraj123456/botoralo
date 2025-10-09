@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getBotById } from '@/lib/supabase/actions';
@@ -9,7 +10,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   if (!BACKEND_URL || !MASTER_KEY) {
     const stream = new ReadableStream({
       start(controller) {
-        const message = "data: [error] Backend not configured. Cannot stream logs.\\n\\n";
+        const message = "data: [error] Backend not configured. Cannot stream logs.\n\n";
         controller.enqueue(new TextEncoder().encode(message));
         controller.close();
       },
@@ -42,9 +43,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       headers: {
         'Authorization': `Bearer ${MASTER_KEY}`,
         'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
       },
       body,
-      // Important: `duplex: 'half'` is required for streaming request bodies
       // @ts-ignore
       duplex: 'half',
     });
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       console.error("Failed to stream logs from backend:", errorText);
       const stream = new ReadableStream({
         start(controller) {
-          const message = `data: [error] Failed to connect to log stream: ${errorText.replace(/\\n/g, ' ')}\\n\\n`;
+          const message = `data: [error] Failed to connect to log stream: ${errorText.replace(/\n/g, ' ')}\n\n`;
           controller.enqueue(new TextEncoder().encode(message));
           controller.close();
         },
@@ -62,36 +63,37 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return new Response(stream, { status: backendResponse.status, headers: { 'Content-Type': 'text/event-stream' } });
     }
 
-    // Create a new stream to forward and format events correctly.
+    // Create a new ReadableStream to proxy the data to the client.
+    // This gives us full control over the streaming process.
     const reader = backendResponse.body.getReader();
-    const encoder = new TextEncoder();
-    const customStream = new ReadableStream({
+    const stream = new ReadableStream({
       async start(controller) {
-        function push() {
-          reader.read().then(({ done, value }) => {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
             if (done) {
-              controller.close();
-              return;
+              break;
             }
-            // The chunk from the backend is already in the "data: ...\n\n" format.
-            // We just need to forward it.
+            // value is a Uint8Array, directly enqueue it.
+            // The backend is already formatting it as "data: ...\n\n"
             controller.enqueue(value);
-            push();
-          }).catch(error => {
-            console.error('Error reading from backend stream:', error);
-            controller.error(error);
-          });
+          }
+        } catch (error) {
+          console.error('Error while reading from backend stream:', error);
+          controller.error(error);
+        } finally {
+          controller.close();
         }
-        push();
       }
     });
     
-    return new Response(customStream, {
+    return new Response(stream, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no',
       },
     });
 
@@ -99,7 +101,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     console.error('Fetch failed for log stream:', error);
     const stream = new ReadableStream({
         start(controller) {
-          const message = `data: [error] Failed to establish connection to the backend service.\\n\\n`;
+          const message = `data: [error] Failed to establish connection to the backend service.\n\n`;
           controller.enqueue(new TextEncoder().encode(message));
           controller.close();
         },
