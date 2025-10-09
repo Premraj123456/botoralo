@@ -74,8 +74,8 @@ export function LogViewer({ botId }: LogViewerProps) {
       es.onmessage = (event) => {
         if (event.data) {
           // Robustly handle cases where multiple SSE messages are bundled into one event.data
-          const messageChunk = event.data.replace(/\\n\\n/g, '\n\n');
-          const lines = messageChunk.split('\n\n');
+          const messageChunk = event.data.replace(/\\n\\n/g, '\n');
+          const lines = messageChunk.split('\n');
       
           const newLogs = lines
             .map(line => {
