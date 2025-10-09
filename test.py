@@ -1,1 +1,1 @@
-print("something")
+print("yes")
