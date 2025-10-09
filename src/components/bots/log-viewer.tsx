@@ -29,7 +29,6 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const message = line.trim();
     const lowerMessage = message.toLowerCase();
 
-    // Check for explicit prefixes from our own stream messages
     if (lowerMessage.startsWith('[error]')) {
         return { timestamp, level: 'error', message: message.substring(7).trim() };
     }
@@ -40,7 +39,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
          return { timestamp, level: 'info', message: message.substring(6).trim() };
     }
     
-    // Default case for any log line that doesn't match the above (e.g., from the bot itself).
+    // Default case for bot output that doesn't have our custom prefixes.
     return { timestamp, level: 'info', message };
 };
 
@@ -63,6 +62,7 @@ export function LogViewer({ botId }: LogViewerProps) {
       es.onopen = () => {
         setIsConnected(true);
         setLogs(prev => {
+          // Avoid adding duplicate "connected" messages if already present
           if (prev.length > 0 && prev[prev.length - 1]?.message.includes('Log stream connected')) {
             return prev;
           }
@@ -72,27 +72,26 @@ export function LogViewer({ botId }: LogViewerProps) {
 
       es.onmessage = (event) => {
         if (event.data) {
-          // Robustly handle cases where multiple SSE messages are bundled into one event.data
-          const messageChunk = event.data.replace(/\\n\\n/g, '\\n');
-          const lines = messageChunk.split('\\n');
+            // This is the robust parsing logic.
+            // A single event.data might contain multiple "data: ..." messages.
+            const messageChunk = event.data;
+            const lines = messageChunk.split('\n').filter(line => line.trim() !== '');
       
-          const newLogs = lines
-            .map(line => {
-                // Remove the "data: " prefix and trim whitespace
+            const newLogs: LogEntry[] = [];
+            lines.forEach(line => {
+                // Remove the "data: " prefix and any extra newlines from the raw string.
                 const cleanLine = line.replace(/^data:\s*/, '').trim();
                 if (cleanLine) {
-                    return {
+                    newLogs.push({
                         ...parseLogLine(cleanLine),
                         id: Date.now() + Math.random(),
-                    };
+                    });
                 }
-                return null;
-            })
-            .filter((log): log is LogEntry => log !== null);
+            });
 
-          if (newLogs.length > 0) {
-            setLogs(prevLogs => [...prevLogs, ...newLogs]);
-          }
+            if (newLogs.length > 0) {
+                setLogs(prevLogs => [...prevLogs, ...newLogs]);
+            }
         }
       };
       
@@ -100,12 +99,14 @@ export function LogViewer({ botId }: LogViewerProps) {
         setIsConnected(false);
         setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Log stream disconnected. Retrying...'}]);
         es.close();
+        // Retry connection after a delay
         setTimeout(connect, 5000);
       };
     }
 
     connect();
 
+    // Cleanup on component unmount
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
@@ -115,6 +116,7 @@ export function LogViewer({ botId }: LogViewerProps) {
   }, [botId]);
   
    useEffect(() => {
+    // Auto-scroll to the bottom when new logs arrive
     if (scrollAreaRef.current) {
       const viewport = scrollAreaRef.current.querySelector('div');
       if (viewport) {
@@ -160,3 +162,4 @@ export function LogViewer({ botId }: LogViewerProps) {
     </Card>
   );
 }
+
