@@ -26,7 +26,8 @@ const levelColors: { [key in LogEntry['level']]: string } = {
 
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const timestamp = new Date().toLocaleTimeString();
-    const message = line;
+    // The incoming line might still have the "data: " prefix from the stream.
+    const message = line.startsWith('data:') ? line.substring(5).trim() : line.trim();
     const lowerMessage = message.toLowerCase();
 
     // Check for explicit prefixes from our own stream messages
@@ -62,9 +63,7 @@ export function LogViewer({ botId }: LogViewerProps) {
 
       es.onopen = () => {
         setIsConnected(true);
-        // Use functional update to prevent race conditions and ensure we don't add duplicate messages.
         setLogs(prev => {
-          // Avoid adding multiple 'connected' messages if one already exists recently
           if (prev.length > 0 && prev[prev.length - 1]?.message.includes('Log stream connected')) {
             return prev;
           }
@@ -73,12 +72,18 @@ export function LogViewer({ botId }: LogViewerProps) {
       };
 
       es.onmessage = (event) => {
-        // The backend /logs endpoint formats the data field with the "data: " prefix.
-        // The EventSource onmessage handler automatically strips this prefix.
-        // We just need to handle the content of `event.data`.
         if (event.data) {
-          const newLog = parseLogLine(event.data);
-          setLogs(prevLogs => [...prevLogs, { ...newLog, id: Date.now() + Math.random() }]);
+          const lines = event.data
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
+      
+          const newLogs = lines.map(line => ({
+            ...parseLogLine(line),
+            id: Date.now() + Math.random(),
+          }));
+
+          setLogs(prevLogs => [...prevLogs, ...newLogs]);
         }
       };
       
@@ -86,14 +91,12 @@ export function LogViewer({ botId }: LogViewerProps) {
         setIsConnected(false);
         setLogs(prev => [...prev, {id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: 'Log stream disconnected. Retrying...'}]);
         es.close();
-        // Implement a retry mechanism
-        setTimeout(connect, 5000); // Retry after 5 seconds
+        setTimeout(connect, 5000);
       };
     }
 
     connect();
 
-    // Cleanup function to close connection when component unmounts
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
@@ -104,7 +107,6 @@ export function LogViewer({ botId }: LogViewerProps) {
   
    useEffect(() => {
     if (scrollAreaRef.current) {
-      // A bit of a hack to scroll to the bottom of the scroll area viewport
       const viewport = scrollAreaRef.current.querySelector('div');
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight;
