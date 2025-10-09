@@ -53,17 +53,22 @@ export function LogViewer({ botId }: LogViewerProps) {
     const controller = new AbortController();
     const { signal } = controller;
 
+    console.log(`[LogViewer] Initializing for bot ID: ${botId}`);
+
     const connect = async () => {
       try {
+        console.log('[LogViewer] Attempting to connect to stream...');
         const response = await fetch(`/api/bots/${botId}/logs`, {
           method: 'POST',
           signal,
         });
 
         if (!response.body) {
+          console.error("[LogViewer] Response has no body.");
           throw new Error("Response has no body");
         }
-
+        
+        console.log('[LogViewer] Stream connected successfully.');
         setIsConnected(true);
         setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
 
@@ -74,25 +79,30 @@ export function LogViewer({ botId }: LogViewerProps) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
+            console.log('[LogViewer] Stream finished.');
             break;
           }
 
-          buffer += decoder.decode(value, { stream: true });
+          const chunk = decoder.decode(value, { stream: true });
+          console.log('[LogViewer DEBUG] Received chunk:', JSON.stringify(chunk));
+
+          buffer += chunk;
           
-          // Your backend uses \n\n to separate events.
           const parts = buffer.split('\n\n');
+          console.log('[LogViewer DEBUG] Split buffer into parts:', parts);
           
-          // The last part might be an incomplete message, so we keep it in the buffer.
           buffer = parts.pop() || '';
+          console.log('[LogViewer DEBUG] New buffer for incomplete part:', JSON.stringify(buffer));
 
           const newLogs: LogEntry[] = [];
           for (const part of parts) {
             if (part.trim()) {
-              // Each part can contain multiple lines, but your backend sends one log per `data:` block
+              console.log('[LogViewer DEBUG] Processing part:', JSON.stringify(part));
               const lines = part.split('\n').filter(line => line.startsWith('data:'));
               for (const line of lines) {
-                 const message = line.slice(5).trim(); // Remove 'data:'
+                 const message = line.slice(5).trim();
                  if (message) {
+                    console.log('[LogViewer DEBUG] Parsed message:', message);
                     newLogs.push({ ...parseLogLine(message), id: Date.now() + Math.random() });
                  }
               }
@@ -100,22 +110,27 @@ export function LogViewer({ botId }: LogViewerProps) {
           }
 
           if (newLogs.length > 0) {
+            console.log('[LogViewer] Adding new logs to state:', newLogs.length);
             setLogs(prev => [...prev, ...newLogs]);
           }
         }
       } catch (err: any) {
         if (err.name !== 'AbortError') {
-          console.error("Log stream error:", err);
-           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${err.message}` }]);
+          console.error("[LogViewer] Stream error:", err);
+          setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${(err as Error).message}` }]);
+        } else {
+            console.log('[LogViewer] Stream connection aborted as requested.');
         }
       } finally {
         setIsConnected(false);
+        console.log('[LogViewer] Set isConnected to false.');
       }
     };
 
     connect();
 
     return () => {
+      console.log('[LogViewer] Cleanup: Aborting stream connection.');
       controller.abort();
     };
   }, [botId]);
@@ -123,7 +138,6 @@ export function LogViewer({ botId }: LogViewerProps) {
   useEffect(() => {
     const logContainer = logContainerRef.current;
     if (logContainer) {
-        // Simple auto-scroll to bottom
         logContainer.scrollTop = logContainer.scrollHeight;
     }
   }, [logs]);
