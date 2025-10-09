@@ -29,6 +29,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const message = line;
     const lowerMessage = message.toLowerCase();
 
+    // Check for explicit prefixes from our own stream messages
     if (lowerMessage.startsWith('[error]')) {
         return { timestamp, level: 'error', message: message.substring(7).trim() };
     }
@@ -39,7 +40,7 @@ const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
          return { timestamp, level: 'info', message: message.substring(6).trim() };
     }
     
-    // Default case for any log line that doesn't match the above.
+    // Default case for any log line that doesn't match the above (e.g., from the bot itself).
     return { timestamp, level: 'info', message };
 };
 
@@ -63,6 +64,7 @@ export function LogViewer({ botId }: LogViewerProps) {
         setIsConnected(true);
         // Use functional update to prevent race conditions and ensure we don't add duplicate messages.
         setLogs(prev => {
+          // Avoid adding multiple 'connected' messages if one already exists recently
           if (prev.length > 0 && prev[prev.length - 1]?.message.includes('Log stream connected')) {
             return prev;
           }
@@ -71,19 +73,12 @@ export function LogViewer({ botId }: LogViewerProps) {
       };
 
       es.onmessage = (event) => {
+        // The backend /logs endpoint formats the data field with the "data: " prefix.
+        // The EventSource onmessage handler automatically strips this prefix.
+        // We just need to handle the content of `event.data`.
         if (event.data) {
-          const lines = event.data
-            .split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
-      
-          setLogs((prevLogs) => [
-            ...prevLogs,
-            ...lines.map(line => ({
-              ...parseLogLine(line),
-              id: Date.now() + Math.random(),
-            })),
-          ]);
+          const newLog = parseLogLine(event.data);
+          setLogs(prevLogs => [...prevLogs, { ...newLog, id: Date.now() + Math.random() }]);
         }
       };
       
@@ -98,6 +93,7 @@ export function LogViewer({ botId }: LogViewerProps) {
 
     connect();
 
+    // Cleanup function to close connection when component unmounts
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();

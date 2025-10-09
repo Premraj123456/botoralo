@@ -6,7 +6,6 @@ import { getBotById } from '@/lib/supabase/actions';
 const BACKEND_URL = process.env.BOT_BACKEND_URL;
 const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
-// This is crucial to prevent Next.js from buffering the response in serverless environments.
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
