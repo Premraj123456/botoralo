@@ -26,8 +26,7 @@ const levelColors: { [key in LogEntry['level']]: string } = {
 
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
     const timestamp = new Date().toLocaleTimeString();
-    // The incoming line might still have the "data: " prefix from the stream.
-    const message = line.startsWith('data:') ? line.substring(5).trim() : line.trim();
+    const message = line.trim();
     const lowerMessage = message.toLowerCase();
 
     // Check for explicit prefixes from our own stream messages
@@ -74,8 +73,8 @@ export function LogViewer({ botId }: LogViewerProps) {
       es.onmessage = (event) => {
         if (event.data) {
           // Robustly handle cases where multiple SSE messages are bundled into one event.data
-          const messageChunk = event.data.replace(/\\n\\n/g, '\n');
-          const lines = messageChunk.split('\n');
+          const messageChunk = event.data.replace(/\\n\\n/g, '\\n');
+          const lines = messageChunk.split('\\n');
       
           const newLogs = lines
             .map(line => {

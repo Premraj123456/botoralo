@@ -1,14 +1,12 @@
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getBotById } from '@/lib/supabase/actions';
 
 const BACKEND_URL = process.env.BOT_BACKEND_URL;
 const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
-// This is crucial to prevent Next.js from statically rendering this route.
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+export const runtime = 'nodejs'; // Crucial for preventing response buffering
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   if (!BACKEND_URL || !MASTER_KEY) {
@@ -26,21 +24,20 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return new NextResponse('Unauthorized', { status: 401 });
+    return new Response('Unauthorized', { status: 401 });
   }
 
   const botId = params.id;
   try {
     const bot = await getBotById(botId);
     if (!bot || bot.owner_id !== user.id) {
-      return new NextResponse('Bot not found or you do not have permission to view it.', { status: 404 });
+      return new Response('Bot not found or you do not have permission to view it.', { status: 404 });
     }
   } catch (e) {
-    return new NextResponse('Error fetching bot data.', { status: 500 });
+    return new Response('Error fetching bot data.', { status: 500 });
   }
 
   try {
-    // This fetch call initiates the stream from the Python backend.
     const backendResponse = await fetch(`${BACKEND_URL}/logs`, {
       method: 'POST',
       headers: {
@@ -61,16 +58,21 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       console.error(`Backend log stream failed: ${errorText}`);
       throw new Error(`Failed to connect to the backend log stream: ${errorText}`);
     }
+
+    const stream = new TransformStream({
+        transform(chunk, controller) {
+            controller.enqueue(chunk);
+        }
+    });
+
+    backendResponse.body.pipeTo(stream.writable);
     
-    // Directly pipe the stream from the backend to the client.
-    // This is the most robust way to proxy an SSE stream.
-    return new Response(backendResponse.body, {
+    return new Response(stream.readable, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache, no-transform',
         'Connection': 'keep-alive',
-        // This header is crucial for Vercel and other Nginx-based platforms to not buffer the response.
         'X-Accel-Buffering': 'no', 
       },
     });
