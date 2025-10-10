@@ -8,7 +8,7 @@ const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
 export const runtime = 'nodejs'; // Crucial for preventing response buffering
 
-// IMPORTANT: This route now accepts POST requests to match the Python backend
+// This route now accepts POST requests to match the Python backend
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   if (!BACKEND_URL || !MASTER_KEY) {
     const stream = new ReadableStream({
@@ -56,10 +56,12 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     if (!backendResponse.ok || !backendResponse.body) {
       const errorText = await backendResponse.text();
-      console.error(`Backend log stream failed: ${errorText}`);
+      console.error(`[API Logs] Backend log stream failed: ${errorText}`);
       throw new Error(`Failed to connect to the backend log stream: ${errorText}`);
     }
 
+    // Create a TransformStream to pipe the backend response directly to the client.
+    // This is the most reliable way to proxy a stream.
     const stream = new TransformStream({
         transform(chunk, controller) {
             controller.enqueue(chunk);
@@ -72,7 +74,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache, no-transform',
+        'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
         'X-Accel-Buffering': 'no', 
       },
@@ -86,6 +88,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         controller.close();
       },
     });
+    console.error("[API Logs] Error establishing stream connection:", error)
     return new Response(stream, { status: 500, headers: { 'Content-Type': 'text/event-stream' } });
   }
 }

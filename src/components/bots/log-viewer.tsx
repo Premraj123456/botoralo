@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +24,7 @@ const levelColors: Record<LogEntry['level'], string> = {
   unknown: "text-gray-400",
 };
 
+// This function parses a single line of log data
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
   const timestamp = new Date().toLocaleTimeString();
   // The message is already cleaned of the "data: " prefix
@@ -56,7 +58,7 @@ export function LogViewer({ botId }: LogViewerProps) {
           method: 'POST',
           signal,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({})
+          body: JSON.stringify({}) // Send empty JSON body
         });
 
         if (!response.body) {
@@ -70,6 +72,7 @@ export function LogViewer({ botId }: LogViewerProps) {
         const decoder = new TextDecoder();
         let buffer = '';
 
+        // This robust loop handles any kind of chunking
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
@@ -77,23 +80,23 @@ export function LogViewer({ botId }: LogViewerProps) {
           }
 
           buffer += decoder.decode(value, { stream: true });
-
-          // This is the robust parser. It looks for the SSE message delimiter.
+          
           let boundary = buffer.indexOf('\n\n');
           while (boundary !== -1) {
-            const message = buffer.substring(0, boundary);
-            buffer = buffer.substring(boundary + 2); // Remove the processed message from the buffer
+              const message = buffer.substring(0, boundary);
+              buffer = buffer.substring(boundary + 2); // Remove the processed message from the buffer
 
-            if (message.startsWith('data:')) {
-              const data = message.substring(5).trim();
-              if (data) {
-                const newLog = { ...parseLogLine(data), id: Date.now() + Math.random() };
-                setLogs(prev => [...prev, newLog]);
+              if (message.startsWith('data:')) {
+                  const data = message.substring(5).trim();
+                  if (data) {
+                      const newLog = { ...parseLogLine(data), id: Date.now() + Math.random() };
+                      setLogs(prev => [...prev, newLog]);
+                  }
               }
-            }
-            boundary = buffer.indexOf('\n\n');
+              boundary = buffer.indexOf('\n\n');
           }
         }
+
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           console.error("Stream error:", err);
@@ -101,6 +104,9 @@ export function LogViewer({ botId }: LogViewerProps) {
         }
       } finally {
         setIsConnected(false);
+        if (!signal.aborted) {
+          setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'warn', message: 'Stream ended.' }]);
+        }
       }
     };
 
