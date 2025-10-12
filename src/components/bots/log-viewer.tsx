@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,10 +23,8 @@ const levelColors: Record<LogEntry['level'], string> = {
   unknown: "text-gray-400",
 };
 
-// This function parses a single line of log data
 const parseLogLine = (line: string): Omit<LogEntry, 'id'> => {
   const timestamp = new Date().toLocaleTimeString();
-  // The message is already cleaned of the "data: " prefix
   const messageOnly = line.trim();
   const lower = messageOnly.toLowerCase();
 
@@ -48,61 +45,78 @@ export function LogViewer({ botId }: LogViewerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setLogs([]); // Clear logs on bot change
+    console.log(`[LogViewer] Initializing for bot ID: ${botId}`);
+    setLogs([]);
     const controller = new AbortController();
     const { signal } = controller;
 
     const connect = async () => {
+      console.log("[LogViewer] Attempting to connect to stream...");
       try {
         const response = await fetch(`/api/bots/${botId}/logs`, {
           method: 'POST',
           signal,
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}) // Send empty JSON body
+          body: JSON.stringify({})
         });
 
+        if (!response.ok) {
+          throw new Error(`Fetch failed with status ${response.status}`);
+        }
         if (!response.body) {
           throw new Error("Response has no body");
         }
         
+        console.log("[LogViewer] Stream connected successfully.");
         setIsConnected(true);
-        setLogs([{ id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
+        setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
 
-        // This robust loop handles any kind of chunking
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
+            console.log("[LogViewer] Stream finished.");
             break;
           }
 
-          buffer += decoder.decode(value, { stream: true });
+          const chunk = decoder.decode(value, { stream: true });
+          console.log("[LogViewer DEBUG] Received chunk:", JSON.stringify(chunk));
+          buffer += chunk;
           
+          console.log("[LogViewer DEBUG] Buffer content:", JSON.stringify(buffer));
+
           let boundary = buffer.indexOf('\n\n');
           while (boundary !== -1) {
-              const message = buffer.substring(0, boundary);
-              buffer = buffer.substring(boundary + 2); // Remove the processed message from the buffer
+            const message = buffer.substring(0, boundary);
+            buffer = buffer.substring(boundary + 2);
 
-              if (message.startsWith('data:')) {
-                  const data = message.substring(5).trim();
-                  if (data) {
-                      const newLog = { ...parseLogLine(data), id: Date.now() + Math.random() };
-                      setLogs(prev => [...prev, newLog]);
-                  }
+            console.log("[LogViewer DEBUG] Processing message part:", JSON.stringify(message));
+
+            if (message.startsWith('data:')) {
+              const data = message.substring(5).trim();
+              if (data) {
+                const newLog = { ...parseLogLine(data), id: Date.now() + Math.random() };
+                console.log("[LogViewer] Adding new log to state:", newLog);
+                setLogs(prev => [...prev, newLog]);
               }
-              boundary = buffer.indexOf('\n\n');
+            }
+            boundary = buffer.indexOf('\n\n');
           }
+           console.log("[LogViewer DEBUG] New buffer for incomplete part:", JSON.stringify(buffer));
         }
 
       } catch (err: any) {
         if (err.name !== 'AbortError') {
-          console.error("Stream error:", err);
+          console.error("[LogViewer] Stream error:", err);
           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${(err as Error).message}.` }]);
+        } else {
+            console.log("[LogViewer] Stream connection aborted as requested.");
         }
       } finally {
+        console.log("[LogViewer] Set isConnected to false.");
         setIsConnected(false);
         if (!signal.aborted) {
           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'warn', message: 'Stream ended.' }]);
@@ -113,6 +127,7 @@ export function LogViewer({ botId }: LogViewerProps) {
     connect();
 
     return () => {
+      console.log("[LogViewer] Cleanup: Aborting stream connection.");
       controller.abort();
     };
   }, [botId]);
