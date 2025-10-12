@@ -1,14 +1,13 @@
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getBotById } from '@/lib/supabase/actions';
 
 const BACKEND_URL = process.env.BOT_BACKEND_URL;
 const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
-export const runtime = 'nodejs'; // Crucial for preventing response buffering
+export const runtime = 'edge'; // Use the Edge runtime for best streaming performance
 
-// This route now accepts POST requests to match the Python backend
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   if (!BACKEND_URL || !MASTER_KEY) {
     const stream = new ReadableStream({
@@ -50,8 +49,9 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
         userId: user.id,
         botoraloBotId: botId,
       }),
-      // @ts-ignore - This is required for streaming in some Node.js environments.
-      duplex: 'half', 
+      // This is crucial for streaming in Vercel/Next.js Edge functions
+      // @ts-ignore
+      duplex: 'half',
     });
 
     if (!backendResponse.ok || !backendResponse.body) {
@@ -60,22 +60,30 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       throw new Error(`Failed to connect to the backend log stream: ${errorText}`);
     }
 
-    // Create a TransformStream to pipe the backend response directly to the client.
-    // This is the most reliable way to proxy a stream.
-    const stream = new TransformStream({
-        transform(chunk, controller) {
-            controller.enqueue(chunk);
+    // Create a new ReadableStream to pipe the data through to the client.
+    // This is the most reliable way to proxy a stream in Next.js.
+    const reader = backendResponse.body.getReader();
+    const stream = new ReadableStream({
+      async start(controller) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            break;
+          }
+          controller.enqueue(value);
         }
+        controller.close();
+      },
     });
-
-    backendResponse.body.pipeTo(stream.writable);
     
-    return new Response(stream.readable, {
+    // Return the stream directly to the client
+    return new Response(stream, {
       status: 200,
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
+        // This header is vital for preventing buffering in proxy environments like Vercel
         'X-Accel-Buffering': 'no', 
       },
     });

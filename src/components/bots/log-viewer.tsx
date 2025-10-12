@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,13 +46,11 @@ export function LogViewer({ botId }: LogViewerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log(`[LogViewer] Initializing for bot ID: ${botId}`);
     setLogs([]);
     const controller = new AbortController();
     const { signal } = controller;
 
     const connect = async () => {
-      console.log("[LogViewer] Attempting to connect to stream...");
       try {
         const response = await fetch(`/api/bots/${botId}/logs`, {
           method: 'POST',
@@ -67,7 +66,6 @@ export function LogViewer({ botId }: LogViewerProps) {
           throw new Error("Response has no body");
         }
         
-        console.log("[LogViewer] Stream connected successfully.");
         setIsConnected(true);
         setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'info', message: 'Connected to log stream...' }]);
 
@@ -78,45 +76,32 @@ export function LogViewer({ botId }: LogViewerProps) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) {
-            console.log("[LogViewer] Stream finished.");
             break;
           }
 
-          const chunk = decoder.decode(value, { stream: true });
-          console.log("[LogViewer DEBUG] Received chunk:", JSON.stringify(chunk));
-          buffer += chunk;
+          buffer += decoder.decode(value, { stream: true });
           
-          console.log("[LogViewer DEBUG] Buffer content:", JSON.stringify(buffer));
-
           let boundary = buffer.indexOf('\n\n');
           while (boundary !== -1) {
             const message = buffer.substring(0, boundary);
             buffer = buffer.substring(boundary + 2);
 
-            console.log("[LogViewer DEBUG] Processing message part:", JSON.stringify(message));
-
             if (message.startsWith('data:')) {
               const data = message.substring(5).trim();
               if (data) {
                 const newLog = { ...parseLogLine(data), id: Date.now() + Math.random() };
-                console.log("[LogViewer] Adding new log to state:", newLog);
                 setLogs(prev => [...prev, newLog]);
               }
             }
             boundary = buffer.indexOf('\n\n');
           }
-           console.log("[LogViewer DEBUG] New buffer for incomplete part:", JSON.stringify(buffer));
         }
-
       } catch (err: any) {
         if (err.name !== 'AbortError') {
           console.error("[LogViewer] Stream error:", err);
           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'error', message: `Stream disconnected: ${(err as Error).message}.` }]);
-        } else {
-            console.log("[LogViewer] Stream connection aborted as requested.");
         }
       } finally {
-        console.log("[LogViewer] Set isConnected to false.");
         setIsConnected(false);
         if (!signal.aborted) {
           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'warn', message: 'Stream ended.' }]);
@@ -127,7 +112,6 @@ export function LogViewer({ botId }: LogViewerProps) {
     connect();
 
     return () => {
-      console.log("[LogViewer] Cleanup: Aborting stream connection.");
       controller.abort();
     };
   }, [botId]);
