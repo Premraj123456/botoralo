@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
 import { Paddle, Subscription } from '@paddle/paddle-node-sdk';
+import { redirect } from 'next/navigation';
 
 // This file is NOT a server action file. It is a server-side utility.
 // Initialize Paddle with the correct environment setting
@@ -249,21 +250,18 @@ export async function deleteBot(prevState: any, formData: FormData) {
     const supabase = createSupabaseServerClient();
     
     try {
-        const { error: dbError } = await supabase.from('bots').delete().eq('id', botId);
-
-        if (dbError) {
-            console.error("Failed to delete bot from Supabase:", dbError);
-            throw new Error("Could not delete bot from the database.");
-        }
-
         await deleteBotFromBackend(botId);
-        revalidatePath('/dashboard');
-        return { message: "Bot has been deleted.", success: true };
     } catch (e) {
-        // If the backend delete fails, we should still proceed as the DB record is gone.
-        // The container might be orphaned, but it's better than blocking the user.
-        console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
-        revalidatePath('/dashboard');
-        return { message: "Bot has been deleted from the dashboard.", success: true };
+        console.warn(`Could not delete bot ${botId} from backend service, but proceeding with DB deletion. It may have already been deleted or orphaned.`, e);
     }
+
+    const { error: dbError } = await supabase.from('bots').delete().eq('id', botId);
+
+    if (dbError) {
+        console.error("Failed to delete bot from Supabase:", dbError);
+        return { message: "Could not delete bot from the database.", success: false };
+    }
+    
+    revalidatePath('/dashboard');
+    return { message: "Bot has been deleted.", success: true, redirect: "/dashboard" };
 }

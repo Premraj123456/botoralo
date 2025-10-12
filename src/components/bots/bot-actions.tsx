@@ -115,8 +115,13 @@ export function BotActions({ botId, initialStatus }: BotActionsProps) {
     if (deleteState.message) {
       if (deleteState.success) {
         toast({ title: "Success", description: deleteState.message });
-        router.push("/dashboard");
-        router.refresh();
+        // @ts-ignore
+        if (deleteState.redirect) {
+          // @ts-ignore
+          router.push(deleteState.redirect);
+        } else {
+          router.refresh();
+        }
       } else {
         toast({ title: "Error", description: deleteState.message, variant: "destructive" });
       }
