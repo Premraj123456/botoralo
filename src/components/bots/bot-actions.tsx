@@ -72,44 +72,15 @@ function StopButton({ disabled }: { disabled: boolean }) {
   );
 }
 
-function DeleteButton({ onClick, isPending }: { onClick: () => void, isPending: boolean }) {
-    const [deleteState, deleteAction] = useFormState(deleteBotAction, initialState);
-    const router = useRouter();
-    const { toast } = useToast();
-
-    useEffect(() => {
-        if(deleteState.message && !isPending){
-            if(deleteState.success){
-                toast({ title: "Bot Deleted", description: deleteState.message });
-                router.push('/dashboard');
-                router.refresh();
-            } else {
-                toast({ title: "Error", description: deleteState.message, variant: 'destructive' });
-            }
-        }
-    }, [deleteState, isPending, router, toast]);
-
-    return (
-        <form action={deleteAction} className="contents">
-            <input type="hidden" name="botId" value={onClick.toString()} />
-             <AlertDialogAction type="submit" disabled={isPending}>
-                {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Continue
-            </AlertDialogAction>
-        </form>
-    )
-}
-
-
 export function BotActions({ botId, initialStatus }: BotActionsProps) {
   const { toast } = useToast();
   const router = useRouter();
 
   const [startState, startAction] = useFormState(startBot, initialState);
   const [stopState, stopAction] = useFormState(stopBot, initialState);
-  const [deleteState, deleteAction] = useFormState(deleteBot, initialState);
+  const [deleteState, deleteAction] = useFormState(deleteBotAction, initialState);
 
-  const [isDeleting, startDeleteTransition] = useTransition();
+  const { pending: isDeleting } = useFormStatus();
   
   useEffect(() => {
     if (startState.message) {
@@ -147,14 +118,6 @@ export function BotActions({ botId, initialStatus }: BotActionsProps) {
       }
     }
   }, [deleteState, isDeleting, router, toast]);
-
-  const handleDelete = () => {
-    startDeleteTransition(() => {
-        const formData = new FormData();
-        formData.append('botId', botId);
-        deleteAction(initialState, formData);
-    });
-  };
 
   return (
     <div className="flex gap-2">

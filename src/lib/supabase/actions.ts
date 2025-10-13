@@ -331,7 +331,8 @@ export async function stopBot(prevState: any, formData: FormData) {
     }
 }
 
-export async function deleteBot(botId: string) {
+export async function deleteBot(prevState: any, formData: FormData) {
+    const botId = formData.get('botId') as string;
     const supabase = createSupabaseServerClient();
     
     try {
@@ -342,19 +343,14 @@ export async function deleteBot(botId: string) {
             throw new Error("Could not delete bot from the database.");
         }
 
-        // The revalidation will happen after the client redirects and re-fetches.
-        // We can still trigger it here to be safe.
+        await deleteBotFromBackend(botId);
         revalidatePath('/dashboard');
-        
-        // This runs in the background, we don't need to wait for it.
-        deleteBotFromBackend(botId).catch(e => {
-          console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
-        });
-        
-        return { message: "Bot has been queued for deletion.", success: true };
+        return { message: "Bot has been deleted.", success: true };
     } catch (e) {
-        return { message: (e as Error).message, success: false };
+        // If the backend delete fails, we should still proceed as the DB record is gone.
+        // The container might be orphaned, but it's better than blocking the user.
+        console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
+        revalidatePath('/dashboard');
+        return { message: "Bot has been deleted from the dashboard.", success: true };
     }
 }
-
-    
