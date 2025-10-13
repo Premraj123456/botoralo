@@ -1,5 +1,5 @@
+import { Link } from 'next/link';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { Link } from '@/components/layout/page-loader';
 import { Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

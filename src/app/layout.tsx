@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter, Source_Code_Pro } from 'next/font/google';
-import { PageLoader, NProgressProvider } from '@/components/layout/page-loader';
+import { PageLoader } from '@/components/layout/page-loader';
 import { PaddleProvider } from '@/components/paddle/paddle-provider';
 import { Suspense } from 'react';
 
@@ -30,14 +30,13 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${sourceCodePro.variable} dark`}>
       <body className="font-body">
-        <NProgressProvider>
-          <Suspense fallback={null}>
-            <PageLoader />
-          </Suspense>
-          {children}
-          <Toaster />
-          <PaddleProvider />
-        </NProgressProvider>
+        <Suspense fallback={null}>
+          <PageLoader>
+            {children}
+          </PageLoader>
+        </Suspense>
+        <Toaster />
+        <PaddleProvider />
       </body>
     </html>
   );

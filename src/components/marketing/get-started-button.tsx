@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { ArrowRight } from "lucide-react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
