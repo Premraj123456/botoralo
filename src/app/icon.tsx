@@ -19,17 +19,17 @@ export default function Icon() {
       <div
         style={{
           fontSize: 24,
-          background: '#2A2A2A',
+          background: 'transparent', // Use a transparent background
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#8A2BE2',
-          borderRadius: '8px',
+          // Use a specific color for the icon that matches the brand's primary color
+          color: '#8A2BE2', 
         }}
       >
-        <Bot size={24} />
+        <Bot size={28} />
       </div>
     ),
     // ImageResponse options
