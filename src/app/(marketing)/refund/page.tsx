@@ -32,7 +32,7 @@ export default function RefundPolicyPage() {
               <section>
                 <h2 className="text-2xl font-semibold">4. How to Request a Refund</h2>
                 <p>
-                  To request a refund, please contact our support team at support@botoralo.app within the 7-day eligibility period. Please include your account email and the reason for your request. Refunds are processed within 5-10 business days to the original method of payment.
+                  To request a refund, please contact our support team at support@botoralo.space within the 7-day eligibility period. Please include your account email and the reason for your request. Refunds are processed within 5-10 business days to the original method of payment.
                 </p>
               </section>
               <section>
@@ -44,7 +44,7 @@ export default function RefundPolicyPage() {
               <section>
                 <h2 className="text-2xl font-semibold">6. Contact Us</h2>
                 <p>
-                  If you have any questions about our Refund Policy, please contact us at support@botoralo.app.
+                  If you have any questions about our Refund Policy, please contact us at support@botoralo.space.
                 </p>
               </section>
             </CardContent>

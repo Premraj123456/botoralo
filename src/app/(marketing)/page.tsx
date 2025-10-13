@@ -90,8 +90,8 @@ export default function LandingPage() {
                 alt="Hero"
                 className="mx-auto aspect-video overflow-hidden rounded-xl object-cover"
                 height="400"
-                src="https://picsum.photos/seed/1/600/400"
-                data-ai-hint="discord telegram bots"
+                src="https://picsum.photos/seed/saas-dashboard/700/400"
+                data-ai-hint="saas dashboard"
                 width="700"
               />
             </div>
