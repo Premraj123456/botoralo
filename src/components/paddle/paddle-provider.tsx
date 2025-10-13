@@ -11,6 +11,8 @@ declare global {
 export function PaddleProvider() {
   useEffect(() => {
     const paddleToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+    const paddleEnvironment = process.env.NODE_ENV;
+
     if (!paddleToken) {
       console.error("Paddle token is not configured.");
       return;
@@ -26,7 +28,7 @@ export function PaddleProvider() {
     script.async = true;
     script.onload = () => {
       if (window.Paddle) {
-        window.Paddle.Environment.set("sandbox");
+        window.Paddle.Environment.set(paddleEnvironment);
         window.Paddle.Setup({
           token: paddleToken,
         });
