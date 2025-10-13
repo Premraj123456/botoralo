@@ -29,6 +29,9 @@ export async function manageSubscription({ customerId }: { customerId: string })
 
         // The customerId should be passed directly as a string argument.
         const customerPortal = await paddleClient.customerPortalSessions.create(customerId);
+
+        console.log('[manageSubscription] - Full response from Paddle:', JSON.stringify(customerPortal, null, 2));
+        
         return { url: customerPortal.url };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
