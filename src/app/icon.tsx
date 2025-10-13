@@ -1,42 +1,51 @@
-import { ImageResponse } from 'next/og'
-import { Bot } from 'lucide-react';
+import { ImageResponse } from 'next/og';
 
 // Route segment config
-export const runtime = 'edge'
+export const runtime = 'edge';
 
 // Image metadata
 export const size = {
   width: 32,
   height: 32,
-}
-export const contentType = 'image/png'
+};
+export const contentType = 'image/png';
 
 // Image generation
 export default function Icon() {
   return new ImageResponse(
     (
-      // ImageResponse JSX element
       <div
         style={{
-          fontSize: 24,
-          background: 'transparent', // Use a transparent background
-          width: '100%',
-          height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          // Use a specific color for the icon that matches the brand's primary color
-          color: '#8A2BE2', 
+          width: '100%',
+          height: '100%',
+          background: 'transparent',
         }}
       >
-        <Bot size={28} />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#8A2BE2" // Primary brand color
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 8V4H8" />
+          <rect width="16" height="12" x="4" y="8" rx="2" />
+          <path d="M2 14h2" />
+          <path d="M20 14h2" />
+          <path d="M15 13v2" />
+          <path d="M9 13v2" />
+        </svg>
       </div>
     ),
-    // ImageResponse options
     {
-      // For convenience, we can re-use the exported icons size metadata
-      // config to also set the ImageResponse's width and height.
       ...size,
     }
-  )
+  );
 }
