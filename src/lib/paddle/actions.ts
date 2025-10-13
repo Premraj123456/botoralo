@@ -32,7 +32,13 @@ export async function manageSubscription({ customerId }: { customerId: string })
 
         console.log('[manageSubscription] - Full response from Paddle:', JSON.stringify(customerPortal, null, 2));
         
-        return { url: customerPortal.url };
+        // Correctly extract the URL from the nested response object
+        const portalUrl = customerPortal.urls.general.overview;
+        if (!portalUrl) {
+            throw new Error("Could not find the portal URL in the Paddle response.");
+        }
+
+        return { url: portalUrl };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
         throw new Error("Could not generate subscription management link.");
