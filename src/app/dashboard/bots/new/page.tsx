@@ -12,6 +12,7 @@ import { createBot } from "@/lib/supabase/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import React from "react";
 
 const botFormSchema = z.object({
   name: z.string().min(3, "Bot name must be at least 3 characters."),
@@ -27,6 +28,8 @@ type BotFormValues = z.infer<typeof botFormSchema>;
 export default function NewBotPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const [isPending, startTransition] = React.useTransition();
+
   const form = useForm<BotFormValues>({
     resolver: zodResolver(botFormSchema),
     defaultValues: {
@@ -34,29 +37,29 @@ export default function NewBotPage() {
     },
   });
 
-  const onSubmit = async (values: BotFormValues) => {
-    try {
-      const file = values.codeFile[0];
-      // The `createBot` action now handles the FormData creation
-      const formData = new FormData();
-      formData.append("name", values.name);
-      formData.append("codeFile", file);
+  const onSubmit = (values: BotFormValues) => {
+    const formData = new FormData();
+    formData.append("name", values.name);
+    formData.append("codeFile", values.codeFile[0]);
 
-      const newBot: { id: string } | null = await createBot(formData);
-      if (newBot) {
-        toast({ title: "Success", description: "Your bot has been deployed." });
-        router.push(`/dashboard/bots/${newBot.id}`);
-      } else {
-        throw new Error("Failed to create bot.");
-      }
-    } catch (error) {
-      console.error(error);
-      toast({
-        title: "Error",
-        description: (error as Error).message || "Something went wrong.",
-        variant: "destructive",
-      });
-    }
+    startTransition(async () => {
+        try {
+            const newBot = await createBot(formData);
+            if (newBot) {
+                toast({ title: "Success", description: "Your bot is being deployed." });
+                router.push(`/dashboard/bots/${newBot.id}`);
+            } else {
+                 throw new Error("An unknown error occurred.");
+            }
+        } catch (error) {
+            console.error("Create bot error:", error);
+            toast({
+                title: "Deployment Failed",
+                description: (error as Error).message || "Could not create the bot.",
+                variant: "destructive",
+            });
+        }
+    });
   };
 
 
@@ -118,8 +121,8 @@ export default function NewBotPage() {
                 )}
               />
               <div className="flex justify-end">
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? (
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Save className="mr-2 h-4 w-4" />
