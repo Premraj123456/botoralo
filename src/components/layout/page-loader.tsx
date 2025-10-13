@@ -3,6 +3,7 @@
 import * as React from "react";
 import NextLink, { type LinkProps } from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { ClientLink } from './client-link';
 
 function useNProgress() {
   const [isLoading, setIsLoading] = React.useState(false);
@@ -74,30 +75,6 @@ export function useNProgressContext() {
   }
   return context;
 }
-
-const ClientLink = React.forwardRef<
-  HTMLAnchorElement,
-  React.PropsWithChildren<LinkProps> & React.HTMLAttributes<HTMLAnchorElement>
->(function ClientLink({ href, onClick, children, ...props }, ref) {
-  const { startLoading } = useNProgressContext();
-
-  return (
-    <NextLink
-      href={href}
-      ref={ref}
-      onClick={(e) => {
-        startLoading();
-        if (onClick) {
-          onClick(e);
-        }
-      }}
-      {...props}
-    >
-      {children}
-    </NextLink>
-  );
-});
-ClientLink.displayName = "ClientLink";
 
 // Export the server-safe Link component
 export const Link = ClientLink;

@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import { PageLoader, NProgressProvider } from '@/components/layout/page-loader';
 import { PaddleProvider } from '@/components/paddle/paddle-provider';
+import { Suspense } from 'react';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -30,9 +31,11 @@ export default async function RootLayout({
     <html lang="en" className={`${inter.variable} ${sourceCodePro.variable} dark`}>
       <body className="font-body">
         <NProgressProvider>
+          <Suspense fallback={null}>
+            <PageLoader />
+          </Suspense>
           {children}
           <Toaster />
-          <PageLoader />
           <PaddleProvider />
         </NProgressProvider>
       </body>
