@@ -4,7 +4,7 @@
 import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Play, Square, Trash2, Loader2 } from "lucide-react";
-import { startBot, stopBot, deleteBot } from "@/lib/supabase/actions";
+import { startBot, stopBot } from "@/lib/supabase/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import {
@@ -19,6 +19,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useEffect, useState, useTransition } from "react";
+import { deleteBot as deleteBotAction } from "@/lib/supabase/actions";
+import { events } from "@/lib/events";
 
 type BotStatus = "running" | "stopped" | "error";
 
@@ -71,11 +73,30 @@ function StopButton({ disabled }: { disabled: boolean }) {
 }
 
 function DeleteButton({ onClick, isPending }: { onClick: () => void, isPending: boolean }) {
+    const [deleteState, deleteAction] = useFormState(deleteBotAction, initialState);
+    const router = useRouter();
+    const { toast } = useToast();
+
+    useEffect(() => {
+        if(deleteState.message && !isPending){
+            if(deleteState.success){
+                toast({ title: "Bot Deleted", description: deleteState.message });
+                router.push('/dashboard');
+                router.refresh();
+            } else {
+                toast({ title: "Error", description: deleteState.message, variant: 'destructive' });
+            }
+        }
+    }, [deleteState, isPending, router, toast]);
+
     return (
-        <AlertDialogAction onClick={onClick} disabled={isPending}>
-            {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Continue
-        </AlertDialogAction>
+        <form action={deleteAction} className="contents">
+            <input type="hidden" name="botId" value={onClick.toString()} />
+             <AlertDialogAction type="submit" disabled={isPending}>
+                {isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                Continue
+            </AlertDialogAction>
+        </form>
     )
 }
 
@@ -83,21 +104,25 @@ function DeleteButton({ onClick, isPending }: { onClick: () => void, isPending: 
 export function BotActions({ botId, initialStatus }: BotActionsProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const [isDeleting, startDeleteTransition] = useTransition();
 
   const [startState, startAction] = useFormState(startBot, initialState);
   const [stopState, stopAction] = useFormState(stopBot, initialState);
+  const [deleteState, deleteAction] = useFormState(deleteBot, initialState);
+
+  const [isDeleting, startDeleteTransition] = useTransition();
   
   useEffect(() => {
     if (startState.message) {
       if (startState.success) {
         toast({ title: "Success", description: startState.message });
+        events.emit('refresh-logs');
         router.refresh();
       } else {
         toast({ title: "Error", description: startState.message, variant: "destructive" });
       }
     }
-  }, [startState, toast, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startState]);
   
   useEffect(() => {
     if (stopState.message) {
@@ -108,29 +133,26 @@ export function BotActions({ botId, initialStatus }: BotActionsProps) {
         toast({ title: "Error", description: stopState.message, variant: "destructive" });
       }
     }
-  }, [stopState, toast, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stopState]);
+
+  useEffect(() => {
+    if (deleteState.message && !isDeleting) {
+      if (deleteState.success) {
+        toast({ title: "Success", description: deleteState.message });
+        router.push('/dashboard');
+        router.refresh();
+      } else {
+        toast({ title: "Error", description: deleteState.message, variant: "destructive" });
+      }
+    }
+  }, [deleteState, isDeleting, router, toast]);
 
   const handleDelete = () => {
-    // Immediately redirect to the dashboard
-    router.push('/dashboard');
-
-    startDeleteTransition(async () => {
-      const result = await deleteBot(botId);
-      if (result.success) {
-        toast({
-          title: "Bot Deleted",
-          description: "The bot is being removed from your dashboard.",
-        });
-        // The dashboard will eventually be revalidated by the server action.
-        // An additional client-side refresh can ensure it's up-to-date.
-        router.refresh(); 
-      } else {
-        toast({
-          title: "Error Deleting Bot",
-          description: result.message,
-          variant: "destructive",
-        });
-      }
+    startDeleteTransition(() => {
+        const formData = new FormData();
+        formData.append('botId', botId);
+        deleteAction(initialState, formData);
     });
   };
 
@@ -161,7 +183,13 @@ export function BotActions({ botId, initialStatus }: BotActionsProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <DeleteButton onClick={handleDelete} isPending={isDeleting} />
+              <form action={deleteAction} className="contents">
+                <input type="hidden" name="botId" value={botId} />
+                <AlertDialogAction type="submit" disabled={isDeleting}>
+                    {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                    Continue
+                </AlertDialogAction>
+              </form>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

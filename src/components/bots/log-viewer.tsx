@@ -4,7 +4,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { events } from "@/lib/events";
 
 type LogEntry = {
   id: number;
@@ -44,13 +45,18 @@ export function LogViewer({ botId }: LogViewerProps) {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const controllerRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    setLogs([]);
+  const connect = useCallback(async () => {
+    if (controllerRef.current) {
+        controllerRef.current.abort();
+    }
+    
+    setLogs([]); // Clear logs on new connection
     const controller = new AbortController();
+    controllerRef.current = controller;
     const { signal } = controller;
 
-    const connect = async () => {
       try {
         const response = await fetch(`/api/bots/${botId}/logs`, {
           method: 'POST',
@@ -107,14 +113,25 @@ export function LogViewer({ botId }: LogViewerProps) {
           setLogs(prev => [...prev, { id: Date.now(), timestamp: new Date().toLocaleTimeString(), level: 'warn', message: 'Stream ended.' }]);
         }
       }
-    };
+  }, [botId]);
 
+  useEffect(() => {
     connect();
 
-    return () => {
-      controller.abort();
+    const handleRefresh = () => {
+        console.log("Refreshing logs...");
+        connect();
     };
-  }, [botId]);
+
+    events.on('refresh-logs', handleRefresh);
+
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+      events.off('refresh-logs', handleRefresh);
+    };
+  }, [connect]);
 
   useEffect(() => {
     const logContainer = scrollRef.current;
