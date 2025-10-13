@@ -30,8 +30,6 @@ export function SignInForm() {
   const [step, setStep] = useState<"email" | "otp">("email");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDemoSubmitting, setIsDemoSubmitting] = useState(false);
-  const [demoError, setDemoError] = useState(false);
   const { toast } = useToast();
   const supabase = createSupabaseClient();
   const router = useRouter();
@@ -113,28 +111,6 @@ export function SignInForm() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    if (!supabase) return;
-    setIsDemoSubmitting(true);
-    setDemoError(false);
-    try {
-        const { error } = await supabase.auth.signInWithPassword({
-            email: 'demo@user.com',
-            password: 'password',
-        });
-        if (error) {
-            setDemoError(true);
-            throw error;
-        }
-        router.push('/dashboard');
-        router.refresh();
-    } catch (error) {
-        console.error("Demo login failed", error);
-    } finally {
-        setIsDemoSubmitting(false);
-    }
-  }
-
   const renderForms = () => {
     if (step === "otp") {
       return (
@@ -181,7 +157,7 @@ export function SignInForm() {
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full" disabled={isSubmitting || isDemoSubmitting}>
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 animate-spin" />}
             Sign In with OTP
           </Button>
@@ -192,30 +168,7 @@ export function SignInForm() {
 
   return (
     <div>
-        {demoError && (
-            <Alert variant="destructive" className="mb-4">
-                <Terminal className="h-4 w-4" />
-                <AlertTitle>Demo Login Failed</AlertTitle>
-                <AlertDescription>
-                    Please create a user in your Supabase project with the email <strong>demo@user.com</strong> and password <strong>password</strong> to enable this feature.
-                </AlertDescription>
-            </Alert>
-        )}
         {renderForms()}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">
-              Or
-            </span>
-          </div>
-        </div>
-        <Button variant="secondary" className="w-full" onClick={handleDemoLogin} disabled={isDemoSubmitting || isSubmitting}>
-            {isDemoSubmitting && <Loader2 className="mr-2 animate-spin" />}
-            Demo Direct Login
-        </Button>
     </div>
   );
 }
