@@ -45,12 +45,8 @@ export default function NewBotPage() {
     startTransition(async () => {
         try {
             const newBot = await createBot(formData);
-            if (newBot) {
-                toast({ title: "Success", description: "Your bot is being deployed." });
-                router.push(`/dashboard/bots/${newBot.id}`);
-            } else {
-                 throw new Error("An unknown error occurred.");
-            }
+            toast({ title: "Success", description: "Your bot is being deployed." });
+            router.push(`/dashboard/bots/${newBot.id}`);
         } catch (error) {
             console.error("Create bot error:", error);
             toast({
