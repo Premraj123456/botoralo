@@ -20,7 +20,7 @@ const nextConfig = {
     ],
   },
   env: {
-    BOT_BACKEND_URL: "http://35.239.124.83:5000",
+    BOT_BACKEND_URL: "https://api.botoralo.space",
     PADDLE_API_KEY: process.env.PADDLE_API_KEY,
     PADDLE_WEBHOOK_SECRET: process.env.PADDLE_WEBHOOK_SECRET,
     NEXT_PUBLIC_PADDLE_CLIENT_TOKEN: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,

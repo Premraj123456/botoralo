@@ -1,1 +1,1 @@
-print("smething")
+pritn(nothing)
