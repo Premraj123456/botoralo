@@ -204,15 +204,15 @@ export async function updateUserProfile(data: { name: string }) {
 
 // --- BOT ACTIONS ---
 
-export async function createBot(formData: FormData) {
+export async function createBot(formData: FormData): Promise<{ success: boolean; message?: string; data?: Bot; }> {
   const { user } = await getCurrentUser();
-  if (!user) throw new Error('Not authenticated');
+  if (!user) return { success: false, message: 'Not authenticated' };
 
   const name = formData.get('name') as string;
   const codeFile = formData.get('codeFile') as File;
 
   if (!name || !codeFile) {
-    throw new Error("Bot name and code file are required.");
+    return { success: false, message: "Bot name and code file are required." };
   }
 
   const supabase = createSupabaseServerClient();
@@ -228,7 +228,7 @@ export async function createBot(formData: FormData) {
   const currentBotCount = count ?? 0;
 
   if (currentBotCount >= botLimit) {
-    throw new Error(`You have reached your bot limit for the ${subscription.plan} plan. Please upgrade your plan to create more bots.`);
+    return { success: false, message: `You have reached your bot limit for the ${subscription.plan} plan. Please upgrade your plan to create more bots.` };
   }
 
   // Insert a record into the DB first to get an ID
@@ -244,7 +244,7 @@ export async function createBot(formData: FormData) {
 
   if (error) {
     console.error('Error creating bot in database:', error);
-    throw new Error('Failed to create bot in database.');
+    return { success: false, message: 'Failed to create bot in database.' };
   }
   
   try {
@@ -254,12 +254,12 @@ export async function createBot(formData: FormData) {
     console.error("Backend deployment failed:", backendError);
     // Rollback: delete the bot record from Supabase if backend fails
     await supabase.from('bots').delete().eq('id', newBot.id);
-    throw new Error(`Bot deployment failed: ${(backendError as Error).message}`);
+    return { success: false, message: `Bot deployment failed: ${(backendError as Error).message}` };
   }
 
 
   revalidatePath('/dashboard');
-  return newBot;
+  return { success: true, data: newBot };
 }
 
 export async function getUserBots() {
@@ -356,3 +356,5 @@ export async function deleteBot(botId: string) {
         return { message: (e as Error).message, success: false };
     }
 }
+
+    

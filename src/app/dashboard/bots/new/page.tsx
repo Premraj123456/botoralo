@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -43,15 +44,15 @@ export default function NewBotPage() {
     formData.append("codeFile", values.codeFile[0]);
 
     startTransition(async () => {
-        try {
-            const newBot = await createBot(formData);
+        const result = await createBot(formData);
+        
+        if (result.success && result.data) {
             toast({ title: "Success", description: "Your bot is being deployed." });
-            router.push(`/dashboard/bots/${newBot.id}`);
-        } catch (error) {
-            console.error("Create bot error:", error);
+            router.push(`/dashboard/bots/${result.data.id}`);
+        } else {
             toast({
                 title: "Deployment Failed",
-                description: (error as Error).message || "Could not create the bot.",
+                description: result.message || "Could not create the bot.",
                 variant: "destructive",
             });
         }
@@ -133,3 +134,5 @@ export default function NewBotPage() {
     </div>
   );
 }
+
+    
