@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from "react";
@@ -32,9 +33,9 @@ export function BillingClient({ user, subscription }: BillingClientProps) {
     }
     setIsManaging(true);
     try {
-        const { url } = await manageSubscription({ customerId: subscription.paddle_customer_id });
-        if (url) {
-            window.location.href = url;
+        const result = await manageSubscription({ customerId: subscription.paddle_customer_id });
+        if (result && result.url) {
+            window.location.href = result.url;
         } else {
             throw new Error("Could not generate subscription management link.");
         }
