@@ -1,7 +1,6 @@
 
 'use server';
 
-import { paddle } from "./client";
 import { Paddle } from '@paddle/paddle-node-sdk';
 
 export async function handlePaddleWebhook(event: any) {
@@ -29,7 +28,7 @@ export async function manageSubscription({ customerId }: { customerId: string })
         });
 
         // The customerId should be passed directly as an argument.
-        const customerPortal = await paddleClient.customerPortalSessions.create(customerId);
+        const customerPortal = await paddleClient.customerPortalSessions.create({customerId});
         return { url: customerPortal.url };
     } catch (error) {
         console.error("[manageSubscription] - Error generating Paddle management link", error);
