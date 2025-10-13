@@ -85,7 +85,7 @@ export async function getUserSubscription() {
     
     // 3. Get full details for the latest subscription to ensure product data is present
     console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
-    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id, { include: ['product'] });
+    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id);
     
     if (!latestSubscription) {
         console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
@@ -93,9 +93,9 @@ export async function getUserSubscription() {
     }
 
     for (const planItem of latestSubscription.items) {
-        // The product info is now directly included
-        if (planItem.product?.name) {
-            const productName = (planItem.product.name || '').toLowerCase();
+        if (planItem.price?.productId) {
+            const product = await paddle.products.get(planItem.price.productId);
+            const productName = (product?.name || '').toLowerCase();
             console.log(`[getUserSubscription] - Found Product Name: "${productName}"`);
 
             if (productName.includes('power')) {
@@ -215,7 +215,6 @@ export async function createBot(formData: FormData) {
 
   const supabase = createSupabaseServerClient();
 
-  // Check plan limits before creating the bot
   const [subscription, { count }] = await Promise.all([
     getUserSubscription(),
     supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
@@ -247,7 +246,6 @@ export async function createBot(formData: FormData) {
   }
   
   try {
-    // Pass the memory limit to the backend deployment function
     await deployBotToBackend(newBot, codeFile, memoryLimit);
     await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
   } catch (backendError) {
