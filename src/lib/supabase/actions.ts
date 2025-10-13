@@ -16,9 +16,9 @@ const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
 
 
 const planLimits = {
-  Free: { bots: 1, ram: 128 },
-  PRO: { bots: 5, ram: 512 },
-  POWER: { bots: 20, ram: 1024 },
+  Free: 1,
+  PRO: 5,
+  POWER: 20,
 };
 
 export type Bot = {
@@ -85,7 +85,7 @@ export async function getUserSubscription() {
     
     // 3. Get full details for the latest subscription to ensure product data is present
     console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
-    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id);
+    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id, { include: ['product'] });
     
     if (!latestSubscription) {
         console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
@@ -93,9 +93,9 @@ export async function getUserSubscription() {
     }
 
     for (const planItem of latestSubscription.items) {
-        if (planItem.price?.productId) {
-            const product = await paddle.products.get(planItem.price.productId);
-            const productName = (product?.name || '').toLowerCase();
+        // The product info is now directly included
+        if (planItem.product?.name) {
+            const productName = (planItem.product.name || '').toLowerCase();
             console.log(`[getUserSubscription] - Found Product Name: "${productName}"`);
 
             if (productName.includes('power')) {
@@ -220,9 +220,7 @@ export async function createBot(formData: FormData) {
     supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
   ]);
 
-  const plan = subscription.plan as keyof typeof planLimits;
-  const botLimit = planLimits[plan].bots;
-  const memoryLimit = planLimits[plan].ram;
+  const botLimit = planLimits[subscription.plan as keyof typeof planLimits] ?? 1;
   const currentBotCount = count ?? 0;
 
   if (currentBotCount >= botLimit) {
@@ -246,7 +244,7 @@ export async function createBot(formData: FormData) {
   }
   
   try {
-    await deployBotToBackend(newBot, codeFile, memoryLimit);
+    await deployBotToBackend(newBot, codeFile);
     await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
   } catch (backendError) {
     console.error("Backend deployment failed:", backendError);
@@ -343,13 +341,14 @@ export async function deleteBot(prevState: any, formData: FormData) {
 
         await deleteBotFromBackend(botId);
         revalidatePath('/dashboard');
-        return { message: "Bot has been deleted.", success: true };
+        // Return a state that indicates a redirect is needed
+        return { message: "Bot has been deleted.", success: true, redirect: '/dashboard' };
     } catch (e) {
         // If the backend delete fails, we should still proceed as the DB record is gone.
         // The container might be orphaned, but it's better than blocking the user.
         console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
         revalidatePath('/dashboard');
-        return { message: "Bot has been deleted from the dashboard.", success: true };
+        return { message: "Bot has been deleted from the dashboard.", success: true, redirect: '/dashboard' };
     }
 }
 
