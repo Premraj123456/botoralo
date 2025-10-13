@@ -331,8 +331,7 @@ export async function stopBot(prevState: any, formData: FormData) {
     }
 }
 
-export async function deleteBot(prevState: any, formData: FormData) {
-    const botId = formData.get('botId') as string;
+export async function deleteBot(botId: string): Promise<{ success: boolean; message: string; }> {
     const supabase = createSupabaseServerClient();
     
     try {

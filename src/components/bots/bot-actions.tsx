@@ -78,10 +78,9 @@ export function BotActions({ botId, initialStatus }: BotActionsProps) {
 
   const [startState, startAction] = useFormState(startBot, initialState);
   const [stopState, stopAction] = useFormState(stopBot, initialState);
-  const [deleteState, deleteAction] = useFormState(deleteBotAction, initialState);
-
-  const { pending: isDeleting } = useFormStatus();
   
+  const [isDeleting, startDeleteTransition] = useTransition();
+
   useEffect(() => {
     if (startState.message) {
       if (startState.success) {
@@ -107,17 +106,19 @@ export function BotActions({ botId, initialStatus }: BotActionsProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stopState]);
 
-  useEffect(() => {
-    if (deleteState.message && !isDeleting) {
-      if (deleteState.success) {
-        toast({ title: "Success", description: deleteState.message });
+  const handleDelete = () => {
+    startDeleteTransition(async () => {
+      const result = await deleteBotAction(botId);
+      if (result.success) {
+        toast({ title: "Success", description: result.message });
         router.push('/dashboard');
         router.refresh();
       } else {
-        toast({ title: "Error", description: deleteState.message, variant: "destructive" });
+        toast({ title: "Error", description: result.message, variant: "destructive" });
       }
-    }
-  }, [deleteState, isDeleting, router, toast]);
+    });
+  }
+
 
   return (
     <div className="flex gap-2">
@@ -146,13 +147,10 @@ export function BotActions({ botId, initialStatus }: BotActionsProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <form action={deleteAction} className="contents">
-                <input type="hidden" name="botId" value={botId} />
-                <AlertDialogAction type="submit" disabled={isDeleting}>
-                    {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                    Continue
-                </AlertDialogAction>
-              </form>
+              <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                  {isDeleting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Continue
+              </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
