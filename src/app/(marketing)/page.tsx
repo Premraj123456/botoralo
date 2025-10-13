@@ -89,10 +89,10 @@ export default function LandingPage() {
               <Image
                 alt="Hero"
                 className="mx-auto aspect-video overflow-hidden rounded-xl object-cover"
-                height="400"
-                src="https://picsum.photos/seed/saas-dashboard/700/400"
-                data-ai-hint="saas dashboard"
-                width="700"
+                height="1200"
+                src="https://picsum.photos/id/60/1920/1200"
+                data-ai-hint="abstract code"
+                width="1920"
               />
             </div>
           </div>
