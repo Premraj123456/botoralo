@@ -16,9 +16,9 @@ const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
 
 
 const planLimits = {
-  Free: 1,
-  PRO: 5,
-  POWER: 20,
+  Free: { bots: 1, ram: 128 },
+  PRO: { bots: 5, ram: 512 },
+  POWER: { bots: 20, ram: 1024 },
 };
 
 export type Bot = {
@@ -85,7 +85,7 @@ export async function getUserSubscription() {
     
     // 3. Get full details for the latest subscription to ensure product data is present
     console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
-    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id, { include: ['product'] });
+    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id);
     
     if (!latestSubscription) {
         console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
@@ -93,9 +93,11 @@ export async function getUserSubscription() {
     }
 
     for (const planItem of latestSubscription.items) {
-        // The product info is now directly included
-        if (planItem.product?.name) {
-            const productName = (planItem.product.name || '').toLowerCase();
+        if (!planItem.price?.productId) continue;
+
+        const product = await paddle.products.get(planItem.price.productId);
+        if (product?.name) {
+            const productName = (product.name || '').toLowerCase();
             console.log(`[getUserSubscription] - Found Product Name: "${productName}"`);
 
             if (productName.includes('power')) {
@@ -220,7 +222,9 @@ export async function createBot(formData: FormData) {
     supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
   ]);
 
-  const botLimit = planLimits[subscription.plan as keyof typeof planLimits] ?? 1;
+  const plan = subscription.plan as keyof typeof planLimits;
+  const botLimit = planLimits[plan].bots;
+  const memoryMb = planLimits[plan].ram;
   const currentBotCount = count ?? 0;
 
   if (currentBotCount >= botLimit) {
@@ -244,7 +248,7 @@ export async function createBot(formData: FormData) {
   }
   
   try {
-    await deployBotToBackend(newBot, codeFile);
+    await deployBotToBackend(newBot, codeFile, memoryMb);
     await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
   } catch (backendError) {
     console.error("Backend deployment failed:", backendError);
@@ -327,8 +331,7 @@ export async function stopBot(prevState: any, formData: FormData) {
     }
 }
 
-export async function deleteBot(prevState: any, formData: FormData) {
-    const botId = formData.get('botId') as string;
+export async function deleteBot(botId: string) {
     const supabase = createSupabaseServerClient();
     
     try {
@@ -339,17 +342,17 @@ export async function deleteBot(prevState: any, formData: FormData) {
             throw new Error("Could not delete bot from the database.");
         }
 
-        await deleteBotFromBackend(botId);
+        // The revalidation will happen after the client redirects and re-fetches.
+        // We can still trigger it here to be safe.
         revalidatePath('/dashboard');
-        // Return a state that indicates a redirect is needed
-        return { message: "Bot has been deleted.", success: true, redirect: '/dashboard' };
+        
+        // This runs in the background, we don't need to wait for it.
+        deleteBotFromBackend(botId).catch(e => {
+          console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
+        });
+        
+        return { message: "Bot has been queued for deletion.", success: true };
     } catch (e) {
-        // If the backend delete fails, we should still proceed as the DB record is gone.
-        // The container might be orphaned, but it's better than blocking the user.
-        console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
-        revalidatePath('/dashboard');
-        return { message: "Bot has been deleted from the dashboard.", success: true, redirect: '/dashboard' };
+        return { message: (e as Error).message, success: false };
     }
 }
-
-    
