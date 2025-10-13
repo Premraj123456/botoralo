@@ -2,11 +2,11 @@
 'use server';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getCurrentUser } from '@/lib/supabase/auth';
 import { deployBotToBackend, deleteBotFromBackend, startBotInBackend, stopBotInBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
 import { Paddle, Subscription } from '@paddle/paddle-node-sdk';
-import { redirect } from 'next/navigation';
 
 // This file is NOT a server action file. It is a server-side utility.
 // Initialize Paddle with the correct environment setting
@@ -16,16 +16,15 @@ const paddle = new Paddle(process.env.PADDLE_API_KEY!, {
 
 
 const planLimits = {
-  Free: 1,
-  PRO: 5,
-  POWER: 20,
+  Free: { bots: 1, ram: 128 },
+  PRO: { bots: 5, ram: 512 },
+  POWER: { bots: 20, ram: 1024 },
 };
 
 export type Bot = {
   id: string;
   created_at: string;
   name: string;
-  code: string;
   owner_id: string;
   status: 'running' | 'stopped' | 'error';
 };
@@ -86,7 +85,7 @@ export async function getUserSubscription() {
     
     // 3. Get full details for the latest subscription to ensure product data is present
     console.log(`[getUserSubscription] - Fetching full details for subscription ${latestSubscriptionFromList.id}`);
-    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id);
+    const latestSubscription = await paddle.subscriptions.get(latestSubscriptionFromList.id, { include: ['product'] });
     
     if (!latestSubscription) {
         console.error(`[getUserSubscription] - CRITICAL: Could not fetch details for subscription ${latestSubscriptionFromList.id}. Defaulting to Free plan.`);
@@ -94,6 +93,7 @@ export async function getUserSubscription() {
     }
 
     for (const planItem of latestSubscription.items) {
+        // The product info is now directly included
         if (planItem.product?.name) {
             const productName = (planItem.product.name || '').toLowerCase();
             console.log(`[getUserSubscription] - Found Product Name: "${productName}"`);
@@ -118,6 +118,88 @@ export async function getUserSubscription() {
   }
 }
 
+
+export async function upsertUserProfile({
+  userId,
+  email,
+}: {
+  userId: string;
+  email: string;
+}) {
+  const supabase = createSupabaseAdminClient();
+  if (!supabase) {
+    throw new Error('Supabase admin client not initialized.');
+  }
+
+  const profileData = {
+    id: userId,
+    email: email,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert(profileData, { onConflict: 'id' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error upserting user profile:', error);
+    throw new Error('Could not upsert user profile.');
+  }
+  return data;
+}
+
+export async function getUserProfile() {
+  const { user } = await getCurrentUser();
+  if (!user) return null;
+
+  const supabase = createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching profile:", error.message);
+    // If profile doesn't exist, we can still return basic info
+    return {
+      id: user.id,
+      email: user.email ?? null,
+      full_name: null,
+      updated_at: null,
+    };
+  }
+
+  // Ensure the email is always fresh from the auth user
+  if (data) {
+    data.email = user.email ?? data.email;
+  }
+
+  return data;
+}
+
+export async function updateUserProfile(data: { name: string }) {
+  const { user } = await getCurrentUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const supabase = createSupabaseServerClient();
+  const { error } = await supabase
+    .from('profiles')
+    .update({ full_name: data.name, updated_at: new Date().toISOString() })
+    .eq('id', user.id);
+
+  if (error) {
+    console.error("Error updating profile:", error.message);
+    throw new Error('Failed to update profile.');
+  }
+
+  revalidatePath('/dashboard/settings');
+  return { success: true };
+}
+
+
 // --- BOT ACTIONS ---
 
 export async function createBot(formData: FormData) {
@@ -133,19 +215,22 @@ export async function createBot(formData: FormData) {
 
   const supabase = createSupabaseServerClient();
 
+  // Check plan limits before creating the bot
   const [subscription, { count }] = await Promise.all([
     getUserSubscription(),
     supabase.from('bots').select('*', { count: 'exact', head: true }).eq('owner_id', user.id)
   ]);
 
-  const botLimit = planLimits[subscription.plan as keyof typeof planLimits] ?? 1;
+  const plan = subscription.plan as keyof typeof planLimits;
+  const botLimit = planLimits[plan].bots;
+  const memoryLimit = planLimits[plan].ram;
   const currentBotCount = count ?? 0;
 
   if (currentBotCount >= botLimit) {
     throw new Error(`You have reached your bot limit for the ${subscription.plan} plan. Please upgrade your plan to create more bots.`);
   }
 
-
+  // Insert a record into the DB first to get an ID
   const { data: newBot, error } = await supabase
     .from('bots')
     .insert({
@@ -153,8 +238,7 @@ export async function createBot(formData: FormData) {
       owner_id: user.id,
       status: 'stopped',
     })
-    .select()
-    .select('id, created_at, name, status, owner_id ')
+    .select('id, name, owner_id, status, created_at')
     .single();
 
   if (error) {
@@ -163,10 +247,12 @@ export async function createBot(formData: FormData) {
   }
   
   try {
-    await deployBotToBackend(newBot, codeFile);
+    // Pass the memory limit to the backend deployment function
+    await deployBotToBackend(newBot, codeFile, memoryLimit);
     await supabase.from('bots').update({ status: 'running' }).eq('id', newBot.id);
   } catch (backendError) {
     console.error("Backend deployment failed:", backendError);
+    // Rollback: delete the bot record from Supabase if backend fails
     await supabase.from('bots').delete().eq('id', newBot.id);
     throw new Error(`Bot deployment failed: ${(backendError as Error).message}`);
   }
@@ -250,18 +336,23 @@ export async function deleteBot(prevState: any, formData: FormData) {
     const supabase = createSupabaseServerClient();
     
     try {
+        const { error: dbError } = await supabase.from('bots').delete().eq('id', botId);
+
+        if (dbError) {
+            console.error("Failed to delete bot from Supabase:", dbError);
+            throw new Error("Could not delete bot from the database.");
+        }
+
         await deleteBotFromBackend(botId);
+        revalidatePath('/dashboard');
+        return { message: "Bot has been deleted.", success: true };
     } catch (e) {
-        console.warn(`Could not delete bot ${botId} from backend service, but proceeding with DB deletion. It may have already been deleted or orphaned.`, e);
+        // If the backend delete fails, we should still proceed as the DB record is gone.
+        // The container might be orphaned, but it's better than blocking the user.
+        console.warn(`Could not delete bot ${botId} from backend service. It may have already been deleted or orphaned.`, e);
+        revalidatePath('/dashboard');
+        return { message: "Bot has been deleted from the dashboard.", success: true };
     }
-
-    const { error: dbError } = await supabase.from('bots').delete().eq('id', botId);
-
-    if (dbError) {
-        console.error("Failed to delete bot from Supabase:", dbError);
-        return { message: "Could not delete bot from the database.", success: false };
-    }
-    
-    revalidatePath('/dashboard');
-    return { message: "Bot has been deleted.", success: true, redirect: "/dashboard" };
 }
+
+    

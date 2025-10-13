@@ -6,7 +6,7 @@ import type { Bot } from '@/lib/supabase/actions';
 import { getBotById } from '@/lib/supabase/actions';
 
 const BACKEND_URL = process.env.BOT_BACKEND_URL;
-const MASTER_KEY = process.env.MASTER_BACKEND_KEY;
+const MASTER_KEY = process.env.BOT_BACKEND_MASTER_KEY;
 
 if (!BACKEND_URL || !MASTER_KEY) {
   console.warn("Bot backend URL or master key is not configured. Bot operations will be simulated.");
@@ -14,13 +14,10 @@ if (!BACKEND_URL || !MASTER_KEY) {
 
 async function makeBackendRequest(endpoint: string, method: string, body: object | FormData, isFormData: boolean = false) {
   if (!BACKEND_URL || !MASTER_KEY) {
-    console.log(`[SIMULATING] Backend request to ${endpoint} with method ${method}`, body);
+    console.log(`Simulating backend request to ${endpoint} with method ${method}`, body);
     // Simulate a successful response in development if not configured
     return { success: true, data: { status: `simulated ${endpoint}` } };
   }
-
-  const fullUrl = `${BACKEND_URL}${endpoint}`;
-  console.log(`[BOT_BACKEND_CLIENT] Making backend request: ${method} ${fullUrl}`);
 
   try {
     const headers: HeadersInit = {
@@ -31,12 +28,10 @@ async function makeBackendRequest(endpoint: string, method: string, body: object
         headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(fullUrl, {
+    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
       method,
       headers,
       body: isFormData ? body as FormData : JSON.stringify(body),
-      // Adding a timeout to the fetch request is not directly supported in all Node.js versions.
-      // The timeout error you are seeing is likely from the underlying infrastructure.
     });
 
     if (!response.ok) {
@@ -48,20 +43,19 @@ async function makeBackendRequest(endpoint: string, method: string, body: object
         errorData = { error: "Unknown backend error", details: errorText };
       }
       
-      console.error(`[BOT_BACKEND_CLIENT] Backend request failed: ${response.status} ${response.statusText}`, errorData);
+      console.error(`Backend request failed: ${response.status}`, errorData);
       throw new Error(errorData.details || errorData.error || `Request failed with status ${response.status}`);
     }
 
     return { success: true, data: await response.json() };
   } catch (error) {
-    console.error("[BOT_BACKEND_CLIENT] Error making backend request:", error);
-    // Re-throw the original error to be handled by the caller
+    console.error("Error making backend request:", error);
     throw error;
   }
 }
 
 
-export async function deployBotToBackend(bot: Bot, codeFile: File) {
+export async function deployBotToBackend(bot: Bot, codeFile: File, memoryMb: number) {
   const { user } = await getCurrentUser();
   if (!user) throw new Error("Not authenticated");
 
@@ -72,6 +66,7 @@ export async function deployBotToBackend(bot: Bot, codeFile: File) {
     botoraloBotId: bot.id,
     name: bot.name,
     auto_start: true, // Deploy and start immediately
+    memory_mb: memoryMb,
   };
   
   formData.append('meta', JSON.stringify(meta));
@@ -124,3 +119,5 @@ export async function getBotInfoFromBackend(botId: string) {
         return null;
     }
 }
+
+    

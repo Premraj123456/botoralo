@@ -1,3 +1,4 @@
+
 import { Link } from '@/components/layout/page-loader';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,9 +10,9 @@ import { getBotInfoFromBackend } from '@/lib/bot-backend/client';
 import { revalidatePath } from 'next/cache';
 
 const planLimits = {
-  Free: 1,
-  Pro: 5,
-  Power: 20,
+  Free: { bots: 1, ram: 128 },
+  PRO: { bots: 5, ram: 512 },
+  POWER: { bots: 20, ram: 1024 },
 };
 
 export default async function Dashboard() {
@@ -51,8 +52,8 @@ export default async function Dashboard() {
     })
   );
 
-
-  const botLimit = planLimits[subscription.plan as keyof typeof planLimits] || 1;
+  const plan = subscription.plan as keyof typeof planLimits;
+  const botLimit = planLimits[plan].bots;
   const canCreateBot = userBots.length < botLimit;
 
   const CreateBotButton = () => (
