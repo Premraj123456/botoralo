@@ -35,7 +35,7 @@ export function BillingClient({ user, subscription }: BillingClientProps) {
     try {
         const result = await manageSubscription({ customerId: subscription.paddle_customer_id });
         if (result && result.url) {
-            window.location.href = result.url;
+            window.open(result.url, '_blank');
         } else {
             throw new Error("Could not generate subscription management link.");
         }
