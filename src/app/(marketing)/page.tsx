@@ -5,7 +5,7 @@ import {
   Rocket,
 } from 'lucide-react';
 import Image from 'next/image';
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import {
   Accordion,
   AccordionContent,

@@ -1,5 +1,5 @@
 
-import { Link } from '@/components/layout/page-loader';
+import { ClientLink } from '@/components/layout/client-link';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { BotCard } from '@/components/dashboard/bot-card';
@@ -27,7 +27,7 @@ export default async function Dashboard() {
                 <p className="text-sm text-muted-foreground">Please try signing in again.</p>
                 <div className="mt-4">
                     <Button asChild>
-                        <Link href="/signin">Sign In</Link>
+                        <ClientLink href="/signin">Sign In</ClientLink>
                     </Button>
                 </div>
             </div>
@@ -58,9 +58,9 @@ export default async function Dashboard() {
 
   const CreateBotButton = () => (
     <Button asChild disabled={!canCreateBot}>
-      <Link href="/dashboard/bots/new">
+      <ClientLink href="/dashboard/bots/new">
         <PlusCircle className="mr-2 h-4 w-4" /> Create New Bot
-      </Link>
+      </ClientLink>
     </Button>
   );
 

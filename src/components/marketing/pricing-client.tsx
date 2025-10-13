@@ -12,7 +12,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { PaddleCheckout } from '@/components/paddle/paddle-checkout';
 

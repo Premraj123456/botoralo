@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { Link } from '@/components/layout/page-loader';
+import { ClientLink } from '@/components/layout/client-link';
 import type { User } from "@supabase/supabase-js";
 import { manageSubscription } from "@/lib/paddle/actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -78,9 +78,9 @@ export function BillingClient({ user, subscription }: BillingClientProps) {
               </>
             ) : (
                <Button asChild className="w-full">
-                <Link href="/pricing">
+                <ClientLink href="/pricing">
                   Upgrade Plan
-                </Link>
+                </ClientLink>
               </Button>
             )}
             

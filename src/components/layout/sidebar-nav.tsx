@@ -4,7 +4,7 @@
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, PlusCircle, DollarSign, CreditCard } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { Link } from '@/components/layout/page-loader';
+import { ClientLink } from '@/components/layout/client-link';
 import { Button } from "@/components/ui/button";
 
 const primaryNav = [
@@ -28,10 +28,10 @@ export function SidebarNav() {
           variant={pathname === item.href ? "secondary" : "ghost"}
           className="w-full justify-start gap-2"
         >
-          <Link href={item.href}>
+          <ClientLink href={item.href}>
             <item.icon />
             <span>{item.name}</span>
-          </Link>
+          </ClientLink>
         </Button>
       </li>
     ))

@@ -2,7 +2,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Link } from './page-loader';
+import { ClientLink } from './client-link';
 import { LogOut } from 'lucide-react';
 import {
   DropdownMenu,
@@ -54,11 +54,11 @@ export function Header({ user }: { user: User | null }) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-             <Link href="/dashboard/billing">
+             <ClientLink href="/dashboard/billing">
               <DropdownMenuItem>
                 Billing
               </DropdownMenuItem>
-            </Link>
+            </ClientLink>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
@@ -68,9 +68,9 @@ export function Header({ user }: { user: User | null }) {
         </DropdownMenu>
       ) : (
         <Button asChild>
-          <Link href="/signin">
+          <ClientLink href="/signin">
             Sign In
-          </Link>
+          </ClientLink>
         </Button>
       )}
     </header>

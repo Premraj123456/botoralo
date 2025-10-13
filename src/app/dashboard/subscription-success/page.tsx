@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
-import { Link } from '@/components/layout/page-loader';
+import { ClientLink } from '@/components/layout/client-link';
 import { revalidatePath } from 'next/cache';
 
 export default function SubscriptionSuccessPage() {
@@ -24,9 +24,9 @@ export default function SubscriptionSuccessPage() {
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/dashboard">
+            <ClientLink href="/dashboard">
               Go to Dashboard
-            </Link>
+            </ClientLink>
           </Button>
         </CardContent>
       </Card>

@@ -1,7 +1,7 @@
 'use client';
 
 import { Bot, Terminal } from 'lucide-react';
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { createSupabaseClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';

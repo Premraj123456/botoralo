@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Link } from '@/components/layout/page-loader';
+import { ClientLink } from '@/components/layout/client-link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -124,10 +124,10 @@ export function BotCard({ bot }: BotCardProps) {
       </CardContent>
       <CardFooter>
         <Button className="w-full" asChild variant="outline">
-          <Link href={`/dashboard/bots/${bot.id}`}>
+          <ClientLink href={`/dashboard/bots/${bot.id}`}>
             Manage Bot
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
+          </ClientLink>
         </Button>
       </CardFooter>
     </Card>

@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from '@/components/layout/page-loader';
+import Link from 'next/link';
 import { Bot } from "lucide-react";
 
 export default function PrivacyPolicyPage() {

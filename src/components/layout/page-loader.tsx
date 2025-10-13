@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import NextLink from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
 // CONTEXT
@@ -11,7 +10,7 @@ const NProgressContext = React.createContext<{
   startLoading: () => void;
 } | null>(null);
 
-function useNProgressContext() {
+export function useNProgressContext() {
   const context = React.useContext(NProgressContext);
   if (context === null) {
     throw new Error("useNProgressContext must be used within a NProgressProvider");
@@ -85,30 +84,3 @@ export function PageLoader({ children }: { children: React.ReactNode }) {
         </NProgressProvider>
     )
 }
-
-
-// LINK COMPONENT
-// =================================================================================================
-export const Link = React.forwardRef<
-  HTMLAnchorElement,
-  React.PropsWithChildren<React.ComponentProps<typeof NextLink>>
->(function Link({ href, onClick, children, ...props }, ref) {
-  const { startLoading } = useNProgressContext();
-
-  return (
-    <NextLink
-      href={href}
-      ref={ref}
-      onClick={(e) => {
-        startLoading();
-        if (onClick) {
-          onClick(e);
-        }
-      }}
-      {...props}
-    >
-      {children}
-    </NextLink>
-  );
-});
-Link.displayName = "Link";
