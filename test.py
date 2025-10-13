@@ -1,1 +1,1 @@
-pritn(nothing)
+print("till now succes")
