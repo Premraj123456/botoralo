@@ -13,6 +13,18 @@ export function PaddleProvider() {
     const paddleToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
     const paddleEnvironment = process.env.NODE_ENV;
 
+     const isLocal = window.location.hostname === "localhost";
+
+    if (!paddleToken) {
+      console.error("Paddle token is not configured.");
+      return;
+    }
+
+    if (isLocal && paddleToken.startsWith("paddletoken_live")) {
+      console.warn("Paddle: Live token on localhost — skipping to avoid ProfitWell hang.");
+      return;
+    }
+    
     if (!paddleToken) {
       console.error("Paddle token is not configured.");
       return;
