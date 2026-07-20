@@ -31,6 +31,7 @@ export function PaddleProvider() {
         window.Paddle.Environment.set(paddleEnvironment);
         window.Paddle.Setup({
           token: paddleToken,
+          retain: { enabled: false },
         });
         console.log("Paddle.js [info]: Initialized in sandbox mode.");
       }
