@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getUserSubscription } from '@/lib/supabase/actions';
 import { PricingClient } from '@/components/marketing/pricing-client';
-import { PaddleProvider } from '@/components/paddle/paddle-provider';
+
 
 export default async function PricingPage() {
   const supabase = createSupabaseServerClient();
@@ -27,7 +27,7 @@ export default async function PricingPage() {
         </div>
         <PricingClient user={user} subscription={subscription} />
       </div>
-      <PaddleProvider />
+
     </div>
   );
 }
