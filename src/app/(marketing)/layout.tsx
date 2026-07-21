@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Bot } from 'lucide-react';
-import { AuthHeaderButton } from '@/components/layout/auth-header-button';
+import { Button } from '@/components/ui/button';
 
 export const revalidate = 60;
 
@@ -25,7 +25,7 @@ export default async function MarketingLayout({
             <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</Link>
             <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
-            <AuthHeaderButton />
+            <Button asChild size="sm"><Link href="/signin">Get Started</Link></Button>
         </nav>
       </header>
       <main className="flex-1 z-10">{children}</main>
