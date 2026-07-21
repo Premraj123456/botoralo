@@ -4,7 +4,7 @@ import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { Bot } from 'lucide-react';
 import { ClientLink } from '@/components/layout/client-link';
 import { Header } from '@/components/layout/header';
-import { PaddleProvider } from '@/components/paddle/paddle-provider';
+
 
 // Force dynamic rendering for all dashboard pages
 export const dynamic = "force-dynamic";
@@ -38,7 +38,7 @@ export default async function DashboardLayout({
           {children}
         </main>
       </div>
-      <PaddleProvider />
+
     </div>
   );
 }
