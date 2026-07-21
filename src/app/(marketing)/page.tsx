@@ -93,6 +93,7 @@ export default function LandingPage() {
                 src="https://picsum.photos/id/60/1920/1200"
                 data-ai-hint="abstract code"
                 width="1920"
+                priority
               />
             </div>
           </div>
