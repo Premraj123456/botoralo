@@ -28,11 +28,12 @@ export function PaddleProvider() {
     script.async = true;
     script.onload = () => {
       if (window.Paddle) {
-        window.Paddle.Environment.set(paddleEnvironment);
-        window.Paddle.Setup({
-          token: paddleToken,
-          profitwell: false,
-        });
+        try {
+          window.Paddle.Environment.set(paddleEnvironment);
+          window.Paddle.Setup({ token: paddleToken });
+        } catch (e) {
+          console.warn("Paddle setup error:", e);
+        }
       }
     };
     script.onerror = () => {
