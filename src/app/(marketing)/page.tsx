@@ -4,7 +4,6 @@ import {
   Code,
   Rocket,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import {
   Accordion,
@@ -86,15 +85,9 @@ export default function LandingPage() {
             </div>
             <div className="relative animate-fade-in group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-purple-600 rounded-xl blur opacity-50 group-hover:opacity-75 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
-              <Image
-                alt="Hero"
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover"
-                height="1200"
-                src="https://picsum.photos/id/60/1920/1200"
-                data-ai-hint="abstract code"
-                width="1920"
-                priority
-              />
+              <div className="mx-auto aspect-video overflow-hidden rounded-xl object-cover bg-gradient-to-br from-primary/20 to-purple-600/20 flex items-center justify-center">
+                <Bot className="h-24 w-24 text-primary/40" />
+              </div>
             </div>
           </div>
         </div>
