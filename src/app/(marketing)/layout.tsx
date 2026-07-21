@@ -1,16 +1,14 @@
 import Link from 'next/link';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { Bot } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { AuthHeaderButton } from '@/components/layout/auth-header-button';
+
+export const revalidate = 60;
 
 export default async function MarketingLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
   return (
     <div className="bg-background text-foreground min-h-screen flex flex-col">
       <div className="absolute top-0 left-0 w-full h-full bg-grid-white/[0.05] z-0">
@@ -27,9 +25,7 @@ export default async function MarketingLayout({
             <Link href="/#features" className="text-sm font-medium text-muted-foreground hover:text-foreground">Features</Link>
             <Link href="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground">Pricing</Link>
             <Link href="/#faq" className="text-sm font-medium text-muted-foreground hover:text-foreground">FAQ</Link>
-            <Button asChild size="sm">
-                <Link href={user ? "/dashboard" : "/signin"}>{user ? "Dashboard" : "Get Started"}</Link>
-            </Button>
+            <AuthHeaderButton />
         </nav>
       </header>
       <main className="flex-1 z-10">{children}</main>
