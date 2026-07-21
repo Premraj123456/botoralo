@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import { PageLoader } from '@/components/layout/page-loader';
-import { PaddleProvider } from '@/components/paddle/paddle-provider';
+
 import { Suspense } from 'react';
 
 const inter = Inter({
@@ -36,7 +36,7 @@ export default async function RootLayout({
           </PageLoader>
         </Suspense>
         <Toaster />
-        <PaddleProvider />
+
       </body>
     </html>
   );
