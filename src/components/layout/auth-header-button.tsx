@@ -10,6 +10,7 @@ export function AuthHeaderButton() {
 
   useEffect(() => {
     const supabase = createSupabaseClient();
+    if (!supabase) return;
     supabase.auth.getUser().then(({ data }) => {
       setUser(!!data.user);
     });
