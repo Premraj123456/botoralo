@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { PaddleProvider } from '@/components/paddle/paddle-provider';
 import { Inter, Source_Code_Pro } from 'next/font/google';
 import { PageLoader } from '@/components/layout/page-loader';
 
@@ -36,7 +37,7 @@ export default async function RootLayout({
           </PageLoader>
         </Suspense>
         <Toaster />
-
+        <PaddleProvider />
       </body>
     </html>
   );
